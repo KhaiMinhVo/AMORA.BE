@@ -1,0 +1,7 @@
+namespace Amora.Domain.Enums;
+
+public enum MatchStatus
+{
+    Active = 0,
+    Unmatched = 1
+}

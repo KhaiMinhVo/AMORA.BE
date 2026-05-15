@@ -1,0 +1,20 @@
+using Amora.Domain.Enums;
+
+namespace Amora.Domain.Entities;
+
+public sealed class VoicePost
+{
+    public Guid Id { get; set; }
+
+    public Guid PosterId { get; set; }
+
+    public string AudioUrl { get; set; } = string.Empty;
+
+    public int MatchCount { get; set; }
+
+    public VoicePostStatus Status { get; set; } = VoicePostStatus.Open;
+
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    public ICollection<VoiceComment> Comments { get; set; } = new List<VoiceComment>();
+}
