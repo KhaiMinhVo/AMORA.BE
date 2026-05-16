@@ -59,6 +59,11 @@ builder.Services.AddScoped<IPetRepository, PetRepository>();
 builder.Services.AddScoped<IShopRepository, ShopRepository>();
 builder.Services.AddScoped<IPetTransactionRepository, PetTransactionRepository>();
 builder.Services.AddScoped<IIapPurchaseRepository, IapPurchaseRepository>();
+builder.Services.AddScoped<IChatReadStateRepository, ChatReadStateRepository>();
+builder.Services.AddScoped<IMatchMediaUsageRepository, MatchMediaUsageRepository>();
+
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 builder.Services.Configure<IapOptions>(builder.Configuration.GetSection(IapOptions.SectionName));
 builder.Services.AddHttpClient("AppleIap");
@@ -111,9 +116,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = false,
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "Amora",
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "Amora",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(2),
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = signingKey,
             NameClaimType = "name",
@@ -138,6 +146,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AmoraDbContext>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -177,6 +188,13 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AmoraDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -190,6 +208,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 
+app.MapHealthChecks("/health");
 app.MapControllers().RequireAuthorization();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<PetHub>("/hubs/pet");

@@ -150,3 +150,6 @@ D:\FPTU\EXE\AMORA.BE\src\Amora.Api\bin\Debug\net8.0\Microsoft.Extensions.Logging
 D:\FPTU\EXE\AMORA.BE\src\Amora.Api\bin\Debug\net8.0\Quartz.dll
 D:\FPTU\EXE\AMORA.BE\src\Amora.Api\bin\Debug\net8.0\Quartz.Extensions.DependencyInjection.dll
 D:\FPTU\EXE\AMORA.BE\src\Amora.Api\bin\Debug\net8.0\Quartz.Extensions.Hosting.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Api\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.HealthChecks.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Api\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Api\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore.dll

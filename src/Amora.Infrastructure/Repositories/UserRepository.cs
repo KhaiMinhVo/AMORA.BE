@@ -15,9 +15,16 @@ public sealed class UserRepository : IUserRepository
     }
 
     public Task<AppUser?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default)
-    {
-        return _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
-    }
+        => _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+    public Task<AppUser?> GetByIdForUpdateAsync(Guid userId, CancellationToken cancellationToken = default)
+        => _dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+    public Task<AppUser?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+        => _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+
+    public Task<AppUser?> GetByEmailForAuthAsync(string email, CancellationToken cancellationToken = default)
+        => _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
 
     public async Task AddAsync(AppUser user, CancellationToken cancellationToken = default)
     {

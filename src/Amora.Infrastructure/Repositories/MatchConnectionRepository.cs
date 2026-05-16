@@ -148,4 +148,17 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
                 setter => setter.SetProperty(x => x.ExpiresAt, newExpiry),
                 cancellationToken);
     }
+
+    public async Task<bool> UnmatchAsync(Guid matchId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var updated = await _dbContext.MatchConnections
+            .Where(x => x.Id == matchId
+                        && x.Status == MatchStatus.Active
+                        && (x.UserAId == userId || x.UserBId == userId))
+            .ExecuteUpdateAsync(
+                setter => setter.SetProperty(x => x.Status, MatchStatus.Unmatched),
+                cancellationToken);
+
+        return updated > 0;
+    }
 }

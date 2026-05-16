@@ -1,4 +1,5 @@
 using Amora.Application.Abstractions;
+using Amora.Application.Iap;
 using Amora.Application.Pets;
 using Amora.Domain.Interfaces;
 using MediatR;
@@ -10,15 +11,18 @@ public sealed class ProcessCoPresenceCommandHandler : IRequestHandler<ProcessCoP
     private readonly IPetRepository _petRepository;
     private readonly IMatchConnectionRepository _matchRepository;
     private readonly IPetRealtimeNotifier _petNotifier;
+    private readonly PetCoinRewardService _petCoins;
 
     public ProcessCoPresenceCommandHandler(
         IPetRepository petRepository,
         IMatchConnectionRepository matchRepository,
-        IPetRealtimeNotifier petNotifier)
+        IPetRealtimeNotifier petNotifier,
+        PetCoinRewardService petCoins)
     {
         _petRepository = petRepository;
         _matchRepository = matchRepository;
         _petNotifier = petNotifier;
+        _petCoins = petCoins;
     }
 
     public async Task<int> Handle(ProcessCoPresenceCommand request, CancellationToken cancellationToken)
@@ -35,7 +39,11 @@ public sealed class ProcessCoPresenceCommandHandler : IRequestHandler<ProcessCoP
 
         var match = await _matchRepository.GetByIdAsync(request.MatchId, cancellationToken);
         if (match is not null)
+        {
+            await _petCoins.TryGrantCoPresenceCoinsAsync(match.UserAId, cancellationToken);
+            await _petCoins.TryGrantCoPresenceCoinsAsync(match.UserBId, cancellationToken);
             await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, cancellationToken);
+        }
 
         return gained;
     }

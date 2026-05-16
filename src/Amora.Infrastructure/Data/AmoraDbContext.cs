@@ -42,6 +42,10 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<IapPurchaseRecord> IapPurchaseRecords => Set<IapPurchaseRecord>();
 
+    public DbSet<ChatReadState> ChatReadStates => Set<ChatReadState>();
+
+    public DbSet<MatchDailyMediaUsage> MatchDailyMediaUsages => Set<MatchDailyMediaUsage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -49,6 +53,9 @@ public sealed class AmoraDbContext : DbContext
             entity.ToTable("Users");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.DisplayName).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Email).HasMaxLength(256);
+            entity.Property(x => x.PasswordHash).HasMaxLength(500);
+            entity.HasIndex(x => x.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL");
             entity.Property(x => x.AvatarUrl).HasMaxLength(1000).IsRequired();
             entity.Property(x => x.Gender).HasConversion<string>().HasMaxLength(20).HasDefaultValue(Amora.Domain.Enums.Gender.PreferNotToSay);
             entity.Property(x => x.City).HasMaxLength(100);
@@ -237,6 +244,22 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.ProductId).HasMaxLength(100);
 
             entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ChatReadState>(entity =>
+        {
+            entity.ToTable("ChatReadStates");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.MatchId }).IsUnique();
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Match).WithMany().HasForeignKey(x => x.MatchId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MatchDailyMediaUsage>(entity =>
+        {
+            entity.ToTable("MatchDailyMediaUsages");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.MatchId, x.UserId, x.UsageDate }).IsUnique();
         });
 
         base.OnModelCreating(modelBuilder);

@@ -31,6 +31,13 @@ public sealed class MatchesController : ControllerBase
         return Created($"/api/matches/{result.MatchId}", ApiResponse<MatchCreatedResponseDto>.Ok(result, message));
     }
 
+    [HttpPost("{matchId:guid}/unmatch")]
+    public async Task<ActionResult<ApiResponse<object>>> Unmatch(Guid matchId, CancellationToken cancellationToken)
+    {
+        await _matchService.UnmatchAsync(matchId, cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Match unmatched successfully."));
+    }
+
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<InboxItemDto>>>> GetInbox(
         [FromQuery] string? status,

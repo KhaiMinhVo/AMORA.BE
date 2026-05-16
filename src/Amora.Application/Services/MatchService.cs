@@ -20,6 +20,7 @@ public sealed class MatchService
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly IMediator _mediator;
     private readonly IPetRepository _petRepository;
+    private readonly IChatReadStateRepository _readState;
 
     public MatchService(
         ICurrentUserService currentUserService,
@@ -30,7 +31,8 @@ public sealed class MatchService
         IChatMessageRepository chatMessageRepository,
         IRealtimeNotifier realtimeNotifier,
         IMediator mediator,
-        IPetRepository petRepository)
+        IPetRepository petRepository,
+        IChatReadStateRepository readState)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -41,6 +43,7 @@ public sealed class MatchService
         _realtimeNotifier = realtimeNotifier;
         _mediator = mediator;
         _petRepository = petRepository;
+        _readState = readState;
     }
 
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
@@ -104,6 +107,8 @@ public sealed class MatchService
         }
 
         var inboxItems = new List<InboxItemDto>();
+        var matchIds = matches.Select(m => m.Id).ToList();
+        var unreadMap = await _readState.CountUnreadByMatchesAsync(userId, matchIds, cancellationToken);
 
         foreach (var match in matches)
         {
@@ -140,12 +145,33 @@ public sealed class MatchService
                         Content = lastMessage.Content,
                         CreatedAt = lastMessage.CreatedAt
                     },
-                UnreadCount = 0,
+                UnreadCount = unreadMap.GetValueOrDefault(match.Id),
                 PetState = petDto,
                 ExpiresAt = match.ExpiresAt
             });
         }
 
         return inboxItems;
+    }
+
+    public async Task UnmatchAsync(Guid matchId, CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.UserId;
+        var ok = await _matchConnectionRepository.UnmatchAsync(matchId, userId, cancellationToken);
+        if (!ok)
+            throw new ValidationApiException("Cannot unmatch this conversation.");
+
+        var systemMessage = new ChatMessage
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            MatchId = matchId,
+            SenderId = null,
+            MessageType = MessageType.System,
+            Content = "Một trong hai bạn đã hủy kết nối.",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
+        await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
     }
 }

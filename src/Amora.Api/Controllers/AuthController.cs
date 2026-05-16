@@ -1,9 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using Amora.Application.Common;
+using Amora.Application.Dtos.Auth;
+using Amora.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Amora.Api.Controllers;
 
@@ -12,71 +11,42 @@ namespace Amora.Api.Controllers;
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
 {
-    private readonly IConfiguration _configuration;
+    private readonly AuthService _authService;
 
-    public AuthController(IConfiguration configuration)
+    public AuthController(AuthService authService) => _authService = authService;
+
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(
+        [FromBody] RegisterRequest request,
+        CancellationToken cancellationToken)
     {
-        _configuration = configuration;
+        var result = await _authService.RegisterAsync(request, cancellationToken);
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Registration successful."));
     }
 
-    [HttpPost("dev-token")]
-    public ActionResult<object> CreateDevToken([FromBody] DevTokenRequest request)
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(
+        [FromBody] LoginRequest request,
+        CancellationToken cancellationToken)
     {
-        try
-        {
-            if (request is null)
-            {
-                return BadRequest(new { success = false, message = "Request body is required." });
-            }
+        var result = await _authService.LoginAsync(request, cancellationToken);
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Login successful."));
+    }
 
-            if (request.UserId == Guid.Empty)
-            {
-                return BadRequest(new { success = false, message = "UserId is required." });
-            }
+    /// <summary>Development — JWT cho seed user hoặc user mới.</summary>
+    [HttpPost("dev-token")]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> DevToken(
+        [FromBody] DevTokenRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.UserId == Guid.Empty)
+            return BadRequest(ApiResponse<AuthResponseDto>.Fail("UserId required.", "VALIDATION_ERROR"));
 
-            var displayName = string.IsNullOrWhiteSpace(request.DisplayName) ? "Dev User" : request.DisplayName;
-            var jwtKey = _configuration["Jwt:Key"] ?? "dev-only-secret-key-change-me-please-use-a-longer-256-bit-key";
-            var issuer = _configuration["Jwt:Issuer"] ?? "Amora";
-            var audience = _configuration["Jwt:Audience"] ?? "Amora";
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
-
-            var claims = new List<Claim>
-            {
-                new("id", request.UserId.ToString()),
-                new(ClaimTypes.NameIdentifier, request.UserId.ToString()),
-                new(ClaimTypes.Name, displayName),
-                new("role", "User")
-            };
-
-            var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(12),
-                signingCredentials: credentials);
-
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return Ok(new
-            {
-                success = true,
-                data = new
-                {
-                    accessToken = tokenString,
-                    tokenType = "Bearer",
-                    expiresAt = token.ValidTo
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new
-            {
-                success = false,
-                message = ex.Message
-            });
-        }
+        var name = string.IsNullOrWhiteSpace(request.DisplayName) ? "Dev User" : request.DisplayName;
+        var result = await _authService.DevTokenAsync(request.UserId, name, cancellationToken);
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result));
     }
 }
 

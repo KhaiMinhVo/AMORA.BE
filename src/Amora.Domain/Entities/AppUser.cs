@@ -6,6 +6,10 @@ public sealed class AppUser
 {
     public Guid Id { get; set; }
 
+    public string? Email { get; set; }
+
+    public string? PasswordHash { get; set; }
+
     public string DisplayName { get; set; } = string.Empty;
 
     public string AvatarUrl { get; set; } = string.Empty;
@@ -34,4 +38,8 @@ public sealed class AppUser
     public int PetCoins { get; set; }
 
     public int AmoraGems { get; set; }
-}
+
+    public DateOnly? LastPetCoinRewardDate { get; set; }
+
+    public DateOnly? LastCoPresenceCoinDate { get; set; }
+}

@@ -27,4 +27,6 @@ public interface IMatchConnectionRepository
 
     /// <summary>Handshake 24h: gia hạn thêm 24h khi có tin nhắn mới.</summary>
     Task ExtendHandshakeAsync(Guid matchId, CancellationToken cancellationToken = default);
+
+    Task<bool> UnmatchAsync(Guid matchId, Guid userId, CancellationToken cancellationToken = default);
 }

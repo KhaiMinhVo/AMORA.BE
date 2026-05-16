@@ -58,8 +58,10 @@ Common/BaseEntity.cs
 Entities/
  AppUser.cs
  ChatMessage.cs
+ ChatReadState.cs
  IapPurchaseRecord.cs
  MatchConnection.cs
+ MatchDailyMediaUsage.cs
  Pet.cs
  PetStateHistory.cs
  PetTransaction.cs
@@ -84,8 +86,10 @@ Enums/
  VoicePostStatus.cs
 Interfaces/
  IChatMessageRepository.cs
+ IChatReadStateRepository.cs
  IIapPurchaseRepository.cs
  IMatchConnectionRepository.cs
+ IMatchMediaUsageRepository.cs
  IPetRepository.cs
  IPetTransactionRepository.cs
  IShopRepository.cs

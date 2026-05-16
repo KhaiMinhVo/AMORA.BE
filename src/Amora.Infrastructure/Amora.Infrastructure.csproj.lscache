@@ -73,6 +73,8 @@ Data/
   20260516092907_AddPetSystem.Designer.cs
   20260516094252_AddIapAndPresence.cs
   20260516094252_AddIapAndPresence.Designer.cs
+  20260516095737_AddHighPriorityMvp.cs
+  20260516095737_AddHighPriorityMvp.Designer.cs
   AmoraDbContextModelSnapshot.cs
  MongoDbOptions.cs
 Iap/
@@ -90,8 +92,10 @@ obj/Debug/net8.0/
 Presence/InMemoryMatchPresenceTracker.cs
 Repositories/
  ChatMessageRepository.cs
+ ChatReadStateRepository.cs
  IapPurchaseRepository.cs
  MatchConnectionRepository.cs
+ MatchMediaUsageRepository.cs
  PetRepository.cs
  PetTransactionRepository.cs
  ShopRepository.cs

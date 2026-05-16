@@ -1,10 +1,12 @@
 using Amora.Application.Dtos.Safety;
 using Amora.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Amora.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/users/{userId:guid}")]
 public sealed class UserSafetyController : ControllerBase
 {

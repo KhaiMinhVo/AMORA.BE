@@ -55,6 +55,10 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("Gender")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -69,10 +73,24 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<bool>("IsProfileComplete")
                         .HasColumnType("boolean");
 
+                    b.Property<DateOnly?>("LastCoPresenceCoinDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("LastPetCoinRewardDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<int>("PetCoins")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasFilter("\"Email\" IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
 
@@ -110,6 +128,37 @@ namespace Amora.Infrastructure.Data.Migrations
                             IsProfileComplete = false,
                             PetCoins = 0
                         });
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.ChatReadState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("LastReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchId");
+
+                    b.HasIndex("UserId", "MatchId")
+                        .IsUnique();
+
+                    b.ToTable("ChatReadStates", (string)null);
                 });
 
             modelBuilder.Entity("Amora.Domain.Entities.IapPurchaseRecord", b =>
@@ -192,6 +241,38 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.HasIndex("UserBId", "Status");
 
                     b.ToTable("MatchConnections", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.MatchDailyMediaUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ImagesSent")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("UsageDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchId", "UserId", "UsageDate")
+                        .IsUnique();
+
+                    b.ToTable("MatchDailyMediaUsages", (string)null);
                 });
 
             modelBuilder.Entity("Amora.Domain.Entities.Pet", b =>
@@ -725,6 +806,25 @@ namespace Amora.Infrastructure.Data.Migrations
                             PosterId = new Guid("22222222-2222-2222-2222-222222222222"),
                             Status = "Open"
                         });
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.ChatReadState", b =>
+                {
+                    b.HasOne("Amora.Domain.Entities.MatchConnection", "Match")
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Amora.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Match");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Amora.Domain.Entities.IapPurchaseRecord", b =>

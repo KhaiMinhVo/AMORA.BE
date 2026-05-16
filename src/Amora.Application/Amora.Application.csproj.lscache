@@ -56,6 +56,7 @@ TemporaryDependencyNodeTargetIdentifier=net8.0
 Abstractions/
  ICurrentUserService.cs
  IInAppPurchaseVerifier.cs
+ IJwtTokenService.cs
  IMatchPresenceTracker.cs
  IMessageBus.cs
  IMessagePublisher.cs
@@ -67,10 +68,11 @@ Common/
  ApiResponse.cs
  PagedResult.cs
 DependencyInjection.cs
-Dtos/Comments/
- CommentResponseDtos.cs
- CreateVoiceCommentRequest.cs
 Dtos/
+ Auth/AuthDtos.cs
+ Comments/
+  CommentResponseDtos.cs
+  CreateVoiceCommentRequest.cs
  Iap/IapDtos.cs
  Matches/MatchDtos.cs
  Messages/MessageDtos.cs
@@ -119,6 +121,7 @@ Features/Pets/Queries/
 Iap/
  IapGemService.cs
  IapOptions.cs
+ PetCoinRewardService.cs
 Messaging/
  ChatVibeResultMessage.cs
  ChatVoiceProcessedMessage.cs
@@ -129,12 +132,15 @@ obj/Debug/net8.0/
 Pets/
  PetCoordinator.cs
  PetEngine.cs
+ PetFeatureGateService.cs
  PetFeatureUnlocks.cs
  PetShopService.cs
 Services/
  AudioProcessingService.cs
+ AuthService.cs
  ChatService.cs
  MatchService.cs
+ PasswordHasher.cs
  ProfileService.cs
  TrustSafetyService.cs
  VoiceCommentService.cs

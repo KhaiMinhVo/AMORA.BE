@@ -2,6 +2,7 @@ using Amora.Application.Abstractions;
 using Amora.Application.Dtos.Messages;
 using Amora.Application.Exceptions;
 using Amora.Application.Features.Pets.Commands;
+using Amora.Application.Pets;
 using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
@@ -16,19 +17,25 @@ public sealed class ChatService
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly IMediator _mediator;
+    private readonly PetFeatureGateService _featureGate;
+    private readonly IChatReadStateRepository _readState;
 
     public ChatService(
         ICurrentUserService currentUserService,
         IMatchConnectionRepository matchConnectionRepository,
         IChatMessageRepository chatMessageRepository,
         IRealtimeNotifier realtimeNotifier,
-        IMediator mediator)
+        IMediator mediator,
+        PetFeatureGateService featureGate,
+        IChatReadStateRepository readState)
     {
         _currentUserService = currentUserService;
         _matchConnectionRepository = matchConnectionRepository;
         _chatMessageRepository = chatMessageRepository;
         _realtimeNotifier = realtimeNotifier;
         _mediator = mediator;
+        _featureGate = featureGate;
+        _readState = readState;
     }
 
     public async Task<MessageHistoryResponseDto> GetHistoryAsync(Guid matchId, string? cursor, int limit, CancellationToken cancellationToken = default)
@@ -40,6 +47,15 @@ public sealed class ChatService
 
         limit = Math.Clamp(limit, 1, 50);
         var (items, nextCursor) = await _chatMessageRepository.GetByMatchAsync(matchId, cursor, limit, cancellationToken);
+
+        if (items.Count > 0)
+        {
+            await _readState.UpsertReadAsync(
+                _currentUserService.UserId,
+                matchId,
+                items.Max(x => x.CreatedAt),
+                cancellationToken);
+        }
 
         return new MessageHistoryResponseDto
         {
@@ -76,10 +92,14 @@ public sealed class ChatService
             throw new ValidationApiException("Unsupported message type.");
         }
 
-        if (messageType is MessageType.Voice && string.IsNullOrWhiteSpace(request.ContentUrl))
+        if (messageType is MessageType.Voice or MessageType.Image && string.IsNullOrWhiteSpace(request.ContentUrl))
         {
-            throw new ValidationApiException("ContentUrl is required for voice messages.");
+            throw new ValidationApiException("ContentUrl is required for voice/image messages.");
         }
+
+        await _featureGate.ValidateSendAsync(matchId, messageType, cancellationToken);
+        if (messageType == MessageType.Image)
+            await _featureGate.RegisterImageSentAsync(matchId, _currentUserService.UserId, cancellationToken);
 
         var message = new ChatMessage
         {
@@ -107,6 +127,10 @@ public sealed class ChatService
                 _currentUserService.UserId,
                 request.ContentUrl!,
                 request.Duration ?? 0), cancellationToken);
+        }
+        else if (messageType == MessageType.Image)
+        {
+            await _mediator.Send(new ProcessTextMessagePetCommand(matchId, _currentUserService.UserId), cancellationToken);
         }
 
         // Handshake 24h: gia hạn thêm 24h mỗi khi có tin nhắn (trước khi push realtime)
