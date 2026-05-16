@@ -1,0 +1,135 @@
+using Amora.Application.Abstractions;
+using Amora.Application.Dtos.Profile;
+using Amora.Application.Exceptions;
+using Amora.Domain.Enums;
+using Amora.Domain.Interfaces;
+
+namespace Amora.Application.Services;
+
+public sealed class ProfileService
+{
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IUserRepository _userRepository;
+    private readonly IMatchConnectionRepository _matchConnectionRepository;
+
+    public ProfileService(
+        ICurrentUserService currentUserService,
+        IUserRepository userRepository,
+        IMatchConnectionRepository matchConnectionRepository)
+    {
+        _currentUserService = currentUserService;
+        _userRepository = userRepository;
+        _matchConnectionRepository = matchConnectionRepository;
+    }
+
+    /// <summary>Lấy profile của chính mình (đầy đủ thông tin).</summary>
+    public async Task<ProfileResponseDto> GetMyProfileAsync(CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(_currentUserService.UserId, cancellationToken)
+            ?? throw new NotFoundApiException("User not found.");
+
+        return MapToProfileResponse(user);
+    }
+
+    /// <summary>
+    /// Lấy profile công khai của user khác.
+    /// Avatar bị blur nếu chưa match với viewer.
+    /// </summary>
+    public async Task<PublicProfileResponseDto> GetPublicProfileAsync(Guid targetUserId, CancellationToken cancellationToken = default)
+    {
+        var target = await _userRepository.GetByIdAsync(targetUserId, cancellationToken)
+            ?? throw new NotFoundApiException("User not found.");
+
+        var viewerId = _currentUserService.UserId;
+
+        // Kiểm tra đã match chưa để quyết định blur hay không
+        var isMatched = await _matchConnectionRepository.AreMatchedAsync(viewerId, targetUserId, cancellationToken);
+
+        return new PublicProfileResponseDto
+        {
+            UserId = target.Id,
+            DisplayName = target.DisplayName,
+            AvatarUrl = target.AvatarUrl,
+            IsAvatarBlurred = !isMatched, // Chưa match → blur
+            Gender = target.Gender.ToString(),
+            City = target.City,
+            Bio = target.Bio,
+            Interests = ParseInterests(target.Interests)
+        };
+    }
+
+    /// <summary>Cập nhật profile của chính mình.</summary>
+    public async Task<ProfileResponseDto> UpdateMyProfileAsync(UpdateProfileRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(_currentUserService.UserId, cancellationToken)
+            ?? throw new NotFoundApiException("User not found.");
+
+        if (!string.IsNullOrWhiteSpace(request.DisplayName))
+            user.DisplayName = request.DisplayName.Trim();
+
+        if (!string.IsNullOrWhiteSpace(request.AvatarUrl))
+            user.AvatarUrl = request.AvatarUrl.Trim();
+
+        if (!string.IsNullOrWhiteSpace(request.DateOfBirth))
+        {
+            if (!DateOnly.TryParse(request.DateOfBirth, out var dob))
+                throw new ValidationApiException("DateOfBirth must be in yyyy-MM-dd format.");
+
+            // Validate tuổi >= 18
+            var age = DateOnly.FromDateTime(DateTime.UtcNow).Year - dob.Year;
+            if (age < 18)
+                throw new ValidationApiException("You must be at least 18 years old.");
+
+            user.DateOfBirth = dob;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Gender))
+        {
+            if (!Enum.TryParse<Gender>(request.Gender, ignoreCase: true, out var gender))
+                throw new ValidationApiException($"Invalid gender. Valid values: {string.Join(", ", Enum.GetNames<Gender>())}");
+            user.Gender = gender;
+        }
+
+        if (request.City is not null)
+            user.City = request.City.Trim();
+
+        if (request.Bio is not null)
+        {
+            if (request.Bio.Length > 300)
+                throw new ValidationApiException("Bio must not exceed 300 characters.");
+            user.Bio = request.Bio.Trim();
+        }
+
+        if (request.Interests is not null)
+            user.Interests = string.Join(",", request.Interests.Select(i => i.Trim()).Where(i => i.Length > 0));
+
+        // Kiểm tra đã đủ thông tin chưa
+        user.IsProfileComplete = !string.IsNullOrWhiteSpace(user.DisplayName)
+                                  && user.DateOfBirth.HasValue
+                                  && user.Gender != Gender.PreferNotToSay;
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        return MapToProfileResponse(user);
+    }
+
+    private static ProfileResponseDto MapToProfileResponse(Domain.Entities.AppUser user) => new()
+    {
+        UserId = user.Id,
+        DisplayName = user.DisplayName,
+        AvatarUrl = user.AvatarUrl,
+        DateOfBirth = user.DateOfBirth?.ToString("yyyy-MM-dd"),
+        Gender = user.Gender.ToString(),
+        City = user.City,
+        Bio = user.Bio,
+        Interests = ParseInterests(user.Interests),
+        IsProfileComplete = user.IsProfileComplete,
+        CreatedAt = user.CreatedAt
+    };
+
+    private static string[] ParseInterests(string? interests)
+    {
+        if (string.IsNullOrWhiteSpace(interests)) return [];
+        return interests.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+}

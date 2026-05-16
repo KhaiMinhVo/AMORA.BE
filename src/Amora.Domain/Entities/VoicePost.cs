@@ -17,4 +17,7 @@ public sealed class VoicePost
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public ICollection<VoiceComment> Comments { get; set; } = new List<VoiceComment>();
+
+    /// <summary>Dữ liệu Pet được Python Worker ghi vào sau khi xử lý xong.</summary>
+    public PetVibeData? PetVibeData { get; set; }
 }

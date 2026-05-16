@@ -30,9 +30,16 @@ public sealed class VoicePostRepository : IVoicePostRepository
         int pageSize,
         CancellationToken cancellationToken = default)
     {
+        // Lấy danh sách user bị block (subquery trong DB, không load vào RAM)
+        var blockedUserIds = _dbContext.UserBlocks
+            .Where(b => b.BlockerId == viewerId)
+            .Select(b => b.BlockedUserId);
+
         var query = _dbContext.VoicePosts
             .AsNoTracking()
-            .Where(x => x.Status == Amora.Domain.Enums.VoicePostStatus.Open && x.PosterId != viewerId)
+            .Where(x => x.Status == Amora.Domain.Enums.VoicePostStatus.Open
+                         && x.PosterId != viewerId
+                         && !blockedUserIds.Contains(x.PosterId)) // Ẩn post từ user bị block
             .OrderByDescending(x => x.CreatedAt)
             .ThenByDescending(x => x.Id);
 

@@ -26,6 +26,53 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: amora-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  audio-worker:
+    build:
+      context: ../amora-audio-worker
+      dockerfile: Dockerfile
+    container_name: amora-audio-worker
+    env_file:
+      - ../amora-audio-worker/.env
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+      DOTNET_WEBHOOK_URL: http://host.docker.internal:5002/api/webhooks/audio-processed
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+
+  chat-voice-consumer:
+    build:
+      context: ../amora-audio-worker
+      dockerfile: Dockerfile
+    container_name: amora-chat-voice-consumer
+    command: python -m consumers.chat_voice_consumer
+    env_file:
+      - ../amora-audio-worker/.env
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   postgres_data2:
   mongodb_data:
+  rabbitmq_data:

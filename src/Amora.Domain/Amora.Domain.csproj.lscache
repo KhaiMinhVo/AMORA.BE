@@ -54,20 +54,43 @@ TemporaryDependencyNodeTargetIdentifier=net8.0
 
 [sourceFiles]
 Class1.cs
+Common/BaseEntity.cs
 Entities/
  AppUser.cs
  ChatMessage.cs
+ IapPurchaseRecord.cs
  MatchConnection.cs
+ Pet.cs
+ PetStateHistory.cs
+ PetTransaction.cs
+ PetVibeData.cs
+ ShopItem.cs
+ UserBlock.cs
+ UserInventory.cs
+ UserReport.cs
  VoiceComment.cs
  VoicePost.cs
 Enums/
+ Gender.cs
+ GrowthStage.cs
+ ItemType.cs
  MatchStatus.cs
  MessageType.cs
+ PetBuffType.cs
+ PetMood.cs
+ ReportReason.cs
+ ReportStatus.cs
  VoiceCommentStatus.cs
  VoicePostStatus.cs
 Interfaces/
  IChatMessageRepository.cs
+ IIapPurchaseRepository.cs
  IMatchConnectionRepository.cs
+ IPetRepository.cs
+ IPetTransactionRepository.cs
+ IShopRepository.cs
+ IUserBlockRepository.cs
+ IUserReportRepository.cs
  IUserRepository.cs
  IVoiceCommentRepository.cs
  IVoicePostRepository.cs

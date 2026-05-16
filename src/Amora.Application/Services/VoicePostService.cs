@@ -12,15 +12,18 @@ public sealed class VoicePostService
     private readonly ICurrentUserService _currentUserService;
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IUserRepository _userRepository;
+    private readonly AudioProcessingService _audioProcessingService;
 
     public VoicePostService(
         ICurrentUserService currentUserService,
         IVoicePostRepository voicePostRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        AudioProcessingService audioProcessingService)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
         _userRepository = userRepository;
+        _audioProcessingService = audioProcessingService;
     }
 
     public async Task<CreateVoicePostResponseDto> CreateAsync(CreateVoicePostRequest request, CancellationToken cancellationToken = default)
@@ -31,7 +34,7 @@ public sealed class VoicePostService
         }
 
         var userId = _currentUserService.UserId;
-        var since = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
+        var since = DateTimeOffset.UtcNow.Date;
         var todayCount = await _voicePostRepository.CountByPosterSinceAsync(userId, since, cancellationToken);
 
         if (todayCount >= 3)
@@ -45,11 +48,16 @@ public sealed class VoicePostService
             PosterId = userId,
             AudioUrl = request.AudioUrl,
             MatchCount = 0,
-            Status = VoicePostStatus.Open,
+            Status = VoicePostStatus.Processing, // Worker sẽ chuyển sang Open sau khi xử lý xong
             CreatedAt = DateTimeOffset.UtcNow
         };
 
         await _voicePostRepository.AddAsync(post, cancellationToken);
+
+        // Trích xuất S3 file key từ publicUrl (bỏ phần domain, giữ lại path)
+        // Ví dụ: "https://amora-voice-bucket.s3.amazonaws.com/voices/abc.m4a" → "voices/abc.m4a"
+        var s3FileKey = ExtractS3KeyFromUrl(post.AudioUrl);
+        await _audioProcessingService.EnqueueAudioProcessingAsync(post.Id, s3FileKey, cancellationToken);
 
         return new CreateVoicePostResponseDto
         {
@@ -60,6 +68,23 @@ public sealed class VoicePostService
             Status = post.Status.ToString(),
             CreatedAt = post.CreatedAt
         };
+    }
+
+    /// <summary>
+    /// Trích xuất S3 key từ full URL.
+    /// Input:  "https://amora-voice-bucket.s3.amazonaws.com/voices/uuid.m4a"
+    /// Output: "voices/uuid.m4a"
+    /// </summary>
+    private static string ExtractS3KeyFromUrl(string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            // uri.AbsolutePath = "/voices/uuid.m4a" → bỏ dấu "/" đầu tiên
+            return uri.AbsolutePath.TrimStart('/');
+        }
+
+        // Fallback: nếu url đã là key rồi (không phải full URL)
+        return url;
     }
 
     public async Task<FeedResponseDto> GetFeedAsync(int page, int pageSize, CancellationToken cancellationToken = default)

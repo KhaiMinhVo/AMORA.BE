@@ -10,7 +10,7 @@
         "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
         "projectName": "Amora.Application",
         "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
-        "packagesPath": "D:\\nuget-packages",
+        "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
         "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -53,6 +53,20 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.4.1, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -79,7 +93,7 @@
         "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
         "projectName": "Amora.Domain",
         "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
-        "packagesPath": "D:\\nuget-packages",
+        "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
         "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [

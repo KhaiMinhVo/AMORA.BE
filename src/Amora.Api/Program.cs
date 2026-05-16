@@ -1,9 +1,10 @@
 using System.Text;
-using Amora.Api.Hubs;
 using Amora.Api.Infrastructure;
 using Amora.Api.Middleware;
+using Amora.Application;
 using Amora.Application.Abstractions;
 using Amora.Application.Services;
+using Amora.Api.Hubs;
 using Amora.Domain.Interfaces;
 using Amora.Infrastructure.Data;
 using Amora.Infrastructure.Repositories;
@@ -13,6 +14,13 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Threading.RateLimiting;
+using Amazon.S3;
+using Amora.Application.Iap;
+using Amora.Infrastructure.Iap;
+using Amora.Infrastructure.Presence;
+using Amora.Infrastructure.Scheduling;
+using Amora.Infrastructure.Services;
+using Amora.Infrastructure.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +34,8 @@ builder.Services.Configure<MongoDbOptions>(builder.Configuration.GetSection(Mong
 
 builder.Services.AddDbContext<AmoraDbContext>(options =>
 {
-    var connectionString = "Host=127.0.0.1;Port=5444;Database=AmoraCoreDb;Username=postgres;Password=postgres";
+    var connectionString = builder.Configuration.GetConnectionString("Postgres")
+        ?? "Host=localhost;Port=5432;Database=AmoraCoreDb;Username=postgres;Password=your_password";
 
     options.UseNpgsql(connectionString);
 });
@@ -44,13 +53,55 @@ builder.Services.AddScoped<IVoicePostRepository, VoicePostRepository>();
 builder.Services.AddScoped<IVoiceCommentRepository, VoiceCommentRepository>();
 builder.Services.AddScoped<IMatchConnectionRepository, MatchConnectionRepository>();
 builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+builder.Services.AddScoped<IUserReportRepository, UserReportRepository>();
+builder.Services.AddScoped<IUserBlockRepository, UserBlockRepository>();
+builder.Services.AddScoped<IPetRepository, PetRepository>();
+builder.Services.AddScoped<IShopRepository, ShopRepository>();
+builder.Services.AddScoped<IPetTransactionRepository, PetTransactionRepository>();
+builder.Services.AddScoped<IIapPurchaseRepository, IapPurchaseRepository>();
+
+builder.Services.Configure<IapOptions>(builder.Configuration.GetSection(IapOptions.SectionName));
+builder.Services.AddHttpClient("AppleIap");
+builder.Services.AddHttpClient("GoogleIap");
+builder.Services.AddScoped<AppleAppStorePurchaseVerifier>();
+builder.Services.AddScoped<GooglePlayPurchaseVerifier>();
+builder.Services.AddScoped<IInAppPurchaseVerifier, CompositeInAppPurchaseVerifier>();
+
+builder.Services.AddSingleton<IMatchPresenceTracker, InMemoryMatchPresenceTracker>();
+
+builder.Services.AddApplication();
+builder.Services.AddAmoraQuartzJobs();
 
 builder.Services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
 builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
+builder.Services.AddScoped<IPetRealtimeNotifier, SignalRPetRealtimeNotifier>();
 builder.Services.AddScoped<VoicePostService>();
 builder.Services.AddScoped<VoiceCommentService>();
 builder.Services.AddScoped<MatchService>();
 builder.Services.AddScoped<ChatService>();
+builder.Services.AddScoped<TrustSafetyService>();
+builder.Services.AddScoped<ProfileService>();
+
+builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+builder.Services.AddAWSService<IAmazonS3>();
+builder.Services.AddScoped<IStorageService, S3StorageService>();
+
+// Message Bus — Singleton vì connection RabbitMQ được tái sử dụng
+builder.Services.AddSingleton<IMessageBus>(_ =>
+{
+    var rabbitUrl = builder.Configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672//";
+    return RabbitMqMessageBus.CreateAsync(rabbitUrl).GetAwaiter().GetResult();
+});
+builder.Services.AddSingleton<IMessagePublisher>(_ =>
+{
+    var rabbitUrl = builder.Configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672//";
+    return RabbitMqMessagePublisher.CreateAsync(rabbitUrl).GetAwaiter().GetResult();
+});
+builder.Services.AddScoped<AudioProcessingService>();
+
+// Handshake 24h — Background job tự động expire match không có tin nhắn
+builder.Services.AddHostedService<Amora.Infrastructure.Services.HandshakeExpiryService>();
+builder.Services.AddHostedService<Amora.Infrastructure.Messaging.VibeResultConsumerService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-only-secret-key-change-me-please-use-a-longer-256-bit-key";
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
@@ -74,7 +125,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
-                if (!string.IsNullOrWhiteSpace(accessToken) && context.HttpContext.Request.Path.StartsWithSegments("/hubs/chat"))
+                if (!string.IsNullOrWhiteSpace(accessToken) &&
+                    (context.HttpContext.Request.Path.StartsWithSegments("/hubs/chat")
+                     || context.HttpContext.Request.Path.StartsWithSegments("/hubs/pet")))
                 {
                     context.Token = accessToken;
                 }
@@ -139,5 +192,6 @@ app.UseRateLimiter();
 
 app.MapControllers().RequireAuthorization();
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<PetHub>("/hubs/pet");
 
 app.Run();

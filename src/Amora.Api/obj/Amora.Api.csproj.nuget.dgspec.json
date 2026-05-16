@@ -10,7 +10,7 @@
         "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
         "projectName": "Amora.Api",
         "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
-        "packagesPath": "D:\\nuget-packages",
+        "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
         "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -57,6 +57,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "AWSSDK.Extensions.NETCore.Setup": {
+              "target": "Package",
+              "version": "[4.0.3.39, )"
+            },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[8.0.8, )"
@@ -105,7 +109,7 @@
         "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
         "projectName": "Amora.Application",
         "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
-        "packagesPath": "D:\\nuget-packages",
+        "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
         "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -148,6 +152,20 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.4.1, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Options": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -174,7 +192,7 @@
         "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
         "projectName": "Amora.Domain",
         "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
-        "packagesPath": "D:\\nuget-packages",
+        "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
         "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -239,7 +257,7 @@
         "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Infrastructure\\Amora.Infrastructure.csproj",
         "projectName": "Amora.Infrastructure",
         "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Infrastructure\\Amora.Infrastructure.csproj",
-        "packagesPath": "D:\\nuget-packages",
+        "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
         "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
@@ -286,6 +304,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "AWSSDK.S3": {
+              "target": "Package",
+              "version": "[4.0.23.2, )"
+            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[8.0.8, )"
@@ -300,6 +322,14 @@
               "target": "Package",
               "version": "[8.0.8, )"
             },
+            "Microsoft.Extensions.Hosting.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Http": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
             "MongoDB.Driver": {
               "target": "Package",
               "version": "[2.28.0, )"
@@ -307,6 +337,14 @@
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[8.0.4, )"
+            },
+            "Quartz.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[3.13.1, )"
+            },
+            "RabbitMQ.Client": {
+              "target": "Package",
+              "version": "[7.1.2, )"
             }
           },
           "imports": [

@@ -9,3 +9,4 @@ D:\FPTU\EXE\AMORA.BE\src\Amora.Domain\obj\Debug\net8.0\Amora.Domain.dll
 D:\FPTU\EXE\AMORA.BE\src\Amora.Domain\obj\Debug\net8.0\refint\Amora.Domain.dll
 D:\FPTU\EXE\AMORA.BE\src\Amora.Domain\obj\Debug\net8.0\Amora.Domain.pdb
 D:\FPTU\EXE\AMORA.BE\src\Amora.Domain\obj\Debug\net8.0\ref\Amora.Domain.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Domain\obj\Debug\net8.0\Amora.Domain.sourcelink.json

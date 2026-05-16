@@ -61,45 +61,54 @@ Data/
  Migrations/
   20260515064241_InitialCreate.cs
   20260515064241_InitialCreate.Designer.cs
+  20260515193531_AddPetVibeDataTable.cs
+  20260515193531_AddPetVibeDataTable.Designer.cs
+  20260515201624_AddReportAndBlockTables.cs
+  20260515201624_AddReportAndBlockTables.Designer.cs
+  20260515202540_ExpandUserProfile.cs
+  20260515202540_ExpandUserProfile.Designer.cs
+  20260516071728_AddHandshake24h.cs
+  20260516071728_AddHandshake24h.Designer.cs
+  20260516092907_AddPetSystem.cs
+  20260516092907_AddPetSystem.Designer.cs
+  20260516094252_AddIapAndPresence.cs
+  20260516094252_AddIapAndPresence.Designer.cs
   AmoraDbContextModelSnapshot.cs
  MongoDbOptions.cs
+Iap/
+ AppleAppStorePurchaseVerifier.cs
+ CompositeInAppPurchaseVerifier.cs
+ GooglePlayPurchaseVerifier.cs
+Messaging/
+ RabbitMqMessageBus.cs
+ RabbitMqMessagePublisher.cs
+ VibeResultConsumerService.cs
 obj/Debug/net8.0/
  .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
  Amora.Infrastructure.AssemblyInfo.cs
  Amora.Infrastructure.GlobalUsings.g.cs
+Presence/InMemoryMatchPresenceTracker.cs
 Repositories/
  ChatMessageRepository.cs
+ IapPurchaseRepository.cs
  MatchConnectionRepository.cs
+ PetRepository.cs
+ PetTransactionRepository.cs
+ ShopRepository.cs
+ UserBlockRepository.cs
+ UserReportRepository.cs
  UserRepository.cs
  VoiceCommentRepository.cs
  VoicePostRepository.cs
+Scheduling/
+ PetDailySnapshotQuartzJob.cs
+ PetDecayQuartzJob.cs
+ QuartzServiceCollectionExtensions.cs
+Services/
+ HandshakeExpiryService.cs
+ S3StorageService.cs
 
 [metadataReferences]
-../../../../../nuget-packages/
- awssdk.core/3.7.100.14/lib/netcoreapp3.1/AWSSDK.Core.dll
- awssdk.securitytoken/3.7.100.14/lib/netcoreapp3.1/AWSSDK.SecurityToken.dll
- dnsclient/1.6.1/lib/net5.0/DnsClient.dll
- microsoft.entityframeworkcore.abstractions/8.0.8/lib/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
- microsoft.entityframeworkcore.relational/8.0.8/lib/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
- microsoft.entityframeworkcore/8.0.8/lib/net8.0/Microsoft.EntityFrameworkCore.dll
- microsoft.extensions.caching.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.Caching.Abstractions.dll
- microsoft.extensions.caching.memory/8.0.0/lib/net8.0/Microsoft.Extensions.Caching.Memory.dll
- microsoft.extensions.configuration.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.Configuration.Abstractions.dll
- microsoft.extensions.dependencyinjection.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
- microsoft.extensions.dependencyinjection/8.0.0/lib/net8.0/Microsoft.Extensions.DependencyInjection.dll
- microsoft.extensions.logging.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll
- microsoft.extensions.logging/8.0.0/lib/net8.0/Microsoft.Extensions.Logging.dll
- microsoft.extensions.options/8.0.0/lib/net8.0/Microsoft.Extensions.Options.dll
- microsoft.extensions.primitives/8.0.0/lib/net8.0/Microsoft.Extensions.Primitives.dll
- mongodb.bson/2.28.0/lib/netstandard2.1/MongoDB.Bson.dll
- mongodb.driver.core/2.28.0/lib/netstandard2.1/MongoDB.Driver.Core.dll
- mongodb.driver/2.28.0/lib/netstandard2.1/MongoDB.Driver.dll
- mongodb.libmongocrypt/1.11.0/lib/netstandard2.1/MongoDB.Libmongocrypt.dll
- npgsql.entityframeworkcore.postgresql/8.0.4/lib/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
- npgsql/8.0.3/lib/net8.0/Npgsql.dll
- sharpcompress/0.30.1/lib/net5.0/SharpCompress.dll
- snappier/1.0.0/lib/net5.0/Snappier.dll
- zstdsharp.port/0.7.3/lib/net7.0/ZstdSharp.dll
 ../
  Amora.Application/obj/Debug/net8.0/ref/Amora.Application.dll
  Amora.Domain/obj/Debug/net8.0/ref/Amora.Domain.dll
@@ -267,16 +276,50 @@ Repositories/
  System.Xml.XPath.dll
  System.Xml.XPath.XDocument.dll
  WindowsBase.dll
+<NUGET>/
+ awssdk.core/4.0.7/lib/net8.0/AWSSDK.Core.dll
+ awssdk.s3/4.0.23.2/lib/net8.0/AWSSDK.S3.dll
+ awssdk.securitytoken/3.7.100.14/lib/netcoreapp3.1/AWSSDK.SecurityToken.dll
+ dnsclient/1.6.1/lib/net5.0/DnsClient.dll
+ mediatr.contracts/2.0.1/lib/netstandard2.0/MediatR.Contracts.dll
+ mediatr/12.4.1/lib/net6.0/MediatR.dll
+ microsoft.entityframeworkcore.abstractions/8.0.8/lib/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+ microsoft.entityframeworkcore.relational/8.0.8/lib/net8.0/Microsoft.EntityFrameworkCore.Relational.dll
+ microsoft.entityframeworkcore/8.0.8/lib/net8.0/Microsoft.EntityFrameworkCore.dll
+ microsoft.extensions.caching.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.Caching.Abstractions.dll
+ microsoft.extensions.caching.memory/8.0.0/lib/net8.0/Microsoft.Extensions.Caching.Memory.dll
+ microsoft.extensions.configuration.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.Configuration.Abstractions.dll
+ microsoft.extensions.configuration.binder/8.0.0/lib/net8.0/Microsoft.Extensions.Configuration.Binder.dll
+ microsoft.extensions.configuration/8.0.0/lib/net8.0/Microsoft.Extensions.Configuration.dll
+ microsoft.extensions.dependencyinjection.abstractions/8.0.2/lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+ microsoft.extensions.dependencyinjection/8.0.1/lib/net8.0/Microsoft.Extensions.DependencyInjection.dll
+ microsoft.extensions.diagnostics.abstractions/8.0.1/lib/net8.0/Microsoft.Extensions.Diagnostics.Abstractions.dll
+ microsoft.extensions.diagnostics/8.0.1/lib/net8.0/Microsoft.Extensions.Diagnostics.dll
+ microsoft.extensions.fileproviders.abstractions/8.0.0/lib/net8.0/Microsoft.Extensions.FileProviders.Abstractions.dll
+ microsoft.extensions.hosting.abstractions/8.0.1/lib/net8.0/Microsoft.Extensions.Hosting.Abstractions.dll
+ microsoft.extensions.http/8.0.1/lib/net8.0/Microsoft.Extensions.Http.dll
+ microsoft.extensions.logging.abstractions/8.0.2/lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll
+ microsoft.extensions.logging/8.0.1/lib/net8.0/Microsoft.Extensions.Logging.dll
+ microsoft.extensions.options.configurationextensions/8.0.0/lib/net8.0/Microsoft.Extensions.Options.ConfigurationExtensions.dll
+ microsoft.extensions.options/8.0.2/lib/net8.0/Microsoft.Extensions.Options.dll
+ microsoft.extensions.primitives/8.0.0/lib/net8.0/Microsoft.Extensions.Primitives.dll
+ mongodb.bson/2.28.0/lib/netstandard2.1/MongoDB.Bson.dll
+ mongodb.driver.core/2.28.0/lib/netstandard2.1/MongoDB.Driver.Core.dll
+ mongodb.driver/2.28.0/lib/netstandard2.1/MongoDB.Driver.dll
+ mongodb.libmongocrypt/1.11.0/lib/netstandard2.1/MongoDB.Libmongocrypt.dll
+ npgsql.entityframeworkcore.postgresql/8.0.4/lib/net8.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
+ npgsql/8.0.3/lib/net8.0/Npgsql.dll
+ quartz.extensions.dependencyinjection/3.13.1/lib/net8.0/Quartz.Extensions.DependencyInjection.dll
+ quartz.extensions.hosting/3.13.1/lib/net8.0/Quartz.Extensions.Hosting.dll
+ quartz/3.13.1/lib/net6.0/Quartz.dll
+ rabbitmq.client/7.1.2/lib/net8.0/RabbitMQ.Client.dll
+ sharpcompress/0.30.1/lib/net5.0/SharpCompress.dll
+ snappier/1.0.0/lib/net5.0/Snappier.dll
+ system.io.pipelines/8.0.0/lib/net8.0/System.IO.Pipelines.dll
+ system.threading.ratelimiting/8.0.0/lib/net8.0/System.Threading.RateLimiting.dll
+ zstdsharp.port/0.7.3/lib/net7.0/ZstdSharp.dll
 
 [analyzerReferences]
-../../../../../nuget-packages/
- awssdk.securitytoken/3.7.100.14/analyzers/dotnet/cs/AWSSDK.SecurityToken.CodeAnalysis.dll
- microsoft.codeanalysis.analyzers/3.3.3/analyzers/dotnet/cs/
-  Microsoft.CodeAnalysis.Analyzers.dll
-  Microsoft.CodeAnalysis.CSharp.Analyzers.dll
- microsoft.entityframeworkcore.analyzers/8.0.8/analyzers/dotnet/cs/Microsoft.EntityFrameworkCore.Analyzers.dll
- microsoft.extensions.logging.abstractions/8.0.0/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Logging.Generators.dll
- microsoft.extensions.options/8.0.0/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Options.SourceGeneration.dll
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/8.0.27/analyzers/dotnet/cs/
  Microsoft.Interop.ComInterfaceGenerator.dll
  Microsoft.Interop.JavaScript.JSImportGenerator.dll
@@ -287,6 +330,17 @@ Repositories/
 <DOTNET>/sdk/9.0.314/Sdks/Microsoft.NET.Sdk/analyzers/
  Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
  Microsoft.CodeAnalysis.NetAnalyzers.dll
+<NUGET>/awssdk.s3/4.0.23.2/analyzers/dotnet/cs/
+ AWSSDK.S3.CodeAnalysis.dll
+ SharedAnalysisCode.dll
+<NUGET>/
+ awssdk.securitytoken/3.7.100.14/analyzers/dotnet/cs/AWSSDK.SecurityToken.CodeAnalysis.dll
+ microsoft.codeanalysis.analyzers/3.3.3/analyzers/dotnet/cs/
+  Microsoft.CodeAnalysis.Analyzers.dll
+  Microsoft.CodeAnalysis.CSharp.Analyzers.dll
+ microsoft.entityframeworkcore.analyzers/8.0.8/analyzers/dotnet/cs/Microsoft.EntityFrameworkCore.Analyzers.dll
+ microsoft.extensions.logging.abstractions/8.0.2/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Logging.Generators.dll
+ microsoft.extensions.options/8.0.2/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Options.SourceGeneration.dll
 
 [analyzerConfigFiles]
 <DOTNET>/sdk/9.0.314/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_8_default.globalconfig

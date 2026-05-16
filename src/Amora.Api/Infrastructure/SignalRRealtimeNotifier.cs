@@ -21,7 +21,8 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
             postId = matchConnection.PostId,
             userAId = matchConnection.UserAId,
             userBId = matchConnection.UserBId,
-            status = matchConnection.Status.ToString()
+            status = matchConnection.Status.ToString(),
+            expiresAt = matchConnection.ExpiresAt
         };
 
         await _hubContext.Clients.Group(RealtimeGroupNames.User(matchConnection.UserAId.ToString()))
@@ -34,7 +35,7 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
             .SendAsync("ReceiveMatchCreated", payload, cancellationToken);
     }
 
-    public async Task NotifyNewMessageAsync(ChatMessage message, CancellationToken cancellationToken = default)
+    public async Task NotifyNewMessageAsync(ChatMessage message, DateTimeOffset? handshakeExpiresAt = null, CancellationToken cancellationToken = default)
     {
         var payload = new
         {
@@ -45,10 +46,28 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
             contentUrl = message.ContentUrl,
             content = message.Content,
             duration = message.Duration,
-            createdAt = message.CreatedAt
+            createdAt = message.CreatedAt,
+            expiresAt = handshakeExpiresAt
         };
 
         await _hubContext.Clients.Group(RealtimeGroupNames.Match(message.MatchId.ToString()))
             .SendAsync("ReceiveNewMessage", payload, cancellationToken);
+    }
+
+    public async Task NotifyMatchExpiredAsync(MatchConnection matchConnection, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            matchId = matchConnection.Id,
+            reason = "Handshake24h",
+            message = "Match đã hết hạn do không có tin nhắn nào trong 24 giờ.",
+            expiresAt = matchConnection.ExpiresAt
+        };
+
+        await _hubContext.Clients.Group(RealtimeGroupNames.User(matchConnection.UserAId.ToString()))
+            .SendAsync("ReceiveMatchExpired", payload, cancellationToken);
+
+        await _hubContext.Clients.Group(RealtimeGroupNames.User(matchConnection.UserBId.ToString()))
+            .SendAsync("ReceiveMatchExpired", payload, cancellationToken);
     }
 }

@@ -16,6 +16,9 @@ public sealed class MatchCreatedResponseDto
     public string Status { get; init; } = string.Empty;
 
     public bool PostClosed { get; init; }
+
+    /// <summary>Handshake 24h: hạn chót phải có tin nhắn (UTC).</summary>
+    public DateTimeOffset ExpiresAt { get; init; }
 }
 
 public sealed class PartnerPreviewDto
@@ -58,4 +61,7 @@ public sealed class InboxItemDto
     public int UnreadCount { get; init; }
 
     public PetStateDto PetState { get; init; } = new();
+
+    /// <summary>Handshake 24h: thời điểm match sẽ hết hạn nếu không nhắn tin.</summary>
+    public DateTimeOffset ExpiresAt { get; init; }
 }

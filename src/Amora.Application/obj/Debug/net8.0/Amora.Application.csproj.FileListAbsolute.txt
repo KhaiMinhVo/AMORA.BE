@@ -13,3 +13,4 @@ D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.dl
 D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\refint\Amora.Application.dll
 D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.pdb
 D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\ref\Amora.Application.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.sourcelink.json

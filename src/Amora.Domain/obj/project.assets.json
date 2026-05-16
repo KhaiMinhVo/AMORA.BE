@@ -8,7 +8,7 @@
     "net8.0": []
   },
   "packageFolders": {
-    "D:\\nuget-packages": {},
+    "C:\\Users\\vopha\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -17,7 +17,7 @@
       "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
       "projectName": "Amora.Domain",
       "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
-      "packagesPath": "D:\\nuget-packages",
+      "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
       "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [

@@ -24,6 +24,24 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<MatchConnection> MatchConnections => Set<MatchConnection>();
 
+    public DbSet<PetVibeData> PetVibeDataRecords => Set<PetVibeData>();
+
+    public DbSet<UserReport> UserReports => Set<UserReport>();
+
+    public DbSet<UserBlock> UserBlocks => Set<UserBlock>();
+
+    public DbSet<Pet> Pets => Set<Pet>();
+
+    public DbSet<PetStateHistory> PetStateHistories => Set<PetStateHistory>();
+
+    public DbSet<ShopItem> ShopItems => Set<ShopItem>();
+
+    public DbSet<UserInventory> UserInventories => Set<UserInventory>();
+
+    public DbSet<PetTransaction> PetTransactions => Set<PetTransaction>();
+
+    public DbSet<IapPurchaseRecord> IapPurchaseRecords => Set<IapPurchaseRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -32,6 +50,10 @@ public sealed class AmoraDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.DisplayName).HasMaxLength(200).IsRequired();
             entity.Property(x => x.AvatarUrl).HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.Gender).HasConversion<string>().HasMaxLength(20).HasDefaultValue(Amora.Domain.Enums.Gender.PreferNotToSay);
+            entity.Property(x => x.City).HasMaxLength(100);
+            entity.Property(x => x.Bio).HasMaxLength(300);
+            entity.Property(x => x.Interests).HasMaxLength(500);
 
             entity.HasData(
                 new AppUser
@@ -109,8 +131,156 @@ public sealed class AmoraDbContext : DbContext
             entity.HasIndex(x => new { x.UserAId, x.Status });
             entity.HasIndex(x => new { x.UserBId, x.Status });
             entity.HasIndex(x => x.PostId);
+
+            // Handshake 24h: index for background sweep query
+            entity.HasIndex(x => new { x.Status, x.ExpiresAt });
+        });
+
+        modelBuilder.Entity<PetVibeData>(entity =>
+        {
+            entity.ToTable("PetVibeData");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.CleanAudioUrl).HasMaxLength(1000);
+            entity.HasIndex(x => x.PostId).IsUnique();
+
+            entity.HasOne(x => x.Post)
+                .WithOne(x => x.PetVibeData)
+                .HasForeignKey<PetVibeData>(x => x.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserReport>(entity =>
+        {
+            entity.ToTable("UserReports");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Reason).HasConversion<string>().HasMaxLength(30);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(x => x.Description).HasMaxLength(500);
+            entity.HasIndex(x => new { x.ReporterId, x.TargetUserId }).IsUnique();
+        });
+
+        modelBuilder.Entity<UserBlock>(entity =>
+        {
+            entity.ToTable("UserBlocks");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.BlockerId, x.BlockedUserId }).IsUnique();
+            entity.HasIndex(x => x.BlockerId); // Filter feed query
+        });
+
+        modelBuilder.Entity<Pet>(entity =>
+        {
+            entity.ToTable("Pets");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.MatchId).IsUnique();
+            entity.HasIndex(x => new { x.IsFrozen, x.LastInteractionAt });
+            entity.Property(x => x.Mood).HasConversion<string>().HasMaxLength(20);
+            entity.Property(x => x.Stage).HasConversion<string>().HasMaxLength(20);
+
+            entity.HasOne(x => x.Match)
+                .WithOne()
+                .HasForeignKey<Pet>(x => x.MatchId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PetStateHistory>(entity =>
+        {
+            entity.ToTable("PetStateHistories");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.PetId, x.CreatedAt });
+            entity.Property(x => x.EventType).HasMaxLength(50);
+            entity.Property(x => x.PayloadJson).HasColumnType("jsonb");
+
+            entity.HasOne(x => x.Pet).WithMany().HasForeignKey(x => x.PetId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ShopItem>(entity =>
+        {
+            entity.ToTable("ShopItems");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.Code).IsUnique();
+            entity.Property(x => x.Code).HasMaxLength(50);
+            entity.Property(x => x.Name).HasMaxLength(100);
+            entity.Property(x => x.ItemType).HasConversion<string>().HasMaxLength(20);
+            entity.Property(x => x.EffectJson).HasColumnType("jsonb");
+
+            SeedShopItems(entity);
+        });
+
+        modelBuilder.Entity<UserInventory>(entity =>
+        {
+            entity.ToTable("UserInventories");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.ShopItemId }).IsUnique();
+
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.ShopItem).WithMany().HasForeignKey(x => x.ShopItemId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PetTransaction>(entity =>
+        {
+            entity.ToTable("PetTransactions");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.CreatedAt });
+            entity.Property(x => x.TransactionType).HasMaxLength(30);
+
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.ShopItem).WithMany().HasForeignKey(x => x.ShopItemId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<IapPurchaseRecord>(entity =>
+        {
+            entity.ToTable("IapPurchaseRecords");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.Platform, x.TransactionId }).IsUnique();
+            entity.Property(x => x.Platform).HasMaxLength(20);
+            entity.Property(x => x.TransactionId).HasMaxLength(200);
+            entity.Property(x => x.ProductId).HasMaxLength(100);
+
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         base.OnModelCreating(modelBuilder);
+    }
+
+    private static void SeedShopItems(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ShopItem> entity)
+    {
+        var items = new[]
+        {
+            ShopSeed(ShopItem1, "energy_cookie", "Bánh Quy Năng Lượng", "Consumable", 50, 0, """{"hp":30}"""),
+            ShopSeed(ShopItem2, "gentle_bath", "Sữa Tắm Dịu Nhẹ", "Buff", 80, 5, """{"buff":"AffectionateMood","hours":2}"""),
+            ShopSeed(ShopItem3, "growth_potion", "Lọ Thuốc Tăng Trưởng", "Buff", 120, 10, """{"buff":"DoubleVoiceRp","hours":6}"""),
+            ShopSeed(ShopItem4, "resonance_candy", "Kẹo Cộng Hưởng", "Consumable", 40, 0, """{"rp":10}"""),
+            ShopSeed(ShopItem5, "revival_flask", "Bình Hồi Sinh", "Revival", 200, 20, """{"hp":50}"""),
+            ShopSeed(ShopItem6, "fire_fox_skin", "Da Cáo Lửa", "Cosmetic", 150, 15, "{}"),
+            ShopSeed(ShopItem7, "memory_collar", "Vòng Cổ Kỷ Niệm", "Cosmetic", 300, 30, "{}")
+        };
+
+        entity.HasData(items);
+    }
+
+    private static readonly Guid ShopItem1 = Guid.Parse("f1000001-0001-4001-8001-000000000001");
+    private static readonly Guid ShopItem2 = Guid.Parse("f1000001-0001-4001-8001-000000000002");
+    private static readonly Guid ShopItem3 = Guid.Parse("f1000001-0001-4001-8001-000000000003");
+    private static readonly Guid ShopItem4 = Guid.Parse("f1000001-0001-4001-8001-000000000004");
+    private static readonly Guid ShopItem5 = Guid.Parse("f1000001-0001-4001-8001-000000000005");
+    private static readonly Guid ShopItem6 = Guid.Parse("f1000001-0001-4001-8001-000000000006");
+    private static readonly Guid ShopItem7 = Guid.Parse("f1000001-0001-4001-8001-000000000007");
+
+    private static ShopItem ShopSeed(Guid id, string code, string name, string type, int pc, int gems, string effect)
+    {
+        return new ShopItem
+        {
+            Id = id,
+            Code = code,
+            Name = name,
+            Description = name,
+            ItemType = Enum.Parse<ItemType>(type),
+            PricePetCoins = pc,
+            PriceAmoraGems = gems,
+            EffectJson = effect,
+            IsActive = true,
+            CreatedAt = new DateTimeOffset(2026, 5, 16, 0, 0, 0, TimeSpan.Zero),
+            UpdatedAt = new DateTimeOffset(2026, 5, 16, 0, 0, 0, TimeSpan.Zero)
+        };
     }
 }

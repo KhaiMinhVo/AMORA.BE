@@ -28,18 +28,49 @@ namespace Amora.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("AmoraGems")
+                        .HasColumnType("integer");
+
                     b.Property<string>("AvatarUrl")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("Bio")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("PreferNotToSay");
+
+                    b.Property<string>("Interests")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsProfileComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PetCoins")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -49,24 +80,79 @@ namespace Amora.Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            AmoraGems = 0,
                             AvatarUrl = "alice.png",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            DisplayName = "Amora Alice"
+                            DisplayName = "Amora Alice",
+                            Gender = "PreferNotToSay",
+                            IsProfileComplete = false,
+                            PetCoins = 0
                         },
                         new
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            AmoraGems = 0,
                             AvatarUrl = "bob.png",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            DisplayName = "Amora Bob"
+                            DisplayName = "Amora Bob",
+                            Gender = "PreferNotToSay",
+                            IsProfileComplete = false,
+                            PetCoins = 0
                         },
                         new
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
+                            AmoraGems = 0,
                             AvatarUrl = "carol.png",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            DisplayName = "Amora Carol"
+                            DisplayName = "Amora Carol",
+                            Gender = "PreferNotToSay",
+                            IsProfileComplete = false,
+                            PetCoins = 0
                         });
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.IapPurchaseRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("GemsGranted")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Platform", "TransactionId")
+                        .IsUnique();
+
+                    b.ToTable("IapPurchaseRecords", (string)null);
                 });
 
             modelBuilder.Entity("Amora.Domain.Entities.MatchConnection", b =>
@@ -76,6 +162,9 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("PostId")
@@ -96,11 +185,456 @@ namespace Amora.Infrastructure.Data.Migrations
 
                     b.HasIndex("PostId");
 
+                    b.HasIndex("Status", "ExpiresAt");
+
                     b.HasIndex("UserAId", "Status");
 
                     b.HasIndex("UserBId", "Status");
 
                     b.ToTable("MatchConnections", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.Pet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActiveBuffsJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ConsecutiveHighHpDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ConsecutiveNegativeVibes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Hp")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("HpGainWindowStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("HpGainedIn24h")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HpSnapshotCount")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("HpSnapshotSum")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("IsFrozen")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly?>("LastHpSnapshotDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("LastInteractionAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastPartnerMessageAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Mood")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("OnlineBonusGrantedToday")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("Rp")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RpFromTextToday")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RpFromVoiceToday")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("RpStatsDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Stage")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchId")
+                        .IsUnique();
+
+                    b.HasIndex("IsFrozen", "LastInteractionAt");
+
+                    b.ToTable("Pets", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.PetStateHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PetId", "CreatedAt");
+
+                    b.ToTable("PetStateHistories", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.PetTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AmoraGemsDelta")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PetCoinsDelta")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ShopItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShopItemId");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("PetTransactions", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.PetVibeData", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CleanAudioUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<double>("DurationSec")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Energy")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("IsMonotone")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("Pitch")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("PitchVariance")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId")
+                        .IsUnique();
+
+                    b.ToTable("PetVibeData", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.ShopItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EffectJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("PriceAmoraGems")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PricePetCoins")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("ShopItems", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000001"),
+                            Code = "energy_cookie",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Bánh Quy Năng Lượng",
+                            EffectJson = "{\"hp\":30}",
+                            IsActive = true,
+                            ItemType = "Consumable",
+                            Name = "Bánh Quy Năng Lượng",
+                            PriceAmoraGems = 0,
+                            PricePetCoins = 50,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000002"),
+                            Code = "gentle_bath",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Sữa Tắm Dịu Nhẹ",
+                            EffectJson = "{\"buff\":\"AffectionateMood\",\"hours\":2}",
+                            IsActive = true,
+                            ItemType = "Buff",
+                            Name = "Sữa Tắm Dịu Nhẹ",
+                            PriceAmoraGems = 5,
+                            PricePetCoins = 80,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000003"),
+                            Code = "growth_potion",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Lọ Thuốc Tăng Trưởng",
+                            EffectJson = "{\"buff\":\"DoubleVoiceRp\",\"hours\":6}",
+                            IsActive = true,
+                            ItemType = "Buff",
+                            Name = "Lọ Thuốc Tăng Trưởng",
+                            PriceAmoraGems = 10,
+                            PricePetCoins = 120,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000004"),
+                            Code = "resonance_candy",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Kẹo Cộng Hưởng",
+                            EffectJson = "{\"rp\":10}",
+                            IsActive = true,
+                            ItemType = "Consumable",
+                            Name = "Kẹo Cộng Hưởng",
+                            PriceAmoraGems = 0,
+                            PricePetCoins = 40,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000005"),
+                            Code = "revival_flask",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Bình Hồi Sinh",
+                            EffectJson = "{\"hp\":50}",
+                            IsActive = true,
+                            ItemType = "Revival",
+                            Name = "Bình Hồi Sinh",
+                            PriceAmoraGems = 20,
+                            PricePetCoins = 200,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000006"),
+                            Code = "fire_fox_skin",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Da Cáo Lửa",
+                            EffectJson = "{}",
+                            IsActive = true,
+                            ItemType = "Cosmetic",
+                            Name = "Da Cáo Lửa",
+                            PriceAmoraGems = 15,
+                            PricePetCoins = 150,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000007"),
+                            Code = "memory_collar",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Vòng Cổ Kỷ Niệm",
+                            EffectJson = "{}",
+                            IsActive = true,
+                            ItemType = "Cosmetic",
+                            Name = "Vòng Cổ Kỷ Niệm",
+                            PriceAmoraGems = 30,
+                            PricePetCoins = 300,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.UserBlock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BlockedUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BlockerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockerId");
+
+                    b.HasIndex("BlockerId", "BlockedUserId")
+                        .IsUnique();
+
+                    b.ToTable("UserBlocks", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.UserInventory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ShopItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShopItemId");
+
+                    b.HasIndex("UserId", "ShopItemId")
+                        .IsUnique();
+
+                    b.ToTable("UserInventories", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.UserReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("ReporterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("TargetUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReporterId", "TargetUserId")
+                        .IsUnique();
+
+                    b.ToTable("UserReports", (string)null);
                 });
 
             modelBuilder.Entity("Amora.Domain.Entities.VoiceComment", b =>
@@ -193,6 +727,87 @@ namespace Amora.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Amora.Domain.Entities.IapPurchaseRecord", b =>
+                {
+                    b.HasOne("Amora.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.Pet", b =>
+                {
+                    b.HasOne("Amora.Domain.Entities.MatchConnection", "Match")
+                        .WithOne()
+                        .HasForeignKey("Amora.Domain.Entities.Pet", "MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Match");
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.PetStateHistory", b =>
+                {
+                    b.HasOne("Amora.Domain.Entities.Pet", "Pet")
+                        .WithMany()
+                        .HasForeignKey("PetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Pet");
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.PetTransaction", b =>
+                {
+                    b.HasOne("Amora.Domain.Entities.ShopItem", "ShopItem")
+                        .WithMany()
+                        .HasForeignKey("ShopItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Amora.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShopItem");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.PetVibeData", b =>
+                {
+                    b.HasOne("Amora.Domain.Entities.VoicePost", "Post")
+                        .WithOne("PetVibeData")
+                        .HasForeignKey("Amora.Domain.Entities.PetVibeData", "PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.UserInventory", b =>
+                {
+                    b.HasOne("Amora.Domain.Entities.ShopItem", "ShopItem")
+                        .WithMany()
+                        .HasForeignKey("ShopItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Amora.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShopItem");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Amora.Domain.Entities.VoiceComment", b =>
                 {
                     b.HasOne("Amora.Domain.Entities.VoicePost", "Post")
@@ -207,6 +822,8 @@ namespace Amora.Infrastructure.Data.Migrations
             modelBuilder.Entity("Amora.Domain.Entities.VoicePost", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("PetVibeData");
                 });
 #pragma warning restore 612, 618
         }

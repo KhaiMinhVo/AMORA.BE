@@ -55,34 +55,88 @@ TemporaryDependencyNodeTargetIdentifier=net8.0
 [sourceFiles]
 Abstractions/
  ICurrentUserService.cs
+ IInAppPurchaseVerifier.cs
+ IMatchPresenceTracker.cs
+ IMessageBus.cs
+ IMessagePublisher.cs
+ IPetRealtimeNotifier.cs
  IRealtimeNotifier.cs
+ IStorageService.cs
 Class1.cs
 Common/
  ApiResponse.cs
  PagedResult.cs
+DependencyInjection.cs
 Dtos/Comments/
  CommentResponseDtos.cs
  CreateVoiceCommentRequest.cs
 Dtos/
+ Iap/IapDtos.cs
  Matches/MatchDtos.cs
  Messages/MessageDtos.cs
+ Pets/PetDtos.cs
  Posts/
+  AudioProcessedPayload.cs
   CreateVoicePostRequest.cs
   FeedDtos.cs
   VoicePostResponseDtos.cs
+ Profile/ProfileDtos.cs
+ Safety/SafetyDtos.cs
 Exceptions/
  ApiException.cs
  ConflictApiException.cs
  ForbiddenApiException.cs
  NotFoundApiException.cs
  ValidationApiException.cs
+Features/Pets/Commands/
+ ApplyDailyPetSnapshotCommand.cs
+ ApplyDailyPetSnapshotCommandHandler.cs
+ ApplyDecayCommand.cs
+ ApplyDecayCommandHandler.cs
+ BuyItemCommand.cs
+ BuyItemCommandHandler.cs
+ CreatePetCommand.cs
+ CreatePetCommandHandler.cs
+ ProcessCoPresenceCommand.cs
+ ProcessCoPresenceCommandHandler.cs
+ ProcessTextMessagePetCommand.cs
+ ProcessTextMessagePetCommandHandler.cs
+ PublishVoiceForVibeCommand.cs
+ PublishVoiceForVibeCommandHandler.cs
+ UpdatePetAfterVoiceCommand.cs
+ UpdatePetAfterVoiceCommandHandler.cs
+ UseItemCommand.cs
+ UseItemCommandHandler.cs
+Features/Pets/Queries/
+ GetInventoryQuery.cs
+ GetInventoryQueryHandler.cs
+ GetPetStatusQuery.cs
+ GetPetStatusQueryHandler.cs
+ GetShopItemsQuery.cs
+ GetShopItemsQueryHandler.cs
+ GetTransactionsQuery.cs
+ GetTransactionsQueryHandler.cs
+Iap/
+ IapGemService.cs
+ IapOptions.cs
+Messaging/
+ ChatVibeResultMessage.cs
+ ChatVoiceProcessedMessage.cs
 obj/Debug/net8.0/
  .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
  Amora.Application.AssemblyInfo.cs
  Amora.Application.GlobalUsings.g.cs
+Pets/
+ PetCoordinator.cs
+ PetEngine.cs
+ PetFeatureUnlocks.cs
+ PetShopService.cs
 Services/
+ AudioProcessingService.cs
  ChatService.cs
  MatchService.cs
+ ProfileService.cs
+ TrustSafetyService.cs
  VoiceCommentService.cs
  VoicePostService.cs
 
@@ -252,6 +306,12 @@ Services/
  System.Xml.XPath.dll
  System.Xml.XPath.XDocument.dll
  WindowsBase.dll
+<NUGET>/
+ mediatr.contracts/2.0.1/lib/netstandard2.0/MediatR.Contracts.dll
+ mediatr/12.4.1/lib/net6.0/MediatR.dll
+ microsoft.extensions.dependencyinjection.abstractions/8.0.1/lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+ microsoft.extensions.options/8.0.2/lib/net8.0/Microsoft.Extensions.Options.dll
+ microsoft.extensions.primitives/8.0.0/lib/net8.0/Microsoft.Extensions.Primitives.dll
 
 [analyzerReferences]
 <DOTNET>/packs/Microsoft.NETCore.App.Ref/8.0.27/analyzers/dotnet/cs/
@@ -264,6 +324,7 @@ Services/
 <DOTNET>/sdk/9.0.314/Sdks/Microsoft.NET.Sdk/analyzers/
  Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
  Microsoft.CodeAnalysis.NetAnalyzers.dll
+<NUGET>/microsoft.extensions.options/8.0.2/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Options.SourceGeneration.dll
 
 [analyzerConfigFiles]
 <DOTNET>/sdk/9.0.314/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_8_default.globalconfig

@@ -7,4 +7,6 @@ public interface IUserRepository
     Task<AppUser?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
     Task AddAsync(AppUser user, CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(AppUser user, CancellationToken cancellationToken = default);
 }

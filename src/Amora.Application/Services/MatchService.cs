@@ -1,9 +1,11 @@
 using Amora.Application.Abstractions;
 using Amora.Application.Dtos.Matches;
 using Amora.Application.Exceptions;
+using Amora.Application.Features.Pets.Commands;
 using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
+using MediatR;
 
 namespace Amora.Application.Services;
 
@@ -16,6 +18,8 @@ public sealed class MatchService
     private readonly IUserRepository _userRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IRealtimeNotifier _realtimeNotifier;
+    private readonly IMediator _mediator;
+    private readonly IPetRepository _petRepository;
 
     public MatchService(
         ICurrentUserService currentUserService,
@@ -24,7 +28,9 @@ public sealed class MatchService
         IMatchConnectionRepository matchConnectionRepository,
         IUserRepository userRepository,
         IChatMessageRepository chatMessageRepository,
-        IRealtimeNotifier realtimeNotifier)
+        IRealtimeNotifier realtimeNotifier,
+        IMediator mediator,
+        IPetRepository petRepository)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -33,6 +39,8 @@ public sealed class MatchService
         _userRepository = userRepository;
         _chatMessageRepository = chatMessageRepository;
         _realtimeNotifier = realtimeNotifier;
+        _mediator = mediator;
+        _petRepository = petRepository;
     }
 
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
@@ -71,15 +79,17 @@ public sealed class MatchService
         };
 
         await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
+        await _mediator.Send(new CreatePetCommand(result.MatchConnection.Id), cancellationToken);
         await _realtimeNotifier.NotifyMatchCreatedAsync(result.MatchConnection, cancellationToken);
-        await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken);
+        await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
 
         return new MatchCreatedResponseDto
         {
             MatchId = result.MatchConnection.Id,
             UserB_Id = result.MatchConnection.UserBId,
             Status = result.MatchConnection.Status.ToString(),
-            PostClosed = result.PostClosed
+            PostClosed = result.PostClosed,
+            ExpiresAt = result.MatchConnection.ExpiresAt
         };
     }
 
@@ -102,6 +112,16 @@ public sealed class MatchService
             var lastMessageResult = await _chatMessageRepository.GetByMatchAsync(match.Id, cursor: null, limit: 1, cancellationToken);
             var lastMessage = lastMessageResult.Items.FirstOrDefault();
 
+            var pet = await _petRepository.GetByMatchIdAsync(match.Id, cancellationToken);
+            var petDto = pet is null
+                ? new PetStateDto { Hp = 80, Mood = "Neutral", Level = 0 }
+                : new PetStateDto
+                {
+                    Hp = pet.Hp,
+                    Mood = pet.Mood.ToString(),
+                    Level = (int)pet.Stage
+                };
+
             inboxItems.Add(new InboxItemDto
             {
                 MatchId = match.Id,
@@ -121,12 +141,8 @@ public sealed class MatchService
                         CreatedAt = lastMessage.CreatedAt
                     },
                 UnreadCount = 0,
-                PetState = new PetStateDto
-                {
-                    Hp = 95,
-                    Mood = "Excited",
-                    Level = 1
-                }
+                PetState = petDto,
+                ExpiresAt = match.ExpiresAt
             });
         }
 

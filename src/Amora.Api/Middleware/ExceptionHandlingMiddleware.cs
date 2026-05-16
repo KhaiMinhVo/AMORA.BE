@@ -27,9 +27,9 @@ public sealed class ExceptionHandlingMiddleware
         {
             await WriteResponseAsync(context, StatusCodes.Status400BadRequest, ex.Message, "bad_request");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await WriteResponseAsync(context, StatusCodes.Status500InternalServerError, ex.ToString(), "server_error");
+            await WriteResponseAsync(context, StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "server_error");
         }
     }
 

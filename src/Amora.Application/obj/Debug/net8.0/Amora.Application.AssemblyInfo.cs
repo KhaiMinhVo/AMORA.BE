@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Amora.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+aaf7b741e6a849bbe2a6411baf361cb045f6b84e")]
 [assembly: System.Reflection.AssemblyProductAttribute("Amora.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Amora.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

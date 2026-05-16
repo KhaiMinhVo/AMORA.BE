@@ -17,3 +17,4 @@ D:\FPTU\EXE\AMORA.BE\src\Amora.Infrastructure\obj\Debug\net8.0\Amora.Infrastruct
 D:\FPTU\EXE\AMORA.BE\src\Amora.Infrastructure\obj\Debug\net8.0\ref\Amora.Infrastructure.dll
 D:\FPTU\EXE\AMORA.BE\src\Amora.Infrastructure\bin\Debug\net8.0\Amora.Infrastructure.runtimeconfig.json
 D:\FPTU\EXE\AMORA.BE\src\Amora.Infrastructure\obj\Debug\net8.0\Amora.Infrastructure.genruntimeconfig.cache
+D:\FPTU\EXE\AMORA.BE\src\Amora.Infrastructure\obj\Debug\net8.0\Amora.Infrastructure.sourcelink.json

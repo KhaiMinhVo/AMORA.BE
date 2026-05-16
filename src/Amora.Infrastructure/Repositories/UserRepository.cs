@@ -24,4 +24,10 @@ public sealed class UserRepository : IUserRepository
         await _dbContext.Users.AddAsync(user, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task UpdateAsync(AppUser user, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Users.Update(user);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

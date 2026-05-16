@@ -8,7 +8,7 @@ public sealed class AmoraDbContextFactory : IDesignTimeDbContextFactory<AmoraDbC
     public AmoraDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<AmoraDbContext>();
-        optionsBuilder.UseNpgsql("Host=127.0.0.1;Port=5444;Database=AmoraCoreDb;Username=postgres;Password=postgres");
+        optionsBuilder.UseNpgsql("Host=localhost;Port=5444;Database=AmoraCoreDb;Username=postgres;Password=postgres");
         return new AmoraDbContext(optionsBuilder.Options);
     }
 }
