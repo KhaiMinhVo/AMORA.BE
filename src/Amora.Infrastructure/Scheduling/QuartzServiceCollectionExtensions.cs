@@ -22,6 +22,13 @@ public static class QuartzServiceCollectionExtensions
                 .ForJob(snapshotKey)
                 .WithIdentity("pet-daily-snapshot-trigger")
                 .WithCronSchedule("0 5 0 * * ?")); // 00:05 UTC mỗi ngày
+
+            var handshakeKey = new JobKey("handshake-expiry");
+            q.AddJob<HandshakeExpiryQuartzJob>(opts => opts.WithIdentity(handshakeKey));
+            q.AddTrigger(opts => opts
+                .ForJob(handshakeKey)
+                .WithIdentity("handshake-expiry-trigger")
+                .WithCronSchedule("0 */5 * * * ?")); // every 5 minutes
         });
 
         services.AddQuartzHostedService(o => o.WaitForJobsToComplete = true);

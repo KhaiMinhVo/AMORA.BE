@@ -15,6 +15,14 @@ public sealed class IapPurchaseRepository : IIapPurchaseRepository
             x => x.Platform == platform && x.TransactionId == transactionId,
             cancellationToken);
 
+    public Task<Domain.Entities.IapPurchaseRecord?> GetByPlatformTransactionIdAsync(
+        string platform,
+        string transactionId,
+        CancellationToken cancellationToken = default)
+        => _db.IapPurchaseRecords.FirstOrDefaultAsync(
+            x => x.Platform == platform && x.TransactionId == transactionId,
+            cancellationToken);
+
     public async Task AddAsync(Domain.Entities.IapPurchaseRecord record, CancellationToken cancellationToken = default)
         => await _db.IapPurchaseRecords.AddAsync(record, cancellationToken);
 

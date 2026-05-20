@@ -23,7 +23,10 @@ public sealed class IapController : ControllerBase
         _iapOptions = iapOptions;
     }
 
-    /// <summary>Xác thực receipt Apple/Google và cộng Amora Gem (idempotent theo transactionId).</summary>
+    /// <summary>
+    /// Xac thuc receipt Apple/Google va cong Amora Gem.
+    /// Idempotent theo transactionId de tranh cong trung.
+    /// </summary>
     [HttpPost("verify")]
     [ProducesResponseType(typeof(ApiResponse<VerifyIapPurchaseResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<VerifyIapPurchaseResponse>>> Verify(

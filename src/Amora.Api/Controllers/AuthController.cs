@@ -15,6 +15,9 @@ public sealed class AuthController : ControllerBase
 
     public AuthController(AuthService authService) => _authService = authService;
 
+    /// <summary>
+    /// Dang ky tai khoan moi va tra ve token.
+    /// </summary>
     [HttpPost("register")]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(
@@ -25,6 +28,9 @@ public sealed class AuthController : ControllerBase
         return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Registration successful."));
     }
 
+    /// <summary>
+    /// Dang nhap va tra ve token cho phien.
+    /// </summary>
     [HttpPost("login")]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(

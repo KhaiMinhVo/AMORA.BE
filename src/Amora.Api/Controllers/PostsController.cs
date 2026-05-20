@@ -18,6 +18,9 @@ public sealed class PostsController : ControllerBase
         _voicePostService = voicePostService;
     }
 
+    /// <summary>
+    /// Lay feed voice post, ho tro phan trang.
+    /// </summary>
     [HttpGet("feed")]
     public async Task<ActionResult<ApiResponse<FeedResponseDto>>> GetFeed(
         [FromQuery] int page = 1,
@@ -28,6 +31,9 @@ public sealed class PostsController : ControllerBase
         return Ok(ApiResponse<FeedResponseDto>.Ok(result));
     }
 
+    /// <summary>
+    /// Tao voice post moi cho user hien tai.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<ApiResponse<CreateVoicePostResponseDto>>> CreatePost(
         [FromBody] CreateVoicePostRequest request,
@@ -37,6 +43,9 @@ public sealed class PostsController : ControllerBase
         return Created($"/api/posts/{result.PostId}", ApiResponse<CreateVoicePostResponseDto>.Ok(result, "Voice post created successfully."));
     }
 
+    /// <summary>
+    /// Dong voice post theo postId.
+    /// </summary>
     [HttpDelete("{postId:guid}")]
     public async Task<IActionResult> ClosePost(Guid postId, CancellationToken cancellationToken)
     {

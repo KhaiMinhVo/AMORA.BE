@@ -183,6 +183,13 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("RefundReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("RefundedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("TransactionId")
                         .IsRequired()
                         .HasMaxLength(200)

@@ -3,45 +3,38 @@ using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Quartz;
 
-namespace Amora.Infrastructure.Services;
+namespace Amora.Infrastructure.Scheduling;
 
 /// <summary>
-/// Handshake 24h — Background job quét và expire các match không có tin nhắn trong 24 giờ.
-/// Chạy mỗi 5 phút, xử lý theo batch 100 match mỗi lần.
+/// Handshake 24h sweep job.
 /// </summary>
-public sealed class HandshakeExpiryService : BackgroundService
+public sealed class HandshakeExpiryQuartzJob : IJob
 {
-    private static readonly TimeSpan SweepInterval = TimeSpan.FromMinutes(5);
     private const int BatchSize = 100;
 
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<HandshakeExpiryService> _logger;
+    private readonly ILogger<HandshakeExpiryQuartzJob> _logger;
 
-    public HandshakeExpiryService(IServiceScopeFactory scopeFactory, ILogger<HandshakeExpiryService> logger)
+    public HandshakeExpiryQuartzJob(IServiceScopeFactory scopeFactory, ILogger<HandshakeExpiryQuartzJob> logger)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task Execute(IJobExecutionContext context)
     {
-        _logger.LogInformation("HandshakeExpiryService started — sweep interval: {Interval}", SweepInterval);
+        var cancellationToken = context.CancellationToken;
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
-            {
-                await SweepExpiredMatchesAsync(stoppingToken);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                _logger.LogError(ex, "HandshakeExpiryService encountered an error during sweep.");
-            }
-
-            await Task.Delay(SweepInterval, stoppingToken);
+            await SweepExpiredMatchesAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "HandshakeExpiryQuartzJob encountered an error during sweep.");
         }
     }
 
@@ -63,7 +56,6 @@ public sealed class HandshakeExpiryService : BackgroundService
 
         _logger.LogInformation("Handshake 24h: {ExpiredCount} match(es) marked as Expired.", expiredCount);
 
-        // Gửi system message & real-time notification cho từng match
         foreach (var match in expiredMatches)
         {
             try

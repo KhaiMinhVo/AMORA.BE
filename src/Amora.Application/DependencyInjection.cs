@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddScoped<PetShopService>();
         services.AddScoped<PetFeatureGateService>();
         services.AddScoped<Iap.IapGemService>();
+        services.AddScoped<Iap.IapWebhookService>();
         services.AddScoped<Iap.PetCoinRewardService>();
         services.AddScoped<AuthService>();
         return services;

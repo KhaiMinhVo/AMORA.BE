@@ -25,7 +25,8 @@ public sealed class WebhookController : ControllerBase
     }
 
     /// <summary>
-    /// Python Worker gọi endpoint này sau khi xử lý âm thanh xong.
+    /// Python Worker goi endpoint nay sau khi xu ly am thanh xong.
+    /// Xac thuc bang shared secret truoc khi cap nhat ket qua.
     /// </summary>
     [HttpPost("audio-processed")]
     public async Task<IActionResult> HandleAudioProcessed(

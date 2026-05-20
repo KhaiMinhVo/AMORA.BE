@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Amora.Application.Abstractions;
 using Amora.Application.Iap;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -14,6 +15,8 @@ namespace Amora.Infrastructure.Iap;
 /// </summary>
 public sealed class GooglePlayPurchaseVerifier
 {
+    private const string AndroidPublisherScope = "https://www.googleapis.com/auth/androidpublisher";
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IapOptions _options;
     private readonly ILogger<GooglePlayPurchaseVerifier> _logger;
@@ -34,11 +37,11 @@ public sealed class GooglePlayPurchaseVerifier
         if (string.IsNullOrWhiteSpace(packageName))
             return IapVerificationResult.Fail("Google package name not configured.");
 
-        // TODO: OAuth2 service account token — stub kiểm tra token không rỗng
-        var accessToken = Environment.GetEnvironmentVariable("GOOGLE_PLAY_API_TOKEN");
+        var accessToken = await TryGetAccessTokenAsync(cancellationToken)
+            ?? Environment.GetEnvironmentVariable("GOOGLE_PLAY_API_TOKEN");
         if (string.IsNullOrWhiteSpace(accessToken))
         {
-            _logger.LogWarning("GOOGLE_PLAY_API_TOKEN not set — cannot verify Google purchase in production.");
+            _logger.LogWarning("Google Play credentials not configured — cannot verify Google purchase.");
             return IapVerificationResult.Fail("Google Play API not configured.");
         }
 
@@ -57,5 +60,20 @@ public sealed class GooglePlayPurchaseVerifier
             return IapVerificationResult.Fail("Purchase not completed.");
 
         return IapVerificationResult.Ok();
+    }
+
+    private async Task<string?> TryGetAccessTokenAsync(CancellationToken cancellationToken)
+    {
+        var credentialsPath = _options.GoogleServiceAccountJsonPath
+            ?? Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+
+        if (string.IsNullOrWhiteSpace(credentialsPath) || !File.Exists(credentialsPath))
+            return null;
+
+        var credential = GoogleCredential.FromFile(credentialsPath).CreateScoped(AndroidPublisherScope);
+        if (credential.UnderlyingCredential is not ITokenAccess tokenAccess)
+            return null;
+
+        return await tokenAccess.GetAccessTokenForRequestAsync(cancellationToken: cancellationToken);
     }
 }

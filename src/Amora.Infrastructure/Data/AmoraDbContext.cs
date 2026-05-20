@@ -242,6 +242,7 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.Platform).HasMaxLength(20);
             entity.Property(x => x.TransactionId).HasMaxLength(200);
             entity.Property(x => x.ProductId).HasMaxLength(100);
+            entity.Property(x => x.RefundReason).HasMaxLength(200);
 
             entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });

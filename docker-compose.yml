@@ -40,6 +40,30 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: amora-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: amora-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
   audio-worker:
     build:
       context: ../amora-audio-worker
@@ -68,7 +92,14 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=AmoraCoreDb;Username=postgres;Password=postgres
       ConnectionStrings__MongoDb: mongodb://mongodb:27017
+      ConnectionStrings__Redis: redis:6379
       RabbitMQ__Url: amqp://guest:guest@rabbitmq:5672//
+      AWS__ServiceURL: http://minio:9000
+      AWS__ForcePathStyle: "true"
+      AWS__AccessKey: minioadmin
+      AWS__SecretKey: minioadmin
+      Storage__BucketName: amora-voice-bucket
+      Storage__PublicBaseUrl: http://localhost:9000/amora-voice-bucket
     depends_on:
       postgres:
         condition: service_healthy
@@ -76,6 +107,10 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
     restart: unless-stopped
 
   chat-voice-consumer:
@@ -97,3 +132,4 @@ volumes:
   postgres_data2:
   mongodb_data:
   rabbitmq_data:
+  minio_data:

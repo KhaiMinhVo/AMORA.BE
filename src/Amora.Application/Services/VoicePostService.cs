@@ -4,6 +4,7 @@ using Amora.Application.Exceptions;
 using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace Amora.Application.Services;
 
@@ -13,17 +14,20 @@ public sealed class VoicePostService
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IUserRepository _userRepository;
     private readonly AudioProcessingService _audioProcessingService;
+    private readonly string? _storageBucketName;
 
     public VoicePostService(
         ICurrentUserService currentUserService,
         IVoicePostRepository voicePostRepository,
         IUserRepository userRepository,
-        AudioProcessingService audioProcessingService)
+        AudioProcessingService audioProcessingService,
+        IConfiguration configuration)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
         _userRepository = userRepository;
         _audioProcessingService = audioProcessingService;
+        _storageBucketName = configuration["Storage:BucketName"] ?? configuration["AWS:BucketName"];
     }
 
     public async Task<CreateVoicePostResponseDto> CreateAsync(CreateVoicePostRequest request, CancellationToken cancellationToken = default)
@@ -56,7 +60,7 @@ public sealed class VoicePostService
 
         // Trích xuất S3 file key từ publicUrl (bỏ phần domain, giữ lại path)
         // Ví dụ: "https://amora-voice-bucket.s3.amazonaws.com/voices/abc.m4a" → "voices/abc.m4a"
-        var s3FileKey = ExtractS3KeyFromUrl(post.AudioUrl);
+        var s3FileKey = ExtractS3KeyFromUrl(post.AudioUrl, _storageBucketName);
         await _audioProcessingService.EnqueueAudioProcessingAsync(post.Id, s3FileKey, cancellationToken);
 
         return new CreateVoicePostResponseDto
@@ -75,12 +79,18 @@ public sealed class VoicePostService
     /// Input:  "https://amora-voice-bucket.s3.amazonaws.com/voices/uuid.m4a"
     /// Output: "voices/uuid.m4a"
     /// </summary>
-    private static string ExtractS3KeyFromUrl(string url)
+    private static string ExtractS3KeyFromUrl(string url, string? bucketName)
     {
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
         {
             // uri.AbsolutePath = "/voices/uuid.m4a" → bỏ dấu "/" đầu tiên
-            return uri.AbsolutePath.TrimStart('/');
+            var path = uri.AbsolutePath.TrimStart('/');
+            if (!string.IsNullOrWhiteSpace(bucketName) && path.StartsWith(bucketName + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                return path[(bucketName.Length + 1)..];
+            }
+
+            return path;
         }
 
         // Fallback: nếu url đã là key rồi (không phải full URL)

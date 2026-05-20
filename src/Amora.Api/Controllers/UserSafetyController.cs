@@ -17,7 +17,10 @@ public sealed class UserSafetyController : ControllerBase
         _trustSafetyService = trustSafetyService;
     }
 
-    /// <summary>Báo cáo người dùng vi phạm.</summary>
+    /// <summary>
+    /// Bao cao nguoi dung vi pham.
+    /// Luu thong tin ly do va mo ta.
+    /// </summary>
     [HttpPost("report")]
     public async Task<IActionResult> ReportUser(
         Guid userId,
@@ -28,7 +31,10 @@ public sealed class UserSafetyController : ControllerBase
         return Ok(new { success = true, data = result });
     }
 
-    /// <summary>Block một người dùng — không thấy nhau trên Feed nữa.</summary>
+    /// <summary>
+    /// Block mot nguoi dung de an nhau tren feed.
+    /// Tao ban ghi chan tuong tac.
+    /// </summary>
     [HttpPost("block")]
     public async Task<IActionResult> BlockUser(Guid userId, CancellationToken cancellationToken)
     {
@@ -36,7 +42,10 @@ public sealed class UserSafetyController : ControllerBase
         return Ok(new { success = true, data = result });
     }
 
-    /// <summary>Bỏ block một người dùng.</summary>
+    /// <summary>
+    /// Bo block mot nguoi dung.
+    /// Khoi phuc kha nang tuong tac.
+    /// </summary>
     [HttpDelete("block")]
     public async Task<IActionResult> UnblockUser(Guid userId, CancellationToken cancellationToken)
     {

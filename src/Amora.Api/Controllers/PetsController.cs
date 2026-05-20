@@ -9,7 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Amora.Api.Controllers;
 
-/// <summary>Thú cưng ảo theo match — HP, Mood, RP, tiến hóa.</summary>
+/// <summary>
+/// Thu cung ao theo match (HP, Mood, RP, tien hoa).
+/// Cung cap API xem trang thai va dung item.
+/// </summary>
 [ApiController]
 [Authorize]
 [Route("api/pets")]
@@ -24,7 +27,10 @@ public sealed class PetsController : ControllerBase
         _currentUser = currentUser;
     }
 
-    /// <summary>Trạng thái Pet của match.</summary>
+    /// <summary>
+    /// Lay trang thai Pet cua match.
+    /// Tra ve cac chi so hien tai cua Pet.
+    /// </summary>
     [HttpGet("{matchId:guid}/status")]
     [ProducesResponseType(typeof(ApiResponse<PetStatusDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PetStatusDto>>> GetStatus(Guid matchId, CancellationToken cancellationToken)
@@ -33,7 +39,10 @@ public sealed class PetsController : ControllerBase
         return Ok(ApiResponse<PetStatusDto>.Ok(result));
     }
 
-    /// <summary>Dùng item từ inventory lên Pet của match.</summary>
+    /// <summary>
+    /// Su dung item tu inventory len Pet cua match.
+    /// Cap nhat trang thai Pet sau khi ap dung.
+    /// </summary>
     [HttpPost("{matchId:guid}/use-item")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> UseItem(

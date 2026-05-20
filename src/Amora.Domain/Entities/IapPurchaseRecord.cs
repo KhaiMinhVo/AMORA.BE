@@ -15,5 +15,9 @@ public sealed class IapPurchaseRecord : BaseEntity
 
     public int GemsGranted { get; set; }
 
+    public DateTimeOffset? RefundedAt { get; set; }
+
+    public string? RefundReason { get; set; }
+
     public AppUser? User { get; set; }
 }

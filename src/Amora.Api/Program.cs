@@ -18,6 +18,7 @@ using Amazon.S3;
 using Amora.Application.Iap;
 using Amora.Infrastructure.Iap;
 using Amora.Infrastructure.Presence;
+using Amora.Infrastructure.HealthChecks;
 using Amora.Infrastructure.Scheduling;
 using Amora.Infrastructure.Services;
 using Amora.Infrastructure.Messaging;
@@ -71,8 +72,10 @@ builder.Services.AddHttpClient("GoogleIap");
 builder.Services.AddScoped<AppleAppStorePurchaseVerifier>();
 builder.Services.AddScoped<GooglePlayPurchaseVerifier>();
 builder.Services.AddScoped<IInAppPurchaseVerifier, CompositeInAppPurchaseVerifier>();
+builder.Services.AddSingleton<AppleServerNotificationVerifier>();
+builder.Services.AddSingleton<GoogleWebhookTokenValidator>();
 
-builder.Services.AddSingleton<IMatchPresenceTracker, InMemoryMatchPresenceTracker>();
+builder.Services.AddPresenceTracking(builder.Configuration);
 
 builder.Services.AddApplication();
 builder.Services.AddAmoraQuartzJobs();
@@ -87,8 +90,25 @@ builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<TrustSafetyService>();
 builder.Services.AddScoped<ProfileService>();
 
-builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
-builder.Services.AddAWSService<IAmazonS3>();
+var awsOptions = builder.Configuration.GetAWSOptions();
+var awsServiceUrl = builder.Configuration["AWS:ServiceURL"];
+var s3Config = new AmazonS3Config();
+if (!string.IsNullOrWhiteSpace(awsServiceUrl))
+    s3Config.ServiceURL = awsServiceUrl;
+
+if (builder.Configuration.GetValue<bool?>("AWS:ForcePathStyle") == true)
+    s3Config.ForcePathStyle = true;
+
+if (awsOptions.Region is not null && string.IsNullOrWhiteSpace(awsServiceUrl))
+    s3Config.RegionEndpoint = awsOptions.Region;
+
+builder.Services.AddDefaultAWSOptions(awsOptions);
+builder.Services.AddSingleton<IAmazonS3>(_ =>
+{
+    return awsOptions.Credentials is not null
+        ? new AmazonS3Client(awsOptions.Credentials, s3Config)
+        : new AmazonS3Client(s3Config);
+});
 builder.Services.AddScoped<IStorageService, S3StorageService>();
 
 // Message Bus — Singleton vì connection RabbitMQ được tái sử dụng
@@ -104,8 +124,6 @@ builder.Services.AddSingleton<IMessagePublisher>(_ =>
 });
 builder.Services.AddScoped<AudioProcessingService>();
 
-// Handshake 24h — Background job tự động expire match không có tin nhắn
-builder.Services.AddHostedService<Amora.Infrastructure.Services.HandshakeExpiryService>();
 builder.Services.AddHostedService<Amora.Infrastructure.Messaging.VibeResultConsumerService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-only-secret-key-change-me-please-use-a-longer-256-bit-key";
@@ -147,8 +165,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<AmoraDbContext>();
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis")
+    ?? builder.Configuration["Redis:ConnectionString"];
+
+var healthChecks = builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AmoraDbContext>()
+    .AddCheck<RabbitMqHealthCheck>("rabbitmq");
+
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+    healthChecks.AddCheck<RedisHealthCheck>("redis");
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -212,5 +237,6 @@ app.MapHealthChecks("/health");
 app.MapControllers().RequireAuthorization();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<PetHub>("/hubs/pet");
+app.MapHub<CallHub>("/hubs/call");
 
 app.Run();

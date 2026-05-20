@@ -19,6 +19,9 @@ public sealed class ChatController : ControllerBase
         _chatService = chatService;
     }
 
+    /// <summary>
+    /// Lay lich su tin nhan theo match, ho tro cursor.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<ApiResponse<MessageHistoryResponseDto>>> GetMessages(
         Guid matchId,
@@ -30,6 +33,9 @@ public sealed class ChatController : ControllerBase
         return Ok(ApiResponse<MessageHistoryResponseDto>.Ok(result));
     }
 
+    /// <summary>
+    /// Gui tin nhan trong match, ap dung rate limit.
+    /// </summary>
     [HttpPost]
     [EnableRateLimiting("message")]
     public async Task<ActionResult<ApiResponse<SendMessageResponseDto>>> SendMessage(

@@ -15,7 +15,10 @@ public sealed class ProfileController : ControllerBase
         _profileService = profileService;
     }
 
-    /// <summary>Lấy profile của chính mình.</summary>
+    /// <summary>
+    /// Lay profile cua chinh minh.
+    /// Tra ve thong tin ho so hien tai.
+    /// </summary>
     [HttpGet("me")]
     public async Task<IActionResult> GetMyProfile(CancellationToken cancellationToken)
     {
@@ -23,7 +26,10 @@ public sealed class ProfileController : ControllerBase
         return Ok(new { success = true, data = result });
     }
 
-    /// <summary>Cập nhật profile của chính mình.</summary>
+    /// <summary>
+    /// Cap nhat profile cua chinh minh.
+    /// Tra ve thong tin sau khi cap nhat.
+    /// </summary>
     [HttpPut("me")]
     public async Task<IActionResult> UpdateMyProfile(
         [FromBody] UpdateProfileRequest request,
@@ -33,7 +39,10 @@ public sealed class ProfileController : ControllerBase
         return Ok(new { success = true, data = result });
     }
 
-    /// <summary>Xem profile công khai của user khác (avatar blur nếu chưa match).</summary>
+    /// <summary>
+    /// Xem profile cong khai cua user khac.
+    /// Avatar co the bi blur neu chua match.
+    /// </summary>
     [HttpGet("{userId:guid}")]
     public async Task<IActionResult> GetPublicProfile(Guid userId, CancellationToken cancellationToken)
     {

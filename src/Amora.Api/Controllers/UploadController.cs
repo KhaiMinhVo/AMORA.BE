@@ -16,10 +16,14 @@ public class UploadController : ControllerBase
         _storageService = storageService;
     }
 
+    /// <summary>
+    /// Tao presigned URL upload am thanh, kiem tra dinh dang.
+    /// </summary>
     [HttpGet("presigned-url")]
     public async Task<IActionResult> GetPresignedUrl([FromQuery] string extension = ".m4a")
     {
         // Validate định dạng cho phép
+        extension = extension.ToLowerInvariant();
         if (extension != ".m4a" && extension != ".aac" && extension != ".mp3")
             return BadRequest(new { success = false, message = "Định dạng không hỗ trợ" });
 
@@ -29,6 +33,25 @@ public class UploadController : ControllerBase
         { 
             success = true, 
             data = new { uploadUrl, publicUrl } 
+        });
+    }
+
+    /// <summary>
+    /// Tao presigned URL upload anh, kiem tra dinh dang.
+    /// </summary>
+    [HttpGet("presigned-image-url")]
+    public async Task<IActionResult> GetPresignedImageUrl([FromQuery] string extension = ".jpg")
+    {
+        extension = extension.ToLowerInvariant();
+        if (extension is not ".jpg" and not ".jpeg" and not ".png" and not ".webp")
+            return BadRequest(new { success = false, message = "Định dạng ảnh không hỗ trợ" });
+
+        var (uploadUrl, publicUrl) = await _storageService.GeneratePreSignedUploadUrlAsync(extension, "chat-images");
+
+        return Ok(new
+        {
+            success = true,
+            data = new { uploadUrl, publicUrl }
         });
     }
 }

@@ -22,6 +22,9 @@ public sealed class InventoryController : ControllerBase
         _currentUser = currentUser;
     }
 
+    /// <summary>
+    /// Lay danh sach item trong kho cua user hien tai.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<InventoryItemDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<InventoryItemDto>>>> GetInventory(CancellationToken cancellationToken)

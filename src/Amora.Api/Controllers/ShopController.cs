@@ -23,6 +23,9 @@ public sealed class ShopController : ControllerBase
         _currentUser = currentUser;
     }
 
+    /// <summary>
+    /// Lay danh sach vat pham trong shop.
+    /// </summary>
     [HttpGet("items")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<ShopItemDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<ShopItemDto>>>> GetItems(CancellationToken cancellationToken)
@@ -31,6 +34,9 @@ public sealed class ShopController : ControllerBase
         return Ok(ApiResponse<IReadOnlyList<ShopItemDto>>.Ok(items));
     }
 
+    /// <summary>
+    /// Mua vat pham cho user hien tai.
+    /// </summary>
     [HttpPost("buy")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> Buy([FromBody] BuyItemRequest request, CancellationToken cancellationToken)

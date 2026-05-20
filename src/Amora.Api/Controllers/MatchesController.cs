@@ -18,6 +18,9 @@ public sealed class MatchesController : ControllerBase
         _matchService = matchService;
     }
 
+    /// <summary>
+    /// Tao match moi tu yeu cau tuong tac.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<ApiResponse<MatchCreatedResponseDto>>> CreateMatch(
         [FromBody] CreateMatchRequest request,
@@ -31,6 +34,9 @@ public sealed class MatchesController : ControllerBase
         return Created($"/api/matches/{result.MatchId}", ApiResponse<MatchCreatedResponseDto>.Ok(result, message));
     }
 
+    /// <summary>
+    /// Huy ket noi match va dong phien.
+    /// </summary>
     [HttpPost("{matchId:guid}/unmatch")]
     public async Task<ActionResult<ApiResponse<object>>> Unmatch(Guid matchId, CancellationToken cancellationToken)
     {
@@ -38,6 +44,9 @@ public sealed class MatchesController : ControllerBase
         return Ok(ApiResponse<object>.Ok(null, "Match unmatched successfully."));
     }
 
+    /// <summary>
+    /// Lay inbox match theo trang thai (neu co).
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<InboxItemDto>>>> GetInbox(
         [FromQuery] string? status,

@@ -22,6 +22,9 @@ public sealed class TransactionsController : ControllerBase
         _currentUser = currentUser;
     }
 
+    /// <summary>
+    /// Lay lich su giao dich cua user, gioi han so luong.
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<TransactionDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<TransactionDto>>>> GetTransactions(

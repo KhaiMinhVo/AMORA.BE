@@ -46,4 +46,27 @@ public sealed class PetFeatureGateService
 
         await _mediaUsage.IncrementImageSentAsync(matchId, userId, cancellationToken);
     }
+
+    public async Task<int> ValidateCallAsync(Guid matchId, string callType, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(callType))
+            throw new ValidationApiException("Call type is required.");
+
+        var pet = await _pets.GetByMatchIdAsync(matchId, cancellationToken)
+            ?? throw new NotFoundApiException("Pet not found for this match.");
+
+        var features = PetFeatureUnlocks.ForStage(pet.Stage).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var normalizedType = callType.Trim().ToLowerInvariant();
+
+        return normalizedType switch
+        {
+            "voice" or "audio" => features.Contains("voice_call_5min")
+                ? 5 * 60
+                : throw new ForbiddenApiException("Voice call mở khóa ở giai đoạn Thú Nhỏ."),
+            "video" => features.Contains("video_call_3min")
+                ? 3 * 60
+                : throw new ForbiddenApiException("Video call mở khóa ở giai đoạn Thú Trưởng Thành."),
+            _ => throw new ValidationApiException("Unsupported call type.")
+        };
+    }
 }

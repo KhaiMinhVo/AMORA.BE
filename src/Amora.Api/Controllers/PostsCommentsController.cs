@@ -19,6 +19,9 @@ public sealed class PostsCommentsController : ControllerBase
         _voiceCommentService = voiceCommentService;
     }
 
+    /// <summary>
+    /// Tao voice comment cho post, ap dung rate limit.
+    /// </summary>
     [HttpPost]
     [EnableRateLimiting("comment")]
     public async Task<ActionResult<ApiResponse<CreateCommentResponseDto>>> CreateComment(
@@ -30,6 +33,9 @@ public sealed class PostsCommentsController : ControllerBase
         return Created($"/api/posts/{postId}/comments/{result.CommentId}", ApiResponse<CreateCommentResponseDto>.Ok(result, "Voice comment created successfully."));
     }
 
+    /// <summary>
+    /// Lay danh sach comment cua post, ho tro phan trang.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<ApiResponse<VoiceCommentListResponseDto>>> GetComments(
         Guid postId,
