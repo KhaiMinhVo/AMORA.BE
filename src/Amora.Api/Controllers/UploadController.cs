@@ -16,9 +16,6 @@ public class UploadController : ControllerBase
         _storageService = storageService;
     }
 
-    /// <summary>
-    /// Tao presigned URL upload am thanh, kiem tra dinh dang.
-    /// </summary>
     [HttpGet("presigned-url")]
     public async Task<IActionResult> GetPresignedUrl([FromQuery] string extension = ".m4a")
     {
@@ -36,9 +33,6 @@ public class UploadController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Tao presigned URL upload anh, kiem tra dinh dang.
-    /// </summary>
     [HttpGet("presigned-image-url")]
     public async Task<IActionResult> GetPresignedImageUrl([FromQuery] string extension = ".jpg")
     {

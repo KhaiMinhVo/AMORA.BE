@@ -34,10 +34,6 @@ public sealed class IapWebhookController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Xu ly Apple Server Notifications cho IAP (refund/renewal).
-    /// Cap nhat trang thai giao dich theo payload da ky.
-    /// </summary>
     [HttpPost("apple")]
     public async Task<IActionResult> Apple([FromBody] AppleServerNotificationRequest request, CancellationToken cancellationToken)
     {
@@ -69,10 +65,6 @@ public sealed class IapWebhookController : ControllerBase
         return Ok(new { success = true });
     }
 
-    /// <summary>
-    /// Xu ly Google Play Pub/Sub webhook cho IAP (refund/renewal).
-    /// Cap nhat trang thai giao dich tu thong bao Pub/Sub.
-    /// </summary>
     [HttpPost("google")]
     public async Task<IActionResult> Google([FromBody] GooglePubSubEnvelope envelope, CancellationToken cancellationToken)
     {
