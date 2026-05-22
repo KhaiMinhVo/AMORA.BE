@@ -36,6 +36,13 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("BanReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset?>("BannedUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Bio")
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
@@ -70,6 +77,9 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsProfileComplete")
                         .HasColumnType("boolean");
 
@@ -85,6 +95,13 @@ namespace Amora.Infrastructure.Data.Migrations
 
                     b.Property<int>("PetCoins")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("User");
 
                     b.HasKey("Id");
 
@@ -103,8 +120,10 @@ namespace Amora.Infrastructure.Data.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DisplayName = "Amora Alice",
                             Gender = "PreferNotToSay",
+                            IsBanned = false,
                             IsProfileComplete = false,
-                            PetCoins = 0
+                            PetCoins = 0,
+                            Role = "User"
                         },
                         new
                         {
@@ -114,8 +133,10 @@ namespace Amora.Infrastructure.Data.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DisplayName = "Amora Bob",
                             Gender = "PreferNotToSay",
+                            IsBanned = false,
                             IsProfileComplete = false,
-                            PetCoins = 0
+                            PetCoins = 0,
+                            Role = "User"
                         },
                         new
                         {
@@ -125,8 +146,24 @@ namespace Amora.Infrastructure.Data.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DisplayName = "Amora Carol",
                             Gender = "PreferNotToSay",
+                            IsBanned = false,
                             IsProfileComplete = false,
-                            PetCoins = 0
+                            PetCoins = 0,
+                            Role = "User"
+                        },
+                        new
+                        {
+                            Id = new Guid("99999999-9999-9999-9999-999999999999"),
+                            AmoraGems = 0,
+                            AvatarUrl = "admin.png",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DisplayName = "Amora Admin",
+                            Email = "admin@amora.app",
+                            Gender = "PreferNotToSay",
+                            IsBanned = false,
+                            IsProfileComplete = false,
+                            PetCoins = 0,
+                            Role = "Admin"
                         });
                 });
 
@@ -209,6 +246,52 @@ namespace Amora.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("IapPurchaseRecords", (string)null);
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.IapWebhookEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("Processed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RawPayload")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Platform", "EventId")
+                        .IsUnique();
+
+                    b.ToTable("IapWebhookEvents", (string)null);
                 });
 
             modelBuilder.Entity("Amora.Domain.Entities.MatchConnection", b =>

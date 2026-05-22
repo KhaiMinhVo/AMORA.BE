@@ -1,0 +1,141 @@
+Summary
+  Generated on: 5/23/2026 - 1:52:45 AM
+  Coverage date: 5/23/2026 - 12:26:53 AM - 5/23/2026 - 1:52:36 AM
+  Parser: MultiReport (7x Cobertura)
+  Assemblies: 2
+  Classes: 117
+  Files: 87
+  Line coverage: 56.1%
+  Covered lines: 1054
+  Uncovered lines: 823
+  Coverable lines: 1877
+  Total lines: 3560
+  Branch coverage: 43% (202 of 469)
+  Covered branches: 202
+  Total branches: 469
+  Method coverage: 51.4% (261 of 507)
+  Full method coverage: 47.3% (240 of 507)
+  Covered methods: 261
+  Fully covered methods: 240
+  Total methods: 507
+
+Amora.Application                                                                54.6%
+  Amora.Application.Abstractions.AuthTokenResult                                  100%
+  Amora.Application.Abstractions.IapVerificationRequest                             0%
+  Amora.Application.Abstractions.IapVerificationResult                              0%
+  Amora.Application.Common.ApiResponse<T>                                           0%
+  Amora.Application.Common.PagedResult<T>                                           0%
+  Amora.Application.DependencyInjection                                             0%
+  Amora.Application.Dtos.Admin.BanUserRequest                                     100%
+  Amora.Application.Dtos.Admin.PaginatedList<T>                                   100%
+  Amora.Application.Dtos.Admin.ReportDto                                          100%
+  Amora.Application.Dtos.Admin.ResolveReportRequest                               100%
+  Amora.Application.Dtos.Auth.AuthResponseDto                                     100%
+  Amora.Application.Dtos.Auth.LoginRequest                                        100%
+  Amora.Application.Dtos.Auth.RegisterRequest                                     100%
+  Amora.Application.Dtos.Comments.CommenterPreviewDto                             100%
+  Amora.Application.Dtos.Comments.CreateCommentResponseDto                        100%
+  Amora.Application.Dtos.Comments.CreateVoiceCommentRequest                       100%
+  Amora.Application.Dtos.Comments.VoiceCommentItemDto                             100%
+  Amora.Application.Dtos.Comments.VoiceCommentListResponseDto                     100%
+  Amora.Application.Dtos.Iap.VerifyIapPurchaseRequest                               0%
+  Amora.Application.Dtos.Iap.VerifyIapPurchaseResponse                              0%
+  Amora.Application.Dtos.Matches.CreateMatchRequest                               100%
+  Amora.Application.Dtos.Matches.InboxItemDto                                       0%
+  Amora.Application.Dtos.Matches.LastMessagePreviewDto                              0%
+  Amora.Application.Dtos.Matches.MatchCreatedResponseDto                          100%
+  Amora.Application.Dtos.Matches.PartnerPreviewDto                                  0%
+  Amora.Application.Dtos.Matches.PetStateDto                                        0%
+  Amora.Application.Dtos.Messages.MessageHistoryResponseDto                         0%
+  Amora.Application.Dtos.Messages.MessageItemDto                                    0%
+  Amora.Application.Dtos.Messages.SendMessageRequest                              100%
+  Amora.Application.Dtos.Messages.SendMessageResponseDto                          100%
+  Amora.Application.Dtos.Pets.BuyItemRequest                                      100%
+  Amora.Application.Dtos.Pets.InventoryItemDto                                      0%
+  Amora.Application.Dtos.Pets.PetStatusDto                                          0%
+  Amora.Application.Dtos.Pets.ShopItemDto                                           0%
+  Amora.Application.Dtos.Pets.TransactionDto                                        0%
+  Amora.Application.Dtos.Pets.UseItemRequest                                        0%
+  Amora.Application.Dtos.Posts.AudioProcessedPayload                                0%
+  Amora.Application.Dtos.Posts.CreateVoicePostRequest                             100%
+  Amora.Application.Dtos.Posts.CreateVoicePostResponseDto                         100%
+  Amora.Application.Dtos.Posts.FeedPostItemDto                                      0%
+  Amora.Application.Dtos.Posts.FeedResponseDto                                      0%
+  Amora.Application.Dtos.Posts.PetVibeDataDto                                       0%
+  Amora.Application.Dtos.Posts.PosterPreviewDto                                     0%
+  Amora.Application.Dtos.Profile.ProfileResponseDto                                 0%
+  Amora.Application.Dtos.Profile.PublicProfileResponseDto                           0%
+  Amora.Application.Dtos.Profile.UpdateProfileRequest                               0%
+  Amora.Application.Dtos.Safety.BlockResponseDto                                  100%
+  Amora.Application.Dtos.Safety.CreateReportRequest                               100%
+  Amora.Application.Dtos.Safety.ReportResponseDto                                 100%
+  Amora.Application.Exceptions.ApiException                                      71.4%
+  Amora.Application.Exceptions.ConflictApiException                               100%
+  Amora.Application.Exceptions.ForbiddenApiException                              100%
+  Amora.Application.Exceptions.NotFoundApiException                               100%
+  Amora.Application.Exceptions.ValidationApiException                             100%
+  Amora.Application.Features.Pets.Commands.ApplyDailyPetSnapshotCommandHandler      0%
+  Amora.Application.Features.Pets.Commands.ApplyDecayCommandHandler                 0%
+  Amora.Application.Features.Pets.Commands.BuyItemCommand                           0%
+  Amora.Application.Features.Pets.Commands.BuyItemCommandHandler                    0%
+  Amora.Application.Features.Pets.Commands.CreatePetCommand                       100%
+  Amora.Application.Features.Pets.Commands.CreatePetCommandHandler                  0%
+  Amora.Application.Features.Pets.Commands.ProcessCoPresenceCommand                 0%
+  Amora.Application.Features.Pets.Commands.ProcessCoPresenceCommandHandler          0%
+  Amora.Application.Features.Pets.Commands.ProcessTextMessagePetCommand           100%
+  Amora.Application.Features.Pets.Commands.ProcessTextMessagePetCommandHandler      0%
+  Amora.Application.Features.Pets.Commands.PublishVoiceForVibeCommand               0%
+  Amora.Application.Features.Pets.Commands.PublishVoiceForVibeCommandHandler        0%
+  Amora.Application.Features.Pets.Commands.UpdatePetAfterVoiceCommand               0%
+  Amora.Application.Features.Pets.Commands.UpdatePetAfterVoiceCommandHandler        0%
+  Amora.Application.Features.Pets.Commands.UseItemCommand                           0%
+  Amora.Application.Features.Pets.Commands.UseItemCommandHandler                    0%
+  Amora.Application.Features.Pets.Queries.GetInventoryQuery                         0%
+  Amora.Application.Features.Pets.Queries.GetInventoryQueryHandler                  0%
+  Amora.Application.Features.Pets.Queries.GetPetStatusQuery                         0%
+  Amora.Application.Features.Pets.Queries.GetPetStatusQueryHandler                  0%
+  Amora.Application.Features.Pets.Queries.GetShopItemsQueryHandler                  0%
+  Amora.Application.Features.Pets.Queries.GetTransactionsQuery                      0%
+  Amora.Application.Features.Pets.Queries.GetTransactionsQueryHandler               0%
+  Amora.Application.Iap.IapGemService                                               0%
+  Amora.Application.Iap.IapOptions                                                  0%
+  Amora.Application.Iap.IapWebhookService                                        83.3%
+  Amora.Application.Iap.PetCoinRewardService                                     47.3%
+  Amora.Application.Messaging.ChatVibeResultMessage                                 0%
+  Amora.Application.Messaging.ChatVoiceProcessedMessage                           100%
+  Amora.Application.Pets.PetCoordinator                                          65.6%
+  Amora.Application.Pets.PetEngine                                               73.1%
+  Amora.Application.Pets.PetFeatureGateService                                     78%
+  Amora.Application.Pets.PetFeatureUnlocks                                       29.4%
+  Amora.Application.Pets.PetShopService                                          66.4%
+  Amora.Application.Services.AdminModerationService                              86.9%
+  Amora.Application.Services.AudioProcessingService                                39%
+  Amora.Application.Services.AuthService                                         74.1%
+  Amora.Application.Services.ChatService                                         56.4%
+  Amora.Application.Services.MatchService                                        44.4%
+  Amora.Application.Services.PasswordHasher                                       100%
+  Amora.Application.Services.ProfileService                                         0%
+  Amora.Application.Services.TrustSafetyService                                    88%
+  Amora.Application.Services.VoiceCommentService                                  100%
+  Amora.Application.Services.VoicePostService                                    64.5%
+
+Amora.Domain                                                                     74.4%
+  Amora.Domain.Common.BaseEntity                                                  100%
+  Amora.Domain.Entities.AppUser                                                    70%
+  Amora.Domain.Entities.ChatMessage                                               100%
+  Amora.Domain.Entities.ChatReadState                                               0%
+  Amora.Domain.Entities.IapPurchaseRecord                                        87.5%
+  Amora.Domain.Entities.IapWebhookEvent                                           100%
+  Amora.Domain.Entities.MatchConnection                                          85.7%
+  Amora.Domain.Entities.MatchDailyMediaUsage                                       25%
+  Amora.Domain.Entities.Pet                                                      85.7%
+  Amora.Domain.Entities.PetStateHistory                                            75%
+  Amora.Domain.Entities.PetTransaction                                             75%
+  Amora.Domain.Entities.PetVibeData                                                 0%
+  Amora.Domain.Entities.ShopItem                                                 87.5%
+  Amora.Domain.Entities.UserBlock                                                 100%
+  Amora.Domain.Entities.UserInventory                                              80%
+  Amora.Domain.Entities.UserReport                                                100%
+  Amora.Domain.Entities.VoiceComment                                             87.5%
+  Amora.Domain.Entities.VoicePost                                                87.5%
+  Amora.Domain.Results.MatchCreationResult                                          0%

@@ -6,7 +6,7 @@ namespace Amora.Api.Controllers;
 
 [ApiController]
 [Route("api/upload")]
-// [Authorize] // Usually we require authentication to upload, but based on the guide we just implement it.
+[Authorize]
 public class UploadController : ControllerBase
 {
     private readonly IStorageService _storageService;

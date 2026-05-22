@@ -70,4 +70,16 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
         await _hubContext.Clients.Group(RealtimeGroupNames.User(matchConnection.UserBId.ToString()))
             .SendAsync("ReceiveMatchExpired", payload, cancellationToken);
     }
+
+    public async Task DisconnectUserAsync(Guid userId, string reason, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            reason = reason,
+            timestamp = DateTimeOffset.UtcNow
+        };
+
+        await _hubContext.Clients.Group(RealtimeGroupNames.User(userId.ToString()))
+            .SendAsync("ReceiveBanned", payload, cancellationToken);
+    }
 }

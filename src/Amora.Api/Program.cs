@@ -22,8 +22,23 @@ using Amora.Infrastructure.HealthChecks;
 using Amora.Infrastructure.Scheduling;
 using Amora.Infrastructure.Services;
 using Amora.Infrastructure.Messaging;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Serilog: replace default logging with structured output ─────────
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithMachineName()
+        .Enrich.WithThreadId();
+});
+
+// ── OpenTelemetry: traces + metrics ─────────────────────────────────
+builder.AddAmoraObservability();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -62,6 +77,7 @@ builder.Services.AddScoped<IPetTransactionRepository, PetTransactionRepository>(
 builder.Services.AddScoped<IIapPurchaseRepository, IapPurchaseRepository>();
 builder.Services.AddScoped<IChatReadStateRepository, ChatReadStateRepository>();
 builder.Services.AddScoped<IMatchMediaUsageRepository, MatchMediaUsageRepository>();
+builder.Services.AddScoped<IIapWebhookEventRepository, IapWebhookEventRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -88,6 +104,7 @@ builder.Services.AddScoped<VoiceCommentService>();
 builder.Services.AddScoped<MatchService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<TrustSafetyService>();
+builder.Services.AddScoped<AdminModerationService>();
 builder.Services.AddScoped<ProfileService>();
 
 var awsOptions = builder.Configuration.GetAWSOptions();
@@ -220,6 +237,15 @@ if (app.Environment.IsDevelopment())
     await db.Database.MigrateAsync();
 }
 
+app.UseSerilogRequestLogging(opts =>
+{
+    opts.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("UserId", httpContext.User.FindFirst("id")?.Value ?? "anonymous");
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+    };
+});
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -232,8 +258,10 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+app.UseMiddleware<BanCheckMiddleware>();
 
 app.MapHealthChecks("/health");
+app.MapAmoraObservability();
 app.MapControllers().RequireAuthorization();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<PetHub>("/hubs/pet");

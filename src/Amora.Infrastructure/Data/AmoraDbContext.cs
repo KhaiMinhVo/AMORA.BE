@@ -46,6 +46,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<MatchDailyMediaUsage> MatchDailyMediaUsages => Set<MatchDailyMediaUsage>();
 
+    public DbSet<IapWebhookEvent> IapWebhookEvents => Set<IapWebhookEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -61,6 +63,9 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.City).HasMaxLength(100);
             entity.Property(x => x.Bio).HasMaxLength(300);
             entity.Property(x => x.Interests).HasMaxLength(500);
+
+            entity.Property(x => x.Role).HasMaxLength(50).HasDefaultValue("User");
+            entity.Property(x => x.BanReason).HasMaxLength(500);
 
             entity.HasData(
                 new AppUser
@@ -82,6 +87,15 @@ public sealed class AmoraDbContext : DbContext
                     Id = SeedUserCId,
                     DisplayName = "Amora Carol",
                     AvatarUrl = "carol.png",
+                    CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
+                },
+                new AppUser
+                {
+                    Id = Guid.Parse("99999999-9999-9999-9999-999999999999"),
+                    DisplayName = "Amora Admin",
+                    Email = "admin@amora.app",
+                    AvatarUrl = "admin.png",
+                    Role = "Admin",
                     CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
                 });
         });
@@ -261,6 +275,18 @@ public sealed class AmoraDbContext : DbContext
             entity.ToTable("MatchDailyMediaUsages");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.MatchId, x.UserId, x.UsageDate }).IsUnique();
+        });
+
+        modelBuilder.Entity<IapWebhookEvent>(entity =>
+        {
+            entity.ToTable("IapWebhookEvents");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.Platform, x.EventId }).IsUnique();
+            entity.Property(x => x.Platform).HasMaxLength(20);
+            entity.Property(x => x.EventId).HasMaxLength(200);
+            entity.Property(x => x.EventType).HasMaxLength(50);
+            entity.Property(x => x.TransactionId).HasMaxLength(200);
+            entity.Property(x => x.RawPayload).HasMaxLength(4000);
         });
 
         base.OnModelCreating(modelBuilder);

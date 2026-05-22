@@ -6,6 +6,11 @@ public interface IUserReportRepository
 {
     Task AddAsync(UserReport report, CancellationToken cancellationToken = default);
 
-    /// <summary>Kiểm tra user đã report target chưa (tránh spam report).</summary>
     Task<bool> ExistsAsync(Guid reporterId, Guid targetUserId, CancellationToken cancellationToken = default);
+
+    Task<UserReport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<(IEnumerable<UserReport> Reports, int TotalCount)> GetReportsAsync(int page, int pageSize, Amora.Domain.Enums.ReportStatus? status = null, CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(UserReport report, CancellationToken cancellationToken = default);
 }

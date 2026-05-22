@@ -107,3 +107,12 @@ D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\obj\Debug\net8.0\refint\Amora
 D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\obj\Debug\net8.0\Amora.Application.Tests.pdb
 D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\obj\Debug\net8.0\Amora.Application.Tests.genruntimeconfig.cache
 D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\obj\Debug\net8.0\ref\Amora.Application.Tests.dll
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\CoverletSourceRootsMapping_Amora.Application.Tests
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\Castle.Core.dll
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\FluentAssertions.dll
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\Moq.dll
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\System.Diagnostics.EventLog.dll
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Diagnostics.EventLog.Messages.dll
+D:\FPTU\EXE\AMORA.BE\tests\Amora.Application.Tests\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Diagnostics.EventLog.dll

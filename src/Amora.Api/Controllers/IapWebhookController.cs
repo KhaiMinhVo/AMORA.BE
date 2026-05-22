@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Amora.Application.Iap;
@@ -53,6 +54,19 @@ public sealed class IapWebhookController : ControllerBase
             return Unauthorized(new { success = false, message = "Apple bundleId mismatch." });
         }
 
+        // Idempotency: derive event ID from signedPayload hash
+        var eventId = ComputeEventId(request.SignedPayload);
+        var isDuplicate = await _iapWebhookService.TryRecordWebhookEventAsync(
+            _options.ApplePlatform,
+            eventId,
+            payload.NotificationType ?? "UNKNOWN",
+            payload.TransactionId,
+            TruncateForLog(request.SignedPayload),
+            cancellationToken);
+
+        if (isDuplicate)
+            return Ok(new { success = true, duplicate = true });
+
         if (IsAppleRefund(payload.NotificationType))
         {
             await _iapWebhookService.HandleRefundAsync(_options.ApplePlatform, payload.TransactionId, payload.NotificationType, cancellationToken);
@@ -88,6 +102,19 @@ public sealed class IapWebhookController : ControllerBase
         if (notification is null)
             return BadRequest(new { success = false, message = "Invalid Google payload." });
 
+        // Idempotency: use Pub/Sub messageId (guaranteed unique by Google)
+        var eventId = envelope.Message.MessageId ?? ComputeEventId(payloadJson);
+        var isDuplicate = await _iapWebhookService.TryRecordWebhookEventAsync(
+            _options.GooglePlatform,
+            eventId,
+            notification.NotificationType.ToString(),
+            notification.TransactionId,
+            TruncateForLog(payloadJson),
+            cancellationToken);
+
+        if (isDuplicate)
+            return Ok(new { success = true, duplicate = true });
+
         if (notification.IsRefund)
         {
             await _iapWebhookService.HandleRefundAsync(_options.GooglePlatform, notification.TransactionId, notification.NotificationType.ToString(), cancellationToken);
@@ -95,6 +122,10 @@ public sealed class IapWebhookController : ControllerBase
         else if (notification.IsRenewal)
         {
             await _iapWebhookService.HandleRenewalAsync(_options.GooglePlatform, notification.TransactionId, cancellationToken);
+        }
+        else if (notification.IsCanceled)
+        {
+            await _iapWebhookService.HandleSubscriptionCanceledAsync(_options.GooglePlatform, notification.TransactionId, cancellationToken);
         }
 
         return Ok(new { success = true });
@@ -205,15 +236,33 @@ public sealed class IapWebhookController : ControllerBase
         return null;
     }
 
+    /// <summary>Compute a deterministic event ID from raw payload for idempotency.</summary>
+    private static string ComputeEventId(string payload)
+        => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)))[..32];
+
+    private static string? TruncateForLog(string? value)
+        => value?.Length > 4000 ? value[..4000] : value;
+
     private sealed record AppleNotificationPayload(string TransactionId, string? BundleId, string? NotificationType);
 
     private sealed record GoogleNotificationPayload(string TransactionId, int NotificationType, bool IsSubscription)
     {
-        public bool IsRefund => IsSubscription
-            ? NotificationType == 12
-            : NotificationType == 2;
+        // Google subscription notification types:
+        //  1 = RECOVERED, 2 = RENEWED, 3 = CANCELED, 4 = PURCHASED,
+        //  5 = ON_HOLD, 6 = IN_GRACE_PERIOD, 7 = RESTARTED,
+        //  9 = PRICE_CHANGE_CONFIRMED, 12 = REVOKED, 13 = EXPIRED
+        // Google one-time product notification types:
+        //  1 = PURCHASED, 2 = CANCELED
 
-        public bool IsRenewal => IsSubscription && NotificationType == 2;
+        public bool IsRefund => IsSubscription
+            ? NotificationType == 12  // REVOKED
+            : NotificationType == 2;  // ONE_TIME_CANCELED
+
+        public bool IsRenewal => IsSubscription && NotificationType is 2 or 1;
+        // 2 = RENEWED, 1 = RECOVERED (payment recovered after failure)
+
+        public bool IsCanceled => IsSubscription && NotificationType is 3 or 13;
+        // 3 = CANCELED, 13 = EXPIRED
     }
 
     public sealed class AppleServerNotificationRequest

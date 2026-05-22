@@ -69,8 +69,8 @@ public sealed class IapGemService
             UpdatedAt = DateTimeOffset.UtcNow
         }, cancellationToken);
 
+        // Single SaveChanges — both repos share the same DbContext
         await _iapRepository.SaveChangesAsync(cancellationToken);
-        await _transactionRepository.SaveChangesAsync(cancellationToken);
 
         return user.AmoraGems;
     }

@@ -26,4 +26,35 @@ public sealed class UserReportRepository : IUserReportRepository
             x => x.ReporterId == reporterId && x.TargetUserId == targetUserId,
             cancellationToken);
     }
+
+    public Task<UserReport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.UserReports.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public async Task<(IEnumerable<UserReport> Reports, int TotalCount)> GetReportsAsync(int page, int pageSize, Domain.Enums.ReportStatus? status = null, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.UserReports.AsQueryable();
+
+        if (status.HasValue)
+        {
+            query = query.Where(x => x.Status == status.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var reports = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (reports, totalCount);
+    }
+
+    public async Task UpdateAsync(UserReport report, CancellationToken cancellationToken = default)
+    {
+        _dbContext.UserReports.Update(report);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

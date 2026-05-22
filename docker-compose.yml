@@ -64,6 +64,17 @@ services:
     volumes:
       - minio_data:/data
 
+  seq:
+    image: datalust/seq:latest
+    container_name: amora-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:5341"    # Ingestion + UI
+      - "8081:80"      # Alternate UI port
+    volumes:
+      - seq_data:/data
+
   audio-worker:
     build:
       context: ../amora-audio-worker
@@ -133,3 +144,4 @@ volumes:
   mongodb_data:
   rabbitmq_data:
   minio_data:
+  seq_data:

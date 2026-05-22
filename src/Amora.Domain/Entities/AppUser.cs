@@ -14,6 +14,13 @@ public sealed class AppUser
 
     public string AvatarUrl { get; set; } = string.Empty;
 
+    public string Role { get; set; } = "User";
+
+    // ── Moderation ──────────────────────────────────────────────────────
+    public bool IsBanned { get; set; }
+    public DateTimeOffset? BannedUntil { get; set; }
+    public string? BanReason { get; set; }
+
     // ── Profile mở rộng ─────────────────────────────────────────────────
 
     public DateOnly? DateOfBirth { get; set; }

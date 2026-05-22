@@ -37,7 +37,7 @@ public sealed class JwtTokenService : IJwtTokenService
             new("id", user.Id.ToString()),
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.DisplayName),
-            new("role", "User")
+            new("role", user.Role)
         };
 
         var expires = DateTime.UtcNow.AddHours(_options.ExpiryHours);
