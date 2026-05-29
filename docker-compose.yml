@@ -105,12 +105,12 @@ services:
       ConnectionStrings__MongoDb: mongodb://mongodb:27017
       ConnectionStrings__Redis: redis:6379
       RabbitMQ__Url: amqp://guest:guest@rabbitmq:5672//
-      AWS__ServiceURL: http://minio:9000
-      AWS__ForcePathStyle: "true"
-      AWS__AccessKey: minioadmin
-      AWS__SecretKey: minioadmin
-      Storage__BucketName: amora-voice-bucket
-      Storage__PublicBaseUrl: http://localhost:9000/amora-voice-bucket
+      AWS__ServiceURL: ""
+      AWS__ForcePathStyle: "false"
+      AWS__AccessKey: "${AWS_ACCESS_KEY}"
+      AWS__SecretKey: "${AWS_SECRET_KEY}"
+      Storage__BucketName: "amora-voice-bucket"
+      Storage__PublicBaseUrl: "https://amora-voice-bucket.s3.ap-southeast-1.amazonaws.com"
     depends_on:
       postgres:
         condition: service_healthy
