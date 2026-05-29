@@ -28,7 +28,7 @@ public sealed class AuthResponseDto
 
     public string DisplayName { get; init; } = string.Empty;
 
-    public int PetCoins { get; init; }
+    public int Diamonds { get; init; }
 
-    public int AmoraGems { get; init; }
+    public bool RequiresPasswordUpdate { get; init; }
 }

@@ -116,7 +116,7 @@ public sealed class VoicePostService
                 {
                     Id = post.PosterId,
                     DisplayName = poster?.DisplayName ?? $"Ẩn danh #{post.PosterId.ToString()[..4]}",
-                    AvatarUrl = poster?.AvatarUrl ?? "default_avatar.png"
+                    AvatarUrl = "anonymous.png"
                 },
                 AudioUrl = post.AudioUrl,
                 MatchCount = post.MatchCount,

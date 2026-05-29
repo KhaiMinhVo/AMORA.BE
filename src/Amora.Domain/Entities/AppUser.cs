@@ -9,12 +9,20 @@ public sealed class AppUser
     public string? Email { get; set; }
 
     public string? PasswordHash { get; set; }
+    
+    public string? GoogleId { get; set; }
+
+    public string? PhoneNumber { get; set; }
+
+    public bool RequiresPasswordUpdate { get; set; }
 
     public string DisplayName { get; set; } = string.Empty;
 
     public string AvatarUrl { get; set; } = string.Empty;
 
     public string Role { get; set; } = "User";
+
+    public string[] Photos { get; set; } = [];
 
     // ── Moderation ──────────────────────────────────────────────────────
     public bool IsBanned { get; set; }
@@ -41,12 +49,17 @@ public sealed class AppUser
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    // ── Pet Shop currency ───────────────────────────────────────────────
-    public int PetCoins { get; set; }
+    // ── Economy (Tiền tệ duy nhất) ──────────────────────────────────────
+    public int Diamonds { get; set; }
 
-    public int AmoraGems { get; set; }
-
-    public DateOnly? LastPetCoinRewardDate { get; set; }
+    public DateOnly? LastDiamondRewardDate { get; set; }
 
     public DateOnly? LastCoPresenceCoinDate { get; set; }
+
+    // ── Subscriptions ───────────────────────────────────────────────────
+    public bool IsPremium { get; set; }
+    public DateTimeOffset? PremiumUntil { get; set; }
+
+    public bool IsGold { get; set; }
+    public DateTimeOffset? GoldUntil { get; set; }
 }

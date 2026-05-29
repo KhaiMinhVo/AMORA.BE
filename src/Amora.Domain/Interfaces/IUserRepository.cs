@@ -12,6 +12,10 @@ public interface IUserRepository
 
     Task<AppUser?> GetByEmailForAuthAsync(string email, CancellationToken cancellationToken = default);
 
+    Task<AppUser?> GetByGoogleIdAsync(string googleId, CancellationToken cancellationToken = default);
+
+    Task<AppUser?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default);
+
     Task AddAsync(AppUser user, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(AppUser user, CancellationToken cancellationToken = default);

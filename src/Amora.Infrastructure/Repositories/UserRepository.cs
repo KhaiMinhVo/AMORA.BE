@@ -26,6 +26,12 @@ public sealed class UserRepository : IUserRepository
     public Task<AppUser?> GetByEmailForAuthAsync(string email, CancellationToken cancellationToken = default)
         => _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
 
+    public Task<AppUser?> GetByGoogleIdAsync(string googleId, CancellationToken cancellationToken = default)
+        => _dbContext.Users.FirstOrDefaultAsync(x => x.GoogleId == googleId, cancellationToken);
+
+    public Task<AppUser?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
+        => _dbContext.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phoneNumber, cancellationToken);
+
     public async Task AddAsync(AppUser user, CancellationToken cancellationToken = default)
     {
         await _dbContext.Users.AddAsync(user, cancellationToken);

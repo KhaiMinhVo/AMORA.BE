@@ -10,9 +10,7 @@ public sealed class PetTransaction : BaseEntity
 
     public string TransactionType { get; set; } = string.Empty;
 
-    public int PetCoinsDelta { get; set; }
-
-    public int AmoraGemsDelta { get; set; }
+    public int DiamondsDelta { get; set; }
 
     public string? MetadataJson { get; set; }
 

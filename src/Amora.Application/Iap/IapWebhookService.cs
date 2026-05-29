@@ -83,10 +83,10 @@ public sealed class IapWebhookService
             return false;
         }
 
-        var refundable = Math.Min(record.GemsGranted, user.AmoraGems);
+        var refundable = Math.Min(record.GemsGranted, user.Diamonds);
         var delta = -refundable;
 
-        user.AmoraGems += delta;
+        user.Diamonds += delta;
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         record.RefundedAt = DateTimeOffset.UtcNow;
@@ -98,7 +98,7 @@ public sealed class IapWebhookService
             Id = Guid.NewGuid(),
             UserId = user.Id,
             TransactionType = "IapRefund",
-            AmoraGemsDelta = delta,
+            DiamondsDelta = delta,
             MetadataJson = $"{{\"platform\":\"{platform}\",\"transactionId\":\"{transactionId}\",\"reason\":\"{reason ?? ""}\"}}",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow

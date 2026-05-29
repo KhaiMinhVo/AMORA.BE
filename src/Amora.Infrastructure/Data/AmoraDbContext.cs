@@ -40,6 +40,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<PetTransaction> PetTransactions => Set<PetTransaction>();
 
+    public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+
     public DbSet<IapPurchaseRecord> IapPurchaseRecords => Set<IapPurchaseRecord>();
 
     public DbSet<ChatReadState> ChatReadStates => Set<ChatReadState>();
@@ -194,7 +196,6 @@ public sealed class AmoraDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.MatchId).IsUnique();
             entity.HasIndex(x => new { x.IsFrozen, x.LastInteractionAt });
-            entity.Property(x => x.Mood).HasConversion<string>().HasMaxLength(20);
             entity.Property(x => x.Stage).HasConversion<string>().HasMaxLength(20);
 
             entity.HasOne(x => x.Match)
@@ -248,6 +249,18 @@ public sealed class AmoraDbContext : DbContext
             entity.HasOne(x => x.ShopItem).WithMany().HasForeignKey(x => x.ShopItemId).OnDelete(DeleteBehavior.SetNull);
         });
 
+        modelBuilder.Entity<PaymentTransaction>(entity =>
+        {
+            entity.ToTable("PaymentTransactions");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.CreatedAt });
+            entity.Property(x => x.Provider).HasMaxLength(50);
+            entity.Property(x => x.ProviderTransactionId).HasMaxLength(100);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<IapPurchaseRecord>(entity =>
         {
             entity.ToTable("IapPurchaseRecords");
@@ -296,13 +309,15 @@ public sealed class AmoraDbContext : DbContext
     {
         var items = new[]
         {
-            ShopSeed(ShopItem1, "energy_cookie", "Bánh Quy Năng Lượng", "Consumable", 50, 0, """{"hp":30}"""),
-            ShopSeed(ShopItem2, "gentle_bath", "Sữa Tắm Dịu Nhẹ", "Buff", 80, 5, """{"buff":"AffectionateMood","hours":2}"""),
-            ShopSeed(ShopItem3, "growth_potion", "Lọ Thuốc Tăng Trưởng", "Buff", 120, 10, """{"buff":"DoubleVoiceRp","hours":6}"""),
-            ShopSeed(ShopItem4, "resonance_candy", "Kẹo Cộng Hưởng", "Consumable", 40, 0, """{"rp":10}"""),
-            ShopSeed(ShopItem5, "revival_flask", "Bình Hồi Sinh", "Revival", 200, 20, """{"hp":50}"""),
-            ShopSeed(ShopItem6, "fire_fox_skin", "Da Cáo Lửa", "Cosmetic", 150, 15, "{}"),
-            ShopSeed(ShopItem7, "memory_collar", "Vòng Cổ Kỷ Niệm", "Cosmetic", 300, 30, "{}")
+            ShopSeed(ShopItem1, "pet_food", "Túi Thức Ăn Cho Pet", "Consumable", 15, """{"hp":30}"""),
+            ShopSeed(ShopItem2, "gentle_bath", "Sữa Tắm Dịu Nhẹ", "Consumable", 20, """{"hp":20}"""),
+            ShopSeed(ShopItem3, "growth_potion", "Lọ Thuốc Tăng Trưởng", "Buff", 30, """{"buff":"DoubleVoiceRp","hours":6}"""),
+            ShopSeed(ShopItem4, "resonance_candy", "Kẹo Cộng Hưởng", "Consumable", 10, """{"rp":10}"""),
+            ShopSeed(ShopItem5, "revival_flask", "Bình Hồi Sinh", "Revival", 50, """{"hp":50}"""),
+            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000010"), "premium_7d", "Premium 7 Days", "Subscription", 70, """{"premium_days":7}"""),
+            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000011"), "premium_30d", "Premium 1 Month", "Subscription", 138, """{"premium_days":30}"""),
+            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000012"), "gold_7d", "Gold 7 Days", "Subscription", 98, """{"gold_days":7}"""),
+            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000013"), "gold_30d", "Gold 1 Month", "Subscription", 198, """{"gold_days":30}""")
         };
 
         entity.HasData(items);
@@ -316,7 +331,7 @@ public sealed class AmoraDbContext : DbContext
     private static readonly Guid ShopItem6 = Guid.Parse("f1000001-0001-4001-8001-000000000006");
     private static readonly Guid ShopItem7 = Guid.Parse("f1000001-0001-4001-8001-000000000007");
 
-    private static ShopItem ShopSeed(Guid id, string code, string name, string type, int pc, int gems, string effect)
+    private static ShopItem ShopSeed(Guid id, string code, string name, string type, int diamonds, string effect)
     {
         return new ShopItem
         {
@@ -325,8 +340,7 @@ public sealed class AmoraDbContext : DbContext
             Name = name,
             Description = name,
             ItemType = Enum.Parse<ItemType>(type),
-            PricePetCoins = pc,
-            PriceAmoraGems = gems,
+            PriceDiamonds = diamonds,
             EffectJson = effect,
             IsActive = true,
             CreatedAt = new DateTimeOffset(2026, 5, 16, 0, 0, 0, TimeSpan.Zero),

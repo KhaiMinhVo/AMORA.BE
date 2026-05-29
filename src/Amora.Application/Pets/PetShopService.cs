@@ -58,39 +58,38 @@ public sealed class PetShopService
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("User not found.");
 
-        if (request.UseAmoraGems)
+        if (user.Diamonds < (item.PriceDiamonds * request.Quantity))
+            throw new ValidationApiException("Không đủ Diamonds.");
+
+        user.Diamonds -= item.PriceDiamonds * request.Quantity;
+
+        if (item.ItemType == ItemType.Subscription)
         {
-            if (user.AmoraGems < item.PriceAmoraGems)
-                throw new ValidationApiException("Không đủ Amora Gem.");
-            user.AmoraGems -= item.PriceAmoraGems;
+            ApplySubscription(user, item, request.Quantity);
         }
         else
         {
-            if (user.PetCoins < item.PricePetCoins)
-                throw new ValidationApiException("Không đủ Pet Coin.");
-            user.PetCoins -= item.PricePetCoins;
+            var slot = await _shopRepository.GetInventorySlotAsync(userId, item.Id, cancellationToken);
+            if (slot is null)
+            {
+                await _shopRepository.AddInventoryAsync(new UserInventory
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    ShopItemId = item.Id,
+                    Quantity = request.Quantity,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    UpdatedAt = DateTimeOffset.UtcNow
+                }, cancellationToken);
+            }
+            else
+            {
+                slot.Quantity += request.Quantity;
+                slot.UpdatedAt = DateTimeOffset.UtcNow;
+            }
         }
 
         await _userRepository.UpdateAsync(user, cancellationToken);
-
-        var slot = await _shopRepository.GetInventorySlotAsync(userId, item.Id, cancellationToken);
-        if (slot is null)
-        {
-            await _shopRepository.AddInventoryAsync(new UserInventory
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                ShopItemId = item.Id,
-                Quantity = 1,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
-            }, cancellationToken);
-        }
-        else
-        {
-            slot.Quantity++;
-            slot.UpdatedAt = DateTimeOffset.UtcNow;
-        }
 
         await _transactionRepository.AddAsync(new PetTransaction
         {
@@ -98,8 +97,7 @@ public sealed class PetShopService
             UserId = userId,
             ShopItemId = item.Id,
             TransactionType = "Purchase",
-            PetCoinsDelta = request.UseAmoraGems ? 0 : -item.PricePetCoins,
-            AmoraGemsDelta = request.UseAmoraGems ? -item.PriceAmoraGems : 0,
+            DiamondsDelta = -(item.PriceDiamonds * request.Quantity),
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         }, cancellationToken);
@@ -151,8 +149,7 @@ public sealed class PetShopService
                 PetEngine.ApplyHpGain(pet, root.GetProperty("hp").GetInt32(), bypassCap: true);
                 break;
             case "gentle_bath":
-                PetEngine.AddBuff(pet, PetBuffType.AffectionateMood, TimeSpan.FromHours(2));
-                pet.Mood = PetMood.Affectionate;
+                PetEngine.ApplyHpGain(pet, root.GetProperty("hp").GetInt32(), bypassCap: true);
                 break;
             case "growth_potion":
                 PetEngine.AddBuff(pet, PetBuffType.DoubleVoiceRp, TimeSpan.FromHours(6));
@@ -163,11 +160,29 @@ public sealed class PetShopService
             case "revival_flask":
                 pet.IsFrozen = false;
                 pet.Hp = root.GetProperty("hp").GetInt32();
-                pet.Mood = PetMood.Neutral;
                 break;
             default:
                 // cosmetic items — no stat change
                 break;
+        }
+    }
+
+    private static void ApplySubscription(AppUser user, ShopItem item, int quantity)
+    {
+        using var doc = JsonDocument.Parse(item.EffectJson);
+        var root = doc.RootElement;
+        
+        if (root.TryGetProperty("premium_days", out var premiumDays))
+        {
+            user.IsPremium = true;
+            var currentEnd = user.PremiumUntil > DateTimeOffset.UtcNow ? user.PremiumUntil.Value : DateTimeOffset.UtcNow;
+            user.PremiumUntil = currentEnd.AddDays(premiumDays.GetInt32() * quantity);
+        }
+        else if (root.TryGetProperty("gold_days", out var goldDays))
+        {
+            user.IsGold = true;
+            var currentEnd = user.GoldUntil > DateTimeOffset.UtcNow ? user.GoldUntil.Value : DateTimeOffset.UtcNow;
+            user.GoldUntil = currentEnd.AddDays(goldDays.GetInt32() * quantity);
         }
     }
 
@@ -178,7 +193,6 @@ public sealed class PetShopService
         Name = item.Name,
         Description = item.Description,
         ItemType = item.ItemType.ToString(),
-        PricePetCoins = item.PricePetCoins,
-        PriceAmoraGems = item.PriceAmoraGems
+        PriceDiamonds = item.PriceDiamonds
     };
 }

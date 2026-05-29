@@ -4,6 +4,7 @@ public sealed class UpdateProfileRequest
 {
     public string? DisplayName { get; set; }
     public string? AvatarUrl { get; set; }
+    public string[]? Photos { get; set; }
     public string? DateOfBirth { get; set; }  // Format: "yyyy-MM-dd"
     public string? Gender { get; set; }       // "Male", "Female", "NonBinary", "Other", "PreferNotToSay"
     public string? City { get; set; }
@@ -16,6 +17,7 @@ public sealed class ProfileResponseDto
     public Guid UserId { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string AvatarUrl { get; init; } = string.Empty;
+    public string[] Photos { get; init; } = [];
     public string? DateOfBirth { get; init; }
     public string Gender { get; init; } = string.Empty;
     public string? City { get; init; }
@@ -27,14 +29,14 @@ public sealed class ProfileResponseDto
 
 /// <summary>
 /// Profile công khai — hiển thị cho người khác xem.
-/// Avatar bị blur nếu chưa match.
+/// Avatar và Photos bị ẩn (trả về rỗng hoặc ảnh mặc định) nếu chưa match.
 /// </summary>
 public sealed class PublicProfileResponseDto
 {
     public Guid UserId { get; init; }
     public string DisplayName { get; init; } = string.Empty;
     public string AvatarUrl { get; init; } = string.Empty;
-    public bool IsAvatarBlurred { get; init; }
+    public string[] Photos { get; init; } = [];
     public string Gender { get; init; } = string.Empty;
     public string? City { get; init; }
     public string? Bio { get; init; }

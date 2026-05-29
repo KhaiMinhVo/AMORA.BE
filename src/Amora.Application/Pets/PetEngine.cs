@@ -9,8 +9,8 @@ public static class PetEngine
 {
     public const int MaxHp = 100;
     public const int DailyHpGainCap = 30;
-    public const int DailyTextRpCap = 50;
-    public const int DailyVoiceRpCap = 30;
+    public const int DailyTextRpCap = 100; // Cập nhật theo yêu cầu
+    public const int DailyVoiceRpCap = 40;  // Cập nhật theo yêu cầu
     public const int DailyOnlineRp = 5;
     public const int HighHpStreakBonusRp = 20;
 
@@ -50,7 +50,6 @@ public static class PetEngine
         if (pet.Hp == 0)
         {
             pet.IsFrozen = true;
-            pet.Mood = PetMood.Lonely;
         }
 
         return loss;
@@ -83,27 +82,7 @@ public static class PetEngine
         return Math.Max(0, messageCount + (int)Math.Floor(voiceMinutes * 3) + vibeScore);
     }
 
-    public static PetMood ComputeMood(Pet pet, int vibeScore, double? replyDelayMinutes)
-    {
-        if (HasActiveBuff(pet, PetBuffType.AffectionateMood))
-            return PetMood.Affectionate;
 
-        if (pet.ConsecutiveNegativeVibes >= 3)
-            return PetMood.Grumpy;
-
-        var delay = replyDelayMinutes ?? 999;
-        if (delay <= 5 && vibeScore >= 5) return PetMood.Excited;
-        if (delay > 60 || vibeScore <= -2) return PetMood.Lonely;
-        if (vibeScore >= 3) return PetMood.Excited;
-
-        return PetMood.Neutral;
-    }
-
-    public static void RegisterVibe(Pet pet, int vibeScore)
-    {
-        if (vibeScore < 0) pet.ConsecutiveNegativeVibes++;
-        else pet.ConsecutiveNegativeVibes = 0;
-    }
 
     public static int AwardTextRp(Pet pet)
     {
@@ -111,9 +90,17 @@ public static class PetEngine
         ResetDailyStatsIfNeeded(pet);
         if (pet.RpFromTextToday >= DailyTextRpCap) return 0;
 
-        pet.Rp += 1;
-        pet.RpFromTextToday++;
-        return 1;
+        // Cập nhật: 2 RP/tin
+        var gain = 2;
+        // Đảm bảo không vượt quá cap
+        if (pet.RpFromTextToday + gain > DailyTextRpCap)
+        {
+            gain = DailyTextRpCap - pet.RpFromTextToday;
+        }
+
+        pet.Rp += gain;
+        pet.RpFromTextToday += gain;
+        return gain;
     }
 
     public static int AwardVoiceRp(Pet pet, double durationSeconds)
@@ -130,9 +117,18 @@ public static class PetEngine
         for (var i = 0; i < blocks; i++)
         {
             if (pet.RpFromVoiceToday >= DailyVoiceRpCap) break;
-            pet.Rp += 3 * multiplier;
-            pet.RpFromVoiceToday++;
-            gain += 3 * multiplier;
+            
+            // Cập nhật: 4 RP mỗi 30s
+            var blockGain = 4 * multiplier;
+            
+            if (pet.RpFromVoiceToday + blockGain > DailyVoiceRpCap)
+            {
+                blockGain = DailyVoiceRpCap - pet.RpFromVoiceToday;
+            }
+
+            pet.Rp += blockGain;
+            pet.RpFromVoiceToday += blockGain;
+            gain += blockGain;
         }
 
         return gain;
@@ -175,12 +171,13 @@ public static class PetEngine
     {
         var avgHp = pet.HpSnapshotCount > 0 ? pet.HpSnapshotSum / pet.HpSnapshotCount : pet.Hp;
 
-        if (pet.Rp >= 3000 && avgHp >= 80) return GrowthStage.Legend;
-        if (pet.Rp >= 1500 && avgHp >= 70) return GrowthStage.Adult;
-        if (pet.Rp >= 600 && avgHp >= 65) return GrowthStage.Young;
-        if (pet.Rp >= 200 && avgHp >= 60) return GrowthStage.Sprout;
+        // Cập nhật các mốc tiến hóa mới
+        if (pet.Rp >= 1500 && avgHp >= 80) return GrowthStage.Legend; // Trưởng thành cuối cùng
+        if (pet.Rp >= 1000 && avgHp >= 70) return GrowthStage.Adult;  // Trưởng thành
+        if (pet.Rp >= 700 && avgHp >= 65) return GrowthStage.Young;   // Thiếu niên
+        if (pet.Rp >= 300 && avgHp >= 60) return GrowthStage.Sprout;  // Thú non
 
-        return GrowthStage.ResonanceSeed;
+        return GrowthStage.ResonanceSeed; // Trứng
     }
 
     public static bool HasActiveBuff(Pet pet, PetBuffType buffType)

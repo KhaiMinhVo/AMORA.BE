@@ -43,7 +43,7 @@ public sealed class IapGemService
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("User not found.");
 
-        user.AmoraGems += gems;
+        user.Diamonds += gems;
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         await _iapRepository.AddAsync(new IapPurchaseRecord
@@ -63,7 +63,7 @@ public sealed class IapGemService
             Id = Guid.NewGuid(),
             UserId = userId,
             TransactionType = "IapGemPurchase",
-            AmoraGemsDelta = gems,
+            DiamondsDelta = gems,
             MetadataJson = $"{{\"platform\":\"{request.Platform}\",\"productId\":\"{request.ProductId}\"}}",
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
@@ -72,6 +72,6 @@ public sealed class IapGemService
         // Single SaveChanges — both repos share the same DbContext
         await _iapRepository.SaveChangesAsync(cancellationToken);
 
-        return user.AmoraGems;
+        return user.Diamonds;
     }
 }

@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.vs/
+.git/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+logs/
+.dockerignore

@@ -10,8 +10,6 @@ public sealed class Pet : BaseEntity
 
     public int Hp { get; set; } = 80;
 
-    public PetMood Mood { get; set; } = PetMood.Neutral;
-
     public long Rp { get; set; }
 
     public GrowthStage Stage { get; set; } = GrowthStage.ResonanceSeed;
@@ -20,9 +18,6 @@ public sealed class Pet : BaseEntity
     public bool IsFrozen { get; set; }
 
     public DateTimeOffset LastInteractionAt { get; set; } = DateTimeOffset.UtcNow;
-
-    /// <summary>Đếm vibe âm liên tiếp (≤ -1) cho mood Grumpy.</summary>
-    public int ConsecutiveNegativeVibes { get; set; }
 
     public DateTimeOffset? LastPartnerMessageAt { get; set; }
 

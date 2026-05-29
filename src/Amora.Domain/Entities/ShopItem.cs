@@ -13,9 +13,7 @@ public sealed class ShopItem : BaseEntity
 
     public ItemType ItemType { get; set; }
 
-    public int PricePetCoins { get; set; }
-
-    public int PriceAmoraGems { get; set; }
+    public int PriceDiamonds { get; set; }
 
     /// <summary>JSON hiệu ứng: hp, mood, buffType, rpBonus...</summary>
     public string EffectJson { get; set; } = "{}";

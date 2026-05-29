@@ -41,6 +41,63 @@ public sealed class AuthController : ControllerBase
         return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Login successful."));
     }
 
+    /// <summary>
+    /// Dang nhap bang Google IdToken.
+    /// </summary>
+    [HttpPost("google")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> GoogleLogin(
+        [FromBody] LoginWithGoogleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _authService.LoginWithGoogleAsync(request, cancellationToken);
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Google login successful."));
+    }
+
+    /// <summary>
+    /// Gui ma OTP den so dien thoai.
+    /// </summary>
+    [HttpPost("phone/send-otp")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<string>>> SendOtp(
+        [FromBody] SendOtpRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _authService.SendOtpAsync(request, cancellationToken);
+        return Ok(ApiResponse<string>.Ok("OTP sent.", "OTP sent successfully."));
+    }
+
+    /// <summary>
+    /// Xac minh OTP va dang nhap.
+    /// </summary>
+    [HttpPost("phone/verify")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> PhoneLogin(
+        [FromBody] LoginWithPhoneRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _authService.LoginWithPhoneAsync(request, cancellationToken);
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Phone login successful."));
+    }
+
+    /// <summary>
+    /// Thiet lap mat khau cho tai khoan moi (tu Google/Phone).
+    /// </summary>
+    [HttpPost("set-password")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<string>>> SetPassword(
+        [FromBody] SetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userIdString = User.FindFirst("id")?.Value;
+        if (!Guid.TryParse(userIdString, out var userId))
+            return Unauthorized();
+
+        await _authService.SetPasswordAsync(userId, request, cancellationToken);
+        return Ok(ApiResponse<string>.Ok("Password set.", "Password updated successfully."));
+    }
+
     /// <summary>Development — JWT cho seed user hoặc user mới.</summary>
     [HttpPost("dev-token")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> DevToken(

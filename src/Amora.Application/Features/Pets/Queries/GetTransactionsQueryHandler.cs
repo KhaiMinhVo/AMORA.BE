@@ -18,8 +18,7 @@ public sealed class GetTransactionsQueryHandler : IRequestHandler<GetTransaction
         {
             Id = t.Id,
             TransactionType = t.TransactionType,
-            PetCoinsDelta = t.PetCoinsDelta,
-            AmoraGemsDelta = t.AmoraGemsDelta,
+            DiamondsDelta = t.DiamondsDelta,
             CreatedAt = t.CreatedAt,
             ItemName = t.ShopItem?.Name
         }).ToList();

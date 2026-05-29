@@ -20,7 +20,6 @@ public sealed class SignalRPetRealtimeNotifier : IPetRealtimeNotifier
             petId = dto.PetId,
             matchId = dto.MatchId,
             hp = dto.Hp,
-            mood = dto.Mood,
             rp = dto.Rp,
             stage = dto.Stage,
             stageName = dto.StageName,

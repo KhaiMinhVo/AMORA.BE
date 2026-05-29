@@ -12,6 +12,8 @@ public sealed class ProfileService
     private readonly IUserRepository _userRepository;
     private readonly IMatchConnectionRepository _matchConnectionRepository;
 
+    private const string DefaultAnonymousAvatar = "anonymous.png";
+
     public ProfileService(
         ICurrentUserService currentUserService,
         IUserRepository userRepository,
@@ -33,7 +35,7 @@ public sealed class ProfileService
 
     /// <summary>
     /// Lấy profile công khai của user khác.
-    /// Avatar bị blur nếu chưa match với viewer.
+    /// Avatar và Photos bị ẩn nếu chưa match với viewer.
     /// </summary>
     public async Task<PublicProfileResponseDto> GetPublicProfileAsync(Guid targetUserId, CancellationToken cancellationToken = default)
     {
@@ -42,15 +44,15 @@ public sealed class ProfileService
 
         var viewerId = _currentUserService.UserId;
 
-        // Kiểm tra đã match chưa để quyết định blur hay không
+        // Kiểm tra đã match chưa để quyết định hiển thị Avatar và Photos
         var isMatched = await _matchConnectionRepository.AreMatchedAsync(viewerId, targetUserId, cancellationToken);
 
         return new PublicProfileResponseDto
         {
             UserId = target.Id,
             DisplayName = target.DisplayName,
-            AvatarUrl = target.AvatarUrl,
-            IsAvatarBlurred = !isMatched, // Chưa match → blur
+            AvatarUrl = isMatched ? target.AvatarUrl : DefaultAnonymousAvatar,
+            Photos = isMatched ? target.Photos : Array.Empty<string>(),
             Gender = target.Gender.ToString(),
             City = target.City,
             Bio = target.Bio,
@@ -69,6 +71,9 @@ public sealed class ProfileService
 
         if (!string.IsNullOrWhiteSpace(request.AvatarUrl))
             user.AvatarUrl = request.AvatarUrl.Trim();
+
+        if (request.Photos is not null)
+            user.Photos = request.Photos.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray();
 
         if (!string.IsNullOrWhiteSpace(request.DateOfBirth))
         {
@@ -103,10 +108,12 @@ public sealed class ProfileService
         if (request.Interests is not null)
             user.Interests = string.Join(",", request.Interests.Select(i => i.Trim()).Where(i => i.Length > 0));
 
-        // Kiểm tra đã đủ thông tin chưa
+        // Kiểm tra đã đủ thông tin chưa: có avatar, có DOB, có giới tính, và có ít nhất 2 ảnh.
         user.IsProfileComplete = !string.IsNullOrWhiteSpace(user.DisplayName)
+                                  && !string.IsNullOrWhiteSpace(user.AvatarUrl)
                                   && user.DateOfBirth.HasValue
-                                  && user.Gender != Gender.PreferNotToSay;
+                                  && user.Gender != Gender.PreferNotToSay
+                                  && user.Photos is not null && user.Photos.Length >= 2;
 
         await _userRepository.UpdateAsync(user, cancellationToken);
 
@@ -118,6 +125,7 @@ public sealed class ProfileService
         UserId = user.Id,
         DisplayName = user.DisplayName,
         AvatarUrl = user.AvatarUrl,
+        Photos = user.Photos,
         DateOfBirth = user.DateOfBirth?.ToString("yyyy-MM-dd"),
         Gender = user.Gender.ToString(),
         City = user.City,

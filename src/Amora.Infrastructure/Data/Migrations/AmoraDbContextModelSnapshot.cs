@@ -28,9 +28,6 @@ namespace Amora.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("AmoraGems")
-                        .HasColumnType("integer");
-
                     b.Property<string>("AvatarUrl")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -57,6 +54,9 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
 
+                    b.Property<int>("Diamonds")
+                        .HasColumnType("integer");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -73,11 +73,23 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(20)")
                         .HasDefaultValue("PreferNotToSay");
 
+                    b.Property<DateTimeOffset?>("GoldUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GoogleId")
+                        .HasColumnType("text");
+
                     b.Property<string>("Interests")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
                     b.Property<bool>("IsBanned")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsGold")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPremium")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsProfileComplete")
@@ -86,15 +98,25 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<DateOnly?>("LastCoPresenceCoinDate")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly?>("LastPetCoinRewardDate")
+                    b.Property<DateOnly?>("LastDiamondRewardDate")
                         .HasColumnType("date");
 
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<int>("PetCoins")
-                        .HasColumnType("integer");
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<string[]>("Photos")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTimeOffset?>("PremiumUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("RequiresPasswordUpdate")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -115,54 +137,66 @@ namespace Amora.Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            AmoraGems = 0,
                             AvatarUrl = "alice.png",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Diamonds = 0,
                             DisplayName = "Amora Alice",
                             Gender = "PreferNotToSay",
                             IsBanned = false,
+                            IsGold = false,
+                            IsPremium = false,
                             IsProfileComplete = false,
-                            PetCoins = 0,
+                            Photos = new string[0],
+                            RequiresPasswordUpdate = false,
                             Role = "User"
                         },
                         new
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            AmoraGems = 0,
                             AvatarUrl = "bob.png",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Diamonds = 0,
                             DisplayName = "Amora Bob",
                             Gender = "PreferNotToSay",
                             IsBanned = false,
+                            IsGold = false,
+                            IsPremium = false,
                             IsProfileComplete = false,
-                            PetCoins = 0,
+                            Photos = new string[0],
+                            RequiresPasswordUpdate = false,
                             Role = "User"
                         },
                         new
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            AmoraGems = 0,
                             AvatarUrl = "carol.png",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Diamonds = 0,
                             DisplayName = "Amora Carol",
                             Gender = "PreferNotToSay",
                             IsBanned = false,
+                            IsGold = false,
+                            IsPremium = false,
                             IsProfileComplete = false,
-                            PetCoins = 0,
+                            Photos = new string[0],
+                            RequiresPasswordUpdate = false,
                             Role = "User"
                         },
                         new
                         {
                             Id = new Guid("99999999-9999-9999-9999-999999999999"),
-                            AmoraGems = 0,
                             AvatarUrl = "admin.png",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Diamonds = 0,
                             DisplayName = "Amora Admin",
                             Email = "admin@amora.app",
                             Gender = "PreferNotToSay",
                             IsBanned = false,
+                            IsGold = false,
+                            IsPremium = false,
                             IsProfileComplete = false,
-                            PetCoins = 0,
+                            Photos = new string[0],
+                            RequiresPasswordUpdate = false,
                             Role = "Admin"
                         });
                 });
@@ -365,6 +399,48 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.ToTable("MatchDailyMediaUsages", (string)null);
                 });
 
+            modelBuilder.Entity("Amora.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AmountVnd")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DiamondsReceived")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ProviderTransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("PaymentTransactions", (string)null);
+                });
+
             modelBuilder.Entity("Amora.Domain.Entities.Pet", b =>
                 {
                     b.Property<Guid>("Id")
@@ -375,9 +451,6 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("ConsecutiveHighHpDays")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ConsecutiveNegativeVibes")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -412,11 +485,6 @@ namespace Amora.Infrastructure.Data.Migrations
 
                     b.Property<Guid>("MatchId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Mood")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.Property<bool>("OnlineBonusGrantedToday")
                         .HasColumnType("boolean");
@@ -488,17 +556,14 @@ namespace Amora.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("AmoraGemsDelta")
-                        .HasColumnType("integer");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("DiamondsDelta")
+                        .HasColumnType("integer");
+
                     b.Property<string>("MetadataJson")
                         .HasColumnType("text");
-
-                    b.Property<int>("PetCoinsDelta")
-                        .HasColumnType("integer");
 
                     b.Property<Guid?>("ShopItemId")
                         .HasColumnType("uuid");
@@ -598,10 +663,7 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("PriceAmoraGems")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PricePetCoins")
+                    b.Property<int>("PriceDiamonds")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
@@ -618,15 +680,14 @@ namespace Amora.Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("f1000001-0001-4001-8001-000000000001"),
-                            Code = "energy_cookie",
+                            Code = "pet_food",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "Bánh Quy Năng Lượng",
+                            Description = "Túi Thức Ăn Cho Pet",
                             EffectJson = "{\"hp\":30}",
                             IsActive = true,
                             ItemType = "Consumable",
-                            Name = "Bánh Quy Năng Lượng",
-                            PriceAmoraGems = 0,
-                            PricePetCoins = 50,
+                            Name = "Túi Thức Ăn Cho Pet",
+                            PriceDiamonds = 15,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -635,12 +696,11 @@ namespace Amora.Infrastructure.Data.Migrations
                             Code = "gentle_bath",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Description = "Sữa Tắm Dịu Nhẹ",
-                            EffectJson = "{\"buff\":\"AffectionateMood\",\"hours\":2}",
+                            EffectJson = "{\"hp\":20}",
                             IsActive = true,
-                            ItemType = "Buff",
+                            ItemType = "Consumable",
                             Name = "Sữa Tắm Dịu Nhẹ",
-                            PriceAmoraGems = 5,
-                            PricePetCoins = 80,
+                            PriceDiamonds = 20,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -653,8 +713,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             IsActive = true,
                             ItemType = "Buff",
                             Name = "Lọ Thuốc Tăng Trưởng",
-                            PriceAmoraGems = 10,
-                            PricePetCoins = 120,
+                            PriceDiamonds = 30,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -667,8 +726,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             IsActive = true,
                             ItemType = "Consumable",
                             Name = "Kẹo Cộng Hưởng",
-                            PriceAmoraGems = 0,
-                            PricePetCoins = 40,
+                            PriceDiamonds = 10,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
@@ -681,36 +739,59 @@ namespace Amora.Infrastructure.Data.Migrations
                             IsActive = true,
                             ItemType = "Revival",
                             Name = "Bình Hồi Sinh",
-                            PriceAmoraGems = 20,
-                            PricePetCoins = 200,
+                            PriceDiamonds = 50,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
                         {
-                            Id = new Guid("f1000001-0001-4001-8001-000000000006"),
-                            Code = "fire_fox_skin",
+                            Id = new Guid("f1000001-0001-4001-8001-000000000010"),
+                            Code = "premium_7d",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "Da Cáo Lửa",
-                            EffectJson = "{}",
+                            Description = "Premium 7 Days",
+                            EffectJson = "{\"premium_days\":7}",
                             IsActive = true,
-                            ItemType = "Cosmetic",
-                            Name = "Da Cáo Lửa",
-                            PriceAmoraGems = 15,
-                            PricePetCoins = 150,
+                            ItemType = "Subscription",
+                            Name = "Premium 7 Days",
+                            PriceDiamonds = 70,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new
                         {
-                            Id = new Guid("f1000001-0001-4001-8001-000000000007"),
-                            Code = "memory_collar",
+                            Id = new Guid("f1000001-0001-4001-8001-000000000011"),
+                            Code = "premium_30d",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "Vòng Cổ Kỷ Niệm",
-                            EffectJson = "{}",
+                            Description = "Premium 1 Month",
+                            EffectJson = "{\"premium_days\":30}",
                             IsActive = true,
-                            ItemType = "Cosmetic",
-                            Name = "Vòng Cổ Kỷ Niệm",
-                            PriceAmoraGems = 30,
-                            PricePetCoins = 300,
+                            ItemType = "Subscription",
+                            Name = "Premium 1 Month",
+                            PriceDiamonds = 138,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000012"),
+                            Code = "gold_7d",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Gold 7 Days",
+                            EffectJson = "{\"gold_days\":7}",
+                            IsActive = true,
+                            ItemType = "Subscription",
+                            Name = "Gold 7 Days",
+                            PriceDiamonds = 98,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("f1000001-0001-4001-8001-000000000013"),
+                            Code = "gold_30d",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Gold 1 Month",
+                            EffectJson = "{\"gold_days\":30}",
+                            IsActive = true,
+                            ItemType = "Subscription",
+                            Name = "Gold 1 Month",
+                            PriceDiamonds = 198,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         });
                 });
@@ -918,6 +999,17 @@ namespace Amora.Infrastructure.Data.Migrations
                 });
 
             modelBuilder.Entity("Amora.Domain.Entities.IapPurchaseRecord", b =>
+                {
+                    b.HasOne("Amora.Domain.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.PaymentTransaction", b =>
                 {
                     b.HasOne("Amora.Domain.Entities.AppUser", "User")
                         .WithMany()

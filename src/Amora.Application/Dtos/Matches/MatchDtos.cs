@@ -45,8 +45,6 @@ public sealed class PetStateDto
 {
     public int Hp { get; init; }
 
-    public string Mood { get; init; } = string.Empty;
-
     public int Level { get; init; }
 }
 

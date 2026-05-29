@@ -46,6 +46,17 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "https://amora-fe.vercel.app")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 builder.Services.Configure<MongoDbOptions>(builder.Configuration.GetSection(MongoDbOptions.SectionName));
 
 builder.Services.AddDbContext<AmoraDbContext>(options =>
@@ -74,12 +85,14 @@ builder.Services.AddScoped<IUserBlockRepository, UserBlockRepository>();
 builder.Services.AddScoped<IPetRepository, PetRepository>();
 builder.Services.AddScoped<IShopRepository, ShopRepository>();
 builder.Services.AddScoped<IPetTransactionRepository, PetTransactionRepository>();
+builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
 builder.Services.AddScoped<IIapPurchaseRepository, IapPurchaseRepository>();
 builder.Services.AddScoped<IChatReadStateRepository, ChatReadStateRepository>();
 builder.Services.AddScoped<IMatchMediaUsageRepository, MatchMediaUsageRepository>();
 builder.Services.AddScoped<IIapWebhookEventRepository, IapWebhookEventRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.Configure<Amora.Application.Payment.VnPayConfig>(builder.Configuration.GetSection("VnPay"));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 builder.Services.Configure<IapOptions>(builder.Configuration.GetSection(IapOptions.SectionName));
@@ -126,7 +139,9 @@ builder.Services.AddSingleton<IAmazonS3>(_ =>
         ? new AmazonS3Client(awsOptions.Credentials, s3Config)
         : new AmazonS3Client(s3Config);
 });
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IStorageService, S3StorageService>();
+builder.Services.AddScoped<ISmsService, TwilioSmsService>();
 
 // Message Bus — Singleton vì connection RabbitMQ được tái sử dụng
 builder.Services.AddSingleton<IMessageBus>(_ =>
@@ -255,6 +270,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+app.UseCors("AllowSpecificOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();

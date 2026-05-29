@@ -38,7 +38,6 @@ public sealed class PetCoordinator
             Id = Guid.NewGuid(),
             MatchId = matchId,
             Hp = 80,
-            Mood = PetMood.Neutral,
             Rp = 0,
             Stage = GrowthStage.ResonanceSeed,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -62,7 +61,6 @@ public sealed class PetCoordinator
         PetEngine.AwardTextRp(pet);
 
         var replyDelay = ComputeReplyDelayMinutes(pet, senderId);
-        pet.Mood = PetEngine.ComputeMood(pet, vibeScore: 0, replyDelay);
         pet.Stage = PetEngine.EvaluateStage(pet);
         pet.UpdatedAt = DateTimeOffset.UtcNow;
         pet.LastPartnerMessageAt = DateTimeOffset.UtcNow;
@@ -96,15 +94,12 @@ public sealed class PetCoordinator
     {
         var pet = await RequirePetAsync(result.MatchId, cancellationToken);
 
-        PetEngine.RegisterVibe(pet, result.VibeScore);
-
         var voiceMinutes = result.DurationSeconds / 60.0;
         var rawHp = PetEngine.ComputeHpFromInteraction(1, voiceMinutes, result.VibeScore);
         PetEngine.ApplyHpGain(pet, rawHp);
         PetEngine.AwardVoiceRp(pet, result.DurationSeconds);
 
         var replyDelay = ComputeReplyDelayMinutes(pet, result.UserId);
-        pet.Mood = PetEngine.ComputeMood(pet, result.VibeScore, replyDelay);
         pet.Stage = PetEngine.EvaluateStage(pet);
         pet.LastInteractionAt = DateTimeOffset.UtcNow;
         pet.UpdatedAt = DateTimeOffset.UtcNow;
@@ -138,7 +133,6 @@ public sealed class PetCoordinator
         PetId = pet.Id,
         MatchId = pet.MatchId,
         Hp = pet.Hp,
-        Mood = pet.Mood.ToString(),
         Rp = pet.Rp,
         Stage = (int)pet.Stage,
         StageName = PetFeatureUnlocks.StageDisplayName(pet.Stage),
