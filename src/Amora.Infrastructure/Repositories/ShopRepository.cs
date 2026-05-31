@@ -32,7 +32,19 @@ public sealed class ShopRepository : IShopRepository
             .FirstOrDefaultAsync(x => x.UserId == userId && x.ShopItemId == shopItemId, cancellationToken);
 
     public async Task AddInventoryAsync(UserInventory slot, CancellationToken cancellationToken = default)
-        => await _db.UserInventories.AddAsync(slot, cancellationToken);
+    {
+        await _db.UserInventories.AddAsync(slot, cancellationToken);
+    }
+
+    public async Task AddItemAsync(ShopItem item, CancellationToken cancellationToken = default)
+    {
+        await _db.ShopItems.AddAsync(item, cancellationToken);
+    }
+
+    public async Task AddItemsAsync(IEnumerable<ShopItem> items, CancellationToken cancellationToken = default)
+    {
+        await _db.ShopItems.AddRangeAsync(items, cancellationToken);
+    }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
         => _db.SaveChangesAsync(cancellationToken);

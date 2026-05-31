@@ -123,10 +123,18 @@ public sealed class PetShopService
         var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
             ?? throw new NotFoundApiException("Pet not found for this match.");
 
+        if (item.MinStage.HasValue && item.MinStage.Value > pet.Stage)
+            throw new ValidationApiException($"Bạn cần Thú cưng đạt mức {item.MinStage.Value} để sử dụng vật phẩm này.");
+
         ApplyItemEffect(pet, item);
 
-        slot.Quantity--;
-        slot.UpdatedAt = DateTimeOffset.UtcNow;
+        // Do not consume cosmetics or special items (handled separately or persistent)
+        if (item.ItemType != ItemType.Cosmetic)
+        {
+            slot.Quantity--;
+            slot.UpdatedAt = DateTimeOffset.UtcNow;
+        }
+
         pet.UpdatedAt = DateTimeOffset.UtcNow;
         pet.Stage = PetEngine.EvaluateStage(pet);
 
@@ -138,32 +146,167 @@ public sealed class PetShopService
             await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, cancellationToken);
     }
 
+    public async Task ClaimWaterAsync(Guid userId, Guid matchId, CancellationToken cancellationToken)
+    {
+        if (!await _matchRepository.IsParticipantAsync(matchId, userId, cancellationToken))
+            throw new ForbiddenApiException("Not a participant of this match.");
+
+        var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
+            ?? throw new NotFoundApiException("Pet not found for this match.");
+
+        // Reset if new day
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (pet.WaterClaimDate < today)
+        {
+            pet.WaterClaimsToday = 0;
+            pet.WaterClaimDate = today;
+        }
+
+        if (pet.WaterClaimsToday >= 3)
+            throw new ValidationApiException("Bạn đã nhận đủ 3 bình nước hôm nay.");
+
+        if (pet.LastWaterClaimAt.HasValue && (DateTimeOffset.UtcNow - pet.LastWaterClaimAt.Value).TotalHours < 1)
+            throw new ValidationApiException("Vui lòng chờ 1 tiếng kể từ lần nhận nước trước.");
+
+        pet.WaterClaimsToday++;
+        pet.LastWaterClaimAt = DateTimeOffset.UtcNow;
+        if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 5; // Water gives 5 EXP
+
+        pet.Stage = PetEngine.EvaluateStage(pet);
+        pet.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _petRepository.SaveChangesAsync(cancellationToken);
+
+        var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
+        if (match is not null)
+            await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, cancellationToken);
+    }
+
+    public async Task RenamePetAsync(Guid userId, Guid matchId, Guid itemId, string newName, CancellationToken cancellationToken)
+    {
+        if (!await _matchRepository.IsParticipantAsync(matchId, userId, cancellationToken))
+            throw new ForbiddenApiException("Not a participant of this match.");
+
+        var slot = await _shopRepository.GetInventorySlotAsync(userId, itemId, cancellationToken)
+            ?? throw new ValidationApiException("Item not in inventory.");
+
+        if (slot.Quantity <= 0)
+            throw new ValidationApiException("Out of stock.");
+
+        var item = slot.ShopItem ?? await _shopRepository.GetItemByIdAsync(itemId, cancellationToken);
+        if (item == null || item.Code != "rename_card")
+            throw new ValidationApiException("Vật phẩm không hợp lệ (cần Thẻ đổi tên).");
+
+        if (string.IsNullOrWhiteSpace(newName) || newName.Length > 30)
+            throw new ValidationApiException("Tên không hợp lệ (tối đa 30 ký tự).");
+
+        var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
+            ?? throw new NotFoundApiException("Pet not found for this match.");
+
+        pet.Name = newName.Trim();
+        
+        slot.Quantity--;
+        slot.UpdatedAt = DateTimeOffset.UtcNow;
+        pet.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _petRepository.SaveChangesAsync(cancellationToken);
+        await _shopRepository.SaveChangesAsync(cancellationToken);
+
+        var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
+        if (match is not null)
+            await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, cancellationToken);
+    }
+
+    public async Task EquipCosmeticAsync(Guid userId, Guid matchId, Guid itemId, CancellationToken cancellationToken)
+    {
+        if (!await _matchRepository.IsParticipantAsync(matchId, userId, cancellationToken))
+            throw new ForbiddenApiException("Not a participant of this match.");
+
+        var slot = await _shopRepository.GetInventorySlotAsync(userId, itemId, cancellationToken)
+            ?? throw new ValidationApiException("Item not in inventory.");
+
+        if (slot.Quantity <= 0)
+            throw new ValidationApiException("Bạn không sở hữu phụ kiện này.");
+
+        var item = slot.ShopItem ?? await _shopRepository.GetItemByIdAsync(itemId, cancellationToken);
+        if (item == null || item.ItemType != ItemType.Cosmetic)
+            throw new ValidationApiException("Vật phẩm không phải là phụ kiện.");
+
+        var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
+            ?? throw new NotFoundApiException("Pet not found for this match.");
+
+        if (item.MinStage.HasValue && item.MinStage.Value > pet.Stage)
+            throw new ValidationApiException($"Thú cưng cần đạt mức {item.MinStage.Value} để mặc.");
+
+        // Read current cosmetics
+        var cosmetics = new List<EquippedCosmetic>();
+        if (!string.IsNullOrWhiteSpace(pet.EquippedCosmeticsJson))
+        {
+            cosmetics = JsonSerializer.Deserialize<List<EquippedCosmetic>>(pet.EquippedCosmeticsJson) ?? new List<EquippedCosmetic>();
+        }
+
+        // Get slot from effect json
+        var slotId = "outfit";
+        if (!string.IsNullOrWhiteSpace(item.EffectJson))
+        {
+            using var doc = JsonDocument.Parse(item.EffectJson);
+            if (doc.RootElement.TryGetProperty("slot", out var s))
+                slotId = s.GetString() ?? "outfit";
+        }
+
+        // Remove old cosmetic in the same slot
+        cosmetics.RemoveAll(c => c.SlotId == slotId);
+
+        // Add new cosmetic
+        cosmetics.Add(new EquippedCosmetic { SlotId = slotId, ItemId = item.Id, Code = item.Code });
+        
+        pet.EquippedCosmeticsJson = JsonSerializer.Serialize(cosmetics);
+        pet.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _petRepository.SaveChangesAsync(cancellationToken);
+
+        var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
+        if (match is not null)
+            await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, cancellationToken);
+    }
+
+    private sealed class EquippedCosmetic
+    {
+        public string SlotId { get; set; } = string.Empty;
+        public Guid ItemId { get; set; }
+        public string Code { get; set; } = string.Empty;
+    }
+
     private static void ApplyItemEffect(Pet pet, ShopItem item)
     {
+        if (string.IsNullOrWhiteSpace(item.EffectJson) || item.EffectJson == "{}") return;
+
         using var doc = JsonDocument.Parse(item.EffectJson);
         var root = doc.RootElement;
 
-        switch (item.Code)
+        if (root.TryGetProperty("revive", out var reviveProp) && reviveProp.GetBoolean())
         {
-            case "energy_cookie":
-                PetEngine.ApplyHpGain(pet, root.GetProperty("hp").GetInt32(), bypassCap: true);
-                break;
-            case "gentle_bath":
-                PetEngine.ApplyHpGain(pet, root.GetProperty("hp").GetInt32(), bypassCap: true);
-                break;
-            case "growth_potion":
-                PetEngine.AddBuff(pet, PetBuffType.DoubleVoiceRp, TimeSpan.FromHours(6));
-                break;
-            case "resonance_candy":
-                if (!pet.IsFrozen) pet.Rp += root.GetProperty("rp").GetInt32();
-                break;
-            case "revival_flask":
-                pet.IsFrozen = false;
-                pet.Hp = root.GetProperty("hp").GetInt32();
-                break;
-            default:
-                // cosmetic items — no stat change
-                break;
+            pet.IsDead = false;
+            pet.IsFrozen = false;
+        }
+
+        if (root.TryGetProperty("hp", out var hpProp))
+        {
+            PetEngine.ApplyHpGain(pet, hpProp.GetInt32(), bypassCap: true);
+        }
+
+        if (root.TryGetProperty("rp", out var rpProp))
+        {
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += rpProp.GetInt32();
+        }
+
+        if (root.TryGetProperty("buff", out var buffProp))
+        {
+            if (Enum.TryParse<PetBuffType>(buffProp.GetString(), ignoreCase: true, out var buffType))
+            {
+                var minutes = root.TryGetProperty("minutes", out var m) ? m.GetInt32() : 60;
+                PetEngine.AddBuff(pet, buffType, TimeSpan.FromMinutes(minutes));
+            }
         }
     }
 

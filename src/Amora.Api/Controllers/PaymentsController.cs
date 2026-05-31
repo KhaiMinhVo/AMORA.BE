@@ -40,20 +40,32 @@ public sealed class PaymentsController : ControllerBase
         return Ok(ApiResponse<string>.Ok(url, "Success"));
     }
 
+    [AllowAnonymous]
     [HttpGet("vnpay/callback")]
     public async Task<IActionResult> VnPayCallback(CancellationToken cancellationToken)
     {
         var queryDictionary = HttpContext.Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
         
-        var success = await _paymentService.ProcessVnPayCallbackAsync(queryDictionary, cancellationToken);
+        var result = await _paymentService.ProcessVnPayCallbackAsync(queryDictionary, cancellationToken);
         
-        if (success)
+        if (result.Success)
         {
             return Ok("Giao dịch thành công. Vui lòng quay lại ứng dụng.");
         }
         else
         {
-            return BadRequest("Giao dịch thất bại hoặc có lỗi xảy ra.");
+            return BadRequest($"Giao dịch thất bại hoặc có lỗi xảy ra. {result.Message}");
         }
+    }
+
+    [AllowAnonymous]
+    [HttpGet("vnpay/ipn")]
+    public async Task<IActionResult> VnPayIpn(CancellationToken cancellationToken)
+    {
+        var queryDictionary = HttpContext.Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
+        
+        var result = await _paymentService.ProcessVnPayCallbackAsync(queryDictionary, cancellationToken);
+        
+        return Ok(new { RspCode = result.RspCode, Message = result.Message });
     }
 }

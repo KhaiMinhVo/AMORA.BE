@@ -16,5 +16,9 @@ public interface IShopRepository
 
     Task AddInventoryAsync(UserInventory slot, CancellationToken cancellationToken = default);
 
+    Task AddItemAsync(ShopItem item, CancellationToken cancellationToken = default);
+
+    Task AddItemsAsync(IEnumerable<ShopItem> items, CancellationToken cancellationToken = default);
+
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

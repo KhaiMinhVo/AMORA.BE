@@ -111,6 +111,9 @@ services:
       AWS__SecretKey: "${AWS_SECRET_KEY}"
       Storage__BucketName: "amora-voice-bucket"
       Storage__PublicBaseUrl: "https://amora-voice-bucket.s3.ap-southeast-1.amazonaws.com"
+      Twilio__AccountSid: "${TWILIO_ACCOUNT_SID}"
+      Twilio__AuthToken: "${TWILIO_AUTH_TOKEN}"
+      Twilio__FromNumber: "${TWILIO_FROM_NUMBER}"
     depends_on:
       postgres:
         condition: service_healthy

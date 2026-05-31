@@ -1,0 +1,16 @@
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\bin\Debug\net8.0\Amora.Application.deps.json
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\bin\Debug\net8.0\Amora.Application.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\bin\Debug\net8.0\Amora.Application.pdb
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\bin\Debug\net8.0\Amora.Domain.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\bin\Debug\net8.0\Amora.Domain.pdb
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.csproj.AssemblyReference.cache
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.AssemblyInfoInputs.cache
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.AssemblyInfo.cs
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.csproj.CoreCompileInputs.cache
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.sourcelink.json
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Ap.7A32DF73.Up2Date
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\refint\Amora.Application.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\Amora.Application.pdb
+D:\FPTU\EXE\AMORA.BE\src\Amora.Application\obj\Debug\net8.0\ref\Amora.Application.dll

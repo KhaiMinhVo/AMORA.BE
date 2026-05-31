@@ -19,4 +19,14 @@ public sealed class ShopItem : BaseEntity
     public string EffectJson { get; set; } = "{}";
 
     public bool IsActive { get; set; } = true;
+
+    /// <summary>URL hình ảnh vật phẩm.</summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>Giai đoạn tối thiểu để mua/sử dụng (null = tất cả).</summary>
+    public GrowthStage? MinStage { get; set; }
+
+    /// <summary>Giới hạn số lần mua trong ngày (0 = không giới hạn).</summary>
+    public int DailyPurchaseLimit { get; set; }
+
 }

@@ -11,13 +11,13 @@ public sealed class ProcessCoPresenceCommandHandler : IRequestHandler<ProcessCoP
     private readonly IPetRepository _petRepository;
     private readonly IMatchConnectionRepository _matchRepository;
     private readonly IPetRealtimeNotifier _petNotifier;
-    private readonly PetCoinRewardService _petCoins;
+    private readonly DiamondRewardService _petCoins;
 
     public ProcessCoPresenceCommandHandler(
         IPetRepository petRepository,
         IMatchConnectionRepository matchRepository,
         IPetRealtimeNotifier petNotifier,
-        PetCoinRewardService petCoins)
+        DiamondRewardService petCoins)
     {
         _petRepository = petRepository;
         _matchRepository = matchRepository;

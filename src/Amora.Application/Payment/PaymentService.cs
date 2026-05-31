@@ -57,7 +57,7 @@ public sealed class PaymentService
         return paymentUrl;
     }
 
-    public async Task<bool> ProcessVnPayCallbackAsync(IDictionary<string, string> queryParams, CancellationToken cancellationToken)
+    public async Task<(string RspCode, string Message, bool Success)> ProcessVnPayCallbackAsync(IDictionary<string, string> queryParams, CancellationToken cancellationToken)
     {
         var vnpay = new VnPayLibrary();
         foreach (var kv in queryParams)
@@ -72,21 +72,32 @@ public sealed class PaymentService
         var vnp_TxnRef = queryParams.TryGetValue("vnp_TxnRef", out var txn) ? txn : "";
         var vnp_ResponseCode = queryParams.TryGetValue("vnp_ResponseCode", out var code) ? code : "";
         var vnp_TransactionNo = queryParams.TryGetValue("vnp_TransactionNo", out var transNo) ? transNo : "";
+        var vnp_Amount = queryParams.TryGetValue("vnp_Amount", out var amt) ? amt : "0";
 
         if (!vnpay.ValidateSignature(vnp_SecureHash, _vnPayConfig.HashSecret))
         {
-            return false;
+            return ("97", "Invalid signature", false);
         }
 
         if (!Guid.TryParse(vnp_TxnRef, out var transactionId))
         {
-            return false;
+            return ("01", "Order not found", false);
         }
 
         var transaction = await _paymentRepo.GetByIdAsync(transactionId, cancellationToken);
-        if (transaction is null || transaction.Status != PaymentTransactionStatus.Pending)
+        if (transaction is null)
         {
-            return false; // Already processed or not found
+            return ("01", "Order not found", false);
+        }
+
+        if (transaction.AmountVnd * 100 != long.Parse(vnp_Amount))
+        {
+            return ("04", "Invalid amount", false);
+        }
+
+        if (transaction.Status != PaymentTransactionStatus.Pending)
+        {
+            return ("02", "Order already confirmed", true);
         }
 
         transaction.ProviderTransactionId = vnp_TransactionNo;
@@ -109,6 +120,6 @@ public sealed class PaymentService
 
         await _paymentRepo.UpdateAsync(transaction, cancellationToken);
 
-        return transaction.Status == PaymentTransactionStatus.Success;
+        return ("00", "Confirm Success", transaction.Status == PaymentTransactionStatus.Success);
     }
 }

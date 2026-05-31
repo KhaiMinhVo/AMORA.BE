@@ -53,4 +53,55 @@ public sealed class PetsController : ControllerBase
         await _mediator.Send(new UseItemCommand(_currentUser.UserId, matchId, request.ItemId), cancellationToken);
         return Ok(ApiResponse<object>.Ok(null, "Item used successfully."));
     }
+    /// <summary>
+    /// Nhận nước miễn phí (Tối đa 3 lần/ngày, cách nhau 1 giờ).
+    /// </summary>
+    [HttpPost("{matchId:guid}/claim-water")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<object>>> ClaimWater(
+        Guid matchId,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new ClaimWaterCommand(_currentUser.UserId, matchId), cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Nhận nước thành công. Pet nhận thêm 5 EXP."));
+    }
+
+    /// <summary>
+    /// Sử dụng Thẻ Đổi Tên.
+    /// </summary>
+    [HttpPost("{matchId:guid}/rename")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<object>>> RenamePet(
+        Guid matchId,
+        [FromBody] RenamePetRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new RenamePetCommand(_currentUser.UserId, matchId, request.ItemId, request.NewName), cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Đổi tên Thú cưng thành công."));
+    }
+
+    /// <summary>
+    /// Mặc phụ kiện cho Thú cưng.
+    /// </summary>
+    [HttpPost("{matchId:guid}/equip-cosmetic")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<object>>> EquipCosmetic(
+        Guid matchId,
+        [FromBody] EquipCosmeticRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new EquipCosmeticCommand(_currentUser.UserId, matchId, request.ItemId), cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Mặc phụ kiện thành công."));
+    }
+}
+
+public sealed class RenamePetRequest
+{
+    public Guid ItemId { get; set; }
+    public string NewName { get; set; } = string.Empty;
+}
+
+public sealed class EquipCosmeticRequest
+{
+    public Guid ItemId { get; set; }
 }

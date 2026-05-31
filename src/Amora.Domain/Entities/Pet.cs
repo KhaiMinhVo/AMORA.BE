@@ -46,5 +46,28 @@ public sealed class Pet : BaseEntity
     /// <summary>JSON danh sách buff đang active.</summary>
     public string? ActiveBuffsJson { get; set; }
 
+    /// <summary>Tên thú cưng (đặt bằng Rename Card).</summary>
+    public string? Name { get; set; }
+
+    /// <summary>Pet đã chết (24h+ không nhắn tin và chưa dùng Revive).</summary>
+    public bool IsDead { get; set; }
+
+    /// <summary>Thời điểm Pet chết.</summary>
+    public DateTimeOffset? DeathTime { get; set; }
+
+    /// <summary>Số lần nhận nước miễn phí trong ngày (tối đa 3).</summary>
+    public int WaterClaimsToday { get; set; }
+
+    /// <summary>Thời điểm nhận nước gần nhất (cooldown 1 tiếng).</summary>
+    public DateTimeOffset? LastWaterClaimAt { get; set; }
+
+    /// <summary>Ngày reset số lần nhận nước.</summary>
+    public DateOnly WaterClaimDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    /// <summary>JSON danh sách phụ kiện đang mặc [{"slotId":"hat","itemId":"guid","code":"non_ca_tim"}].</summary>
+    public string? EquippedCosmeticsJson { get; set; }
+
+
+
     public MatchConnection? Match { get; set; }
 }

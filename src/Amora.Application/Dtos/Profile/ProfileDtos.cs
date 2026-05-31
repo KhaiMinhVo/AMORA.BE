@@ -25,6 +25,8 @@ public sealed class ProfileResponseDto
     public string[] Interests { get; init; } = [];
     public bool IsProfileComplete { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
+    public int Diamonds { get; init; }
+    public bool IsPremium { get; init; }
 }
 
 /// <summary>

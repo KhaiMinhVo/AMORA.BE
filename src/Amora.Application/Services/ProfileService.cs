@@ -132,7 +132,9 @@ public sealed class ProfileService
         Bio = user.Bio,
         Interests = ParseInterests(user.Interests),
         IsProfileComplete = user.IsProfileComplete,
-        CreatedAt = user.CreatedAt
+        CreatedAt = user.CreatedAt,
+        Diamonds = user.Diamonds,
+        IsPremium = user.IsPremium
     };
 
     private static string[] ParseInterests(string? interests)

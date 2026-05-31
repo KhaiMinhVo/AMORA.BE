@@ -14,7 +14,7 @@ public sealed class AuthService
 {
     private readonly IUserRepository _users;
     private readonly IJwtTokenService _jwt;
-    private readonly PetCoinRewardService _petCoins;
+    private readonly DiamondRewardService _petCoins;
     private readonly ISmsService _smsService;
     private readonly IMemoryCache _memoryCache;
     private readonly IConfiguration _configuration;
@@ -22,7 +22,7 @@ public sealed class AuthService
     public AuthService(
         IUserRepository users, 
         IJwtTokenService jwt, 
-        PetCoinRewardService petCoins,
+        DiamondRewardService petCoins,
         ISmsService smsService,
         IMemoryCache memoryCache,
         IConfiguration configuration)

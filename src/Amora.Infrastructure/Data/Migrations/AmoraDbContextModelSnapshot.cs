@@ -456,6 +456,12 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("DeathTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EquippedCosmeticsJson")
+                        .HasColumnType("text");
+
                     b.Property<int>("Hp")
                         .HasColumnType("integer");
 
@@ -471,6 +477,9 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<double>("HpSnapshotSum")
                         .HasColumnType("double precision");
 
+                    b.Property<bool>("IsDead")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsFrozen")
                         .HasColumnType("boolean");
 
@@ -483,8 +492,14 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("LastPartnerMessageAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("LastWaterClaimAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("MatchId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
 
                     b.Property<bool>("OnlineBonusGrantedToday")
                         .HasColumnType("boolean");
@@ -508,6 +523,12 @@ namespace Amora.Infrastructure.Data.Migrations
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("WaterClaimDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("WaterClaimsToday")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -642,6 +663,9 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("DailyPurchaseLimit")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -650,6 +674,9 @@ namespace Amora.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -657,6 +684,9 @@ namespace Amora.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("MinStage")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -682,6 +712,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000001"),
                             Code = "pet_food",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Túi Thức Ăn Cho Pet",
                             EffectJson = "{\"hp\":30}",
                             IsActive = true,
@@ -695,6 +726,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000002"),
                             Code = "gentle_bath",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Sữa Tắm Dịu Nhẹ",
                             EffectJson = "{\"hp\":20}",
                             IsActive = true,
@@ -708,6 +740,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000003"),
                             Code = "growth_potion",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Lọ Thuốc Tăng Trưởng",
                             EffectJson = "{\"buff\":\"DoubleVoiceRp\",\"hours\":6}",
                             IsActive = true,
@@ -721,6 +754,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000004"),
                             Code = "resonance_candy",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Kẹo Cộng Hưởng",
                             EffectJson = "{\"rp\":10}",
                             IsActive = true,
@@ -734,6 +768,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000005"),
                             Code = "revival_flask",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Bình Hồi Sinh",
                             EffectJson = "{\"hp\":50}",
                             IsActive = true,
@@ -747,6 +782,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000010"),
                             Code = "premium_7d",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Premium 7 Days",
                             EffectJson = "{\"premium_days\":7}",
                             IsActive = true,
@@ -760,6 +796,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000011"),
                             Code = "premium_30d",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Premium 1 Month",
                             EffectJson = "{\"premium_days\":30}",
                             IsActive = true,
@@ -773,6 +810,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000012"),
                             Code = "gold_7d",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Gold 7 Days",
                             EffectJson = "{\"gold_days\":7}",
                             IsActive = true,
@@ -786,6 +824,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Id = new Guid("f1000001-0001-4001-8001-000000000013"),
                             Code = "gold_30d",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DailyPurchaseLimit = 0,
                             Description = "Gold 1 Month",
                             EffectJson = "{\"gold_days\":30}",
                             IsActive = true,
