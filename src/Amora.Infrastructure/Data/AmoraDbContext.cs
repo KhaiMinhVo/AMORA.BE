@@ -252,8 +252,13 @@ public sealed class AmoraDbContext : DbContext
         modelBuilder.Entity<PaymentTransaction>(entity =>
         {
             entity.ToTable("PaymentTransactions");
-            entity.HasKey(x => x.Id);
+            entity.HasKey(e => e.Id);
             entity.HasIndex(x => new { x.UserId, x.CreatedAt });
+            
+            // PayOS requires OrderCode to be unique integer
+            entity.HasIndex(e => e.OrderCode).IsUnique();
+            entity.Property(e => e.OrderCode).IsRequired();
+
             entity.Property(x => x.Provider).HasMaxLength(50);
             entity.Property(x => x.ProviderTransactionId).HasMaxLength(100);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);

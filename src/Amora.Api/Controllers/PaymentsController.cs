@@ -11,11 +11,16 @@ namespace Amora.Api.Controllers;
 public sealed class PaymentsController : ControllerBase
 {
     private readonly PaymentService _paymentService;
+    private readonly Amora.Application.Payment.PayOs.PayOsService _payOsService;
     private readonly ICurrentUserService _currentUser;
 
-    public PaymentsController(PaymentService paymentService, ICurrentUserService currentUser)
+    public PaymentsController(
+        PaymentService paymentService, 
+        Amora.Application.Payment.PayOs.PayOsService payOsService, 
+        ICurrentUserService currentUser)
     {
         _paymentService = paymentService;
+        _payOsService = payOsService;
         _currentUser = currentUser;
     }
 
@@ -67,5 +72,52 @@ public sealed class PaymentsController : ControllerBase
         var result = await _paymentService.ProcessVnPayCallbackAsync(queryDictionary, cancellationToken);
         
         return Ok(new { RspCode = result.RspCode, Message = result.Message });
+    }
+
+    public sealed class CreatePayOsUrlRequest
+    {
+        public int Diamonds { get; set; }
+    }
+
+    [Authorize]
+    [HttpPost("payos/create-url")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<string>>> CreatePayOsUrl(
+        [FromBody] CreatePayOsUrlRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Diamonds <= 0)
+        {
+            return BadRequest(ApiResponse<string>.Fail("Số kim cương phải lớn hơn 0.", "INVALID_DIAMONDS"));
+        }
+
+        var url = await _payOsService.CreatePayOsUrlAsync(_currentUser.UserId, request.Diamonds, cancellationToken);
+        return Ok(ApiResponse<string>.Ok(url, "Success"));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("payos/callback")]
+    public IActionResult PayOsCallback()
+    {
+        return Ok("Giao dịch PayOS hoàn tất. Vui lòng quay lại ứng dụng.");
+    }
+
+    [AllowAnonymous]
+    [HttpGet("payos/cancel")]
+    public IActionResult PayOsCancel()
+    {
+        return BadRequest("Giao dịch PayOS đã bị hủy.");
+    }
+
+    [AllowAnonymous]
+    [HttpPost("payos/ipn")]
+    public async Task<IActionResult> PayOsIpn([FromBody] global::PayOS.Models.Webhooks.Webhook body, CancellationToken cancellationToken)
+    {
+        var success = await _payOsService.VerifyPaymentWebhookAsync(body, cancellationToken);
+        if (success)
+        {
+            return Ok(new { success = true });
+        }
+        return BadRequest(new { success = false });
     }
 }

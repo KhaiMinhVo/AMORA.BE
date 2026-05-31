@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Ac4Nn94V0vI=",
+  "dgSpecHash": "7WsVlFFv8Cc=",
   "success": true,
   "projectFilePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
   "expectedPackageFiles": [
@@ -83,6 +83,7 @@
     "C:\\Users\\vopha\\.nuget\\packages\\opentelemetry.instrumentation.aspnetcore\\1.10.1\\opentelemetry.instrumentation.aspnetcore.1.10.1.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\opentelemetry.instrumentation.entityframeworkcore\\1.0.0-beta.12\\opentelemetry.instrumentation.entityframeworkcore.1.0.0-beta.12.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\opentelemetry.instrumentation.http\\1.10.0\\opentelemetry.instrumentation.http.1.10.0.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\payos\\2.1.0\\payos.2.1.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\pipelines.sockets.unofficial\\2.2.8\\pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\quartz\\3.13.1\\quartz.3.13.1.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\quartz.extensions.dependencyinjection\\3.13.1\\quartz.extensions.dependencyinjection.3.13.1.nupkg.sha512",
@@ -140,6 +141,7 @@
     "C:\\Users\\vopha\\.nuget\\packages\\system.security.principal.windows\\5.0.0\\system.security.principal.windows.5.0.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\system.text.encoding\\4.3.0\\system.text.encoding.4.3.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\system.text.encoding.codepages\\6.0.0\\system.text.encoding.codepages.6.0.0.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\system.text.json\\8.0.6\\system.text.json.8.0.6.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\system.threading\\4.3.0\\system.threading.4.3.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\system.threading.channels\\6.0.0\\system.threading.channels.6.0.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\system.threading.ratelimiting\\8.0.0\\system.threading.ratelimiting.8.0.0.nupkg.sha512",

@@ -93,6 +93,7 @@ builder.Services.AddScoped<IIapWebhookEventRepository, IapWebhookEventRepository
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<Amora.Application.Payment.VnPayConfig>(builder.Configuration.GetSection("VnPay"));
+builder.Services.Configure<Amora.Application.Payment.PayOs.PayOsConfig>(builder.Configuration.GetSection("PayOS"));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 builder.Services.Configure<IapOptions>(builder.Configuration.GetSection(IapOptions.SectionName));
@@ -112,6 +113,7 @@ builder.Services.AddAmoraQuartzJobs();
 builder.Services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
 builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
 builder.Services.AddScoped<IPetRealtimeNotifier, SignalRPetRealtimeNotifier>();
+builder.Services.AddScoped<Amora.Application.Payment.PayOs.PayOsService>();
 builder.Services.AddScoped<VoicePostService>();
 builder.Services.AddScoped<VoiceCommentService>();
 builder.Services.AddScoped<MatchService>();

@@ -197,3 +197,4 @@ D:\FPTU\EXE\AMORA.BE\src\Amora.Api\obj\Debug\net8.0\refint\Amora.Api.dll
 D:\FPTU\EXE\AMORA.BE\src\Amora.Api\obj\Debug\net8.0\Amora.Api.pdb
 D:\FPTU\EXE\AMORA.BE\src\Amora.Api\obj\Debug\net8.0\Amora.Api.genruntimeconfig.cache
 D:\FPTU\EXE\AMORA.BE\src\Amora.Api\obj\Debug\net8.0\ref\Amora.Api.dll
+D:\FPTU\EXE\AMORA.BE\src\Amora.Api\bin\Debug\net8.0\PayOS.dll

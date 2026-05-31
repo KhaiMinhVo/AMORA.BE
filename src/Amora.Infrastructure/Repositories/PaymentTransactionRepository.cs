@@ -22,6 +22,11 @@ public sealed class PaymentTransactionRepository : IPaymentTransactionRepository
         return await _context.PaymentTransactions.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
+    public async Task<PaymentTransaction?> GetByOrderCodeAsync(long orderCode, CancellationToken cancellationToken)
+    {
+        return await _context.PaymentTransactions.FirstOrDefaultAsync(x => x.OrderCode == orderCode, cancellationToken);
+    }
+
     public async Task UpdateAsync(PaymentTransaction transaction, CancellationToken cancellationToken)
     {
         _context.PaymentTransactions.Update(transaction);

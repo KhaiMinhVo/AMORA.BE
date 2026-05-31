@@ -228,6 +228,10 @@
             "Microsoft.Extensions.Options": {
               "target": "Package",
               "version": "[8.0.2, )"
+            },
+            "payOS": {
+              "target": "Package",
+              "version": "[2.1.0, )"
             }
           },
           "imports": [
