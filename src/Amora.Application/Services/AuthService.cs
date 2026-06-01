@@ -15,7 +15,7 @@ public sealed class AuthService
     private readonly IUserRepository _users;
     private readonly IJwtTokenService _jwt;
     private readonly DiamondRewardService _petCoins;
-    private readonly ISmsService _smsService;
+    private readonly IEmailService _emailService;
     private readonly IMemoryCache _memoryCache;
     private readonly IConfiguration _configuration;
 
@@ -23,14 +23,14 @@ public sealed class AuthService
         IUserRepository users, 
         IJwtTokenService jwt, 
         DiamondRewardService petCoins,
-        ISmsService smsService,
+        IEmailService emailService,
         IMemoryCache memoryCache,
         IConfiguration configuration)
     {
         _users = users;
         _jwt = jwt;
         _petCoins = petCoins;
-        _smsService = smsService;
+        _emailService = emailService;
         _memoryCache = memoryCache;
         _configuration = configuration;
     }
@@ -145,24 +145,25 @@ public sealed class AuthService
         return BuildResponse(user);
     }
 
-    public async Task SendOtpAsync(SendOtpRequest request, CancellationToken cancellationToken)
+    public async Task SendEmailOtpAsync(SendEmailOtpRequest request, CancellationToken cancellationToken)
     {
         var otp = new Random().Next(100000, 999999).ToString();
-        var message = $"[Amora] Ma xac nhan cua ban la: {otp}. Ma co hieu luc trong 5 phut.";
+        var subject = "AMORA - Mã xác nhận đăng nhập";
+        var body = $"<h3>Mã xác nhận của bạn là: <strong>{otp}</strong></h3><p>Mã có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>";
 
-        var success = await _smsService.SendSmsAsync(request.PhoneNumber, message, cancellationToken);
+        var success = await _emailService.SendEmailAsync(request.Email, subject, body, cancellationToken);
         if (!success)
         {
-            throw new ValidationApiException("Failed to send OTP to the provided phone number.");
+            throw new ValidationApiException("Failed to send OTP to the provided email.");
         }
 
-        var cacheKey = $"OTP_{request.PhoneNumber}";
+        var cacheKey = $"OTP_{request.Email}";
         _memoryCache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
     }
 
-    public async Task<AuthResponseDto> LoginWithPhoneAsync(LoginWithPhoneRequest request, CancellationToken cancellationToken)
+    public async Task<AuthResponseDto> LoginWithEmailOtpAsync(LoginWithEmailOtpRequest request, CancellationToken cancellationToken)
     {
-        var cacheKey = $"OTP_{request.PhoneNumber}";
+        var cacheKey = $"OTP_{request.Email}";
         if (!_memoryCache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
         {
             throw new ValidationApiException("Invalid or expired OTP.");
@@ -170,14 +171,14 @@ public sealed class AuthService
 
         _memoryCache.Remove(cacheKey);
 
-        var user = await _users.GetByPhoneNumberAsync(request.PhoneNumber, cancellationToken);
+        var user = await _users.GetByEmailForAuthAsync(request.Email, cancellationToken);
         if (user is null)
         {
             user = new AppUser
             {
                 Id = Guid.NewGuid(),
-                PhoneNumber = request.PhoneNumber,
-                DisplayName = "Phone User",
+                Email = request.Email,
+                DisplayName = "User_" + new Random().Next(1000, 9999),
                 AvatarUrl = "default_avatar.png",
                 Diamonds = 0,
                 CreatedAt = DateTimeOffset.UtcNow,

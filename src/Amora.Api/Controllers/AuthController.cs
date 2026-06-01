@@ -55,29 +55,29 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Gui ma OTP den so dien thoai.
+    /// Gui ma OTP den Email.
     /// </summary>
-    [HttpPost("phone/send-otp")]
+    [HttpPost("email/send-otp")]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<string>>> SendOtp(
-        [FromBody] SendOtpRequest request,
+    public async Task<ActionResult<ApiResponse<string>>> SendEmailOtp(
+        [FromBody] SendEmailOtpRequest request,
         CancellationToken cancellationToken)
     {
-        await _authService.SendOtpAsync(request, cancellationToken);
-        return Ok(ApiResponse<string>.Ok("OTP sent.", "OTP sent successfully."));
+        await _authService.SendEmailOtpAsync(request, cancellationToken);
+        return Ok(ApiResponse<string>.Ok("OTP sent.", "OTP sent successfully to email."));
     }
 
     /// <summary>
-    /// Xac minh OTP va dang nhap.
+    /// Xac minh OTP va dang nhap bang Email.
     /// </summary>
-    [HttpPost("phone/verify")]
+    [HttpPost("email/verify")]
     [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> PhoneLogin(
-        [FromBody] LoginWithPhoneRequest request,
+    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> EmailOtpLogin(
+        [FromBody] LoginWithEmailOtpRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _authService.LoginWithPhoneAsync(request, cancellationToken);
-        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Phone login successful."));
+        var result = await _authService.LoginWithEmailOtpAsync(request, cancellationToken);
+        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Email OTP login successful."));
     }
 
     /// <summary>

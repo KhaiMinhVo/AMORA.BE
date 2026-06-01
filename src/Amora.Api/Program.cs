@@ -161,7 +161,7 @@ builder.Services.AddSingleton<IAmazonS3>(_ =>
 });
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IStorageService, S3StorageService>();
-builder.Services.AddScoped<ISmsService, TwilioSmsService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 // Message Bus — Singleton vì connection RabbitMQ được tái sử dụng
 builder.Services.AddSingleton<IMessageBus>(_ =>

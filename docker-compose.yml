@@ -51,19 +51,6 @@ services:
       timeout: 5s
       retries: 5
 
-  minio:
-    image: minio/minio:latest
-    container_name: amora-minio
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio_data:/data
-
   seq:
     image: datalust/seq:latest
     container_name: amora-seq
@@ -105,15 +92,6 @@ services:
       ConnectionStrings__MongoDb: mongodb://mongodb:27017
       ConnectionStrings__Redis: redis:6379
       RabbitMQ__Url: amqp://guest:guest@rabbitmq:5672//
-      AWS__ServiceURL: "http://minio:9000"
-      AWS__ForcePathStyle: "true"
-      AWS__AccessKey: "minioadmin"
-      AWS__SecretKey: "minioadmin"
-      Storage__BucketName: "amora-voice-bucket"
-      Storage__PublicBaseUrl: "http://localhost:9000/amora-voice-bucket"
-      Twilio__AccountSid: "${TWILIO_ACCOUNT_SID}"
-      Twilio__AuthToken: "${TWILIO_AUTH_TOKEN}"
-      Twilio__FromNumber: "${TWILIO_FROM_NUMBER}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -123,8 +101,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_started
     restart: unless-stopped
 
   chat-voice-consumer:
@@ -146,5 +122,4 @@ volumes:
   postgres_data2:
   mongodb_data:
   rabbitmq_data:
-  minio_data:
   seq_data:

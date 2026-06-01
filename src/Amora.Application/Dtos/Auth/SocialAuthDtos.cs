@@ -8,16 +8,18 @@ public class LoginWithGoogleRequest
     public string IdToken { get; set; } = string.Empty;
 }
 
-public class SendOtpRequest
+public class SendEmailOtpRequest
 {
     [Required]
-    public string PhoneNumber { get; set; } = string.Empty;
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
 }
 
-public class LoginWithPhoneRequest
+public class LoginWithEmailOtpRequest
 {
     [Required]
-    public string PhoneNumber { get; set; } = string.Empty;
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
     
     [Required]
     public string Otp { get; set; } = string.Empty;

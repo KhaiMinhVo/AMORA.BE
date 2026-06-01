@@ -2,20 +2,49 @@
 
 Voice dating API (.NET 8) + Pet System + Python audio workers.
 
-## Quick start
+## 🚀 Hướng dẫn Setup cho Developer mới (Teammate)
 
+Làm theo đúng các bước dưới đây để khởi chạy dự án trên máy của bạn (Local Environment):
+
+### Bước 1: Yêu cầu cài đặt (Prerequisites)
+Bạn cần đảm bảo máy tính đã cài đặt sẵn các phần mềm sau:
+- **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (Bắt buộc phải mở Docker Desktop lên cho nó chạy ngầm).
+- **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)**
+- Khuyên dùng IDE: **Visual Studio 2022** hoặc **Rider** hoặc **VS Code**.
+
+### Bước 2: Khởi động các Database & Cấu hình
+Dự án sử dụng PostgreSQL, MongoDB, RabbitMQ, Redis và MinIO (S3 ảo). Tất cả đã được đóng gói trong Docker. Mở Terminal tại thư mục gốc của dự án và chạy:
 ```powershell
-# 1. Infrastructure
-docker compose up -d
+docker compose up -d postgres mongo rabbitmq minio redis
+```
+*(Lệnh này chỉ chạy các dịch vụ nền tảng, không chạy API, để bạn có thể tự Debug API trên Visual Studio).*
 
-# 2. API (local)
+### Bước 3: Tạo Bucket MinIO (Lưu trữ ảnh/voice)
+Hệ thống dùng MinIO làm server lưu file (giả lập AWS S3). Khi mới chạy Docker lần đầu, bạn cần tạo kho lưu trữ:
+1. Mở trình duyệt vào: **http://localhost:9001**
+2. Đăng nhập: Username: `admin` / Password: `admin123`
+3. Tìm mục **Buckets** (bên trái) -> Bấm **Create Bucket**.
+4. Nhập tên bucket bắt buộc là: `amora-voice-bucket` -> Bấm Create.
+5. *(Quan trọng)* Ở bucket vừa tạo, bấm vào icon bánh răng (Settings) -> Mục **Access Policy** -> Chuyển từ `Private` sang `Public` để App có thể load ảnh.
+
+### Bước 4: Chạy Migration (Tạo Database)
+Cập nhật cấu trúc bảng cho PostgreSQL:
+```powershell
 cd src\Amora.Api
 dotnet ef database update --project ..\Amora.Infrastructure
+```
+
+### Bước 5: Chạy API
+Mở file Solution (`Amora.sln`) bằng Visual Studio và bấm **F5** (chọn profile là `http`).
+Hoặc chạy bằng Terminal:
+```powershell
 dotnet run --launch-profile http
 ```
 
-- Swagger: http://localhost:5002/swagger  
-- Health: http://localhost:5002/health  
+### Bước 6: Test kết quả
+Mở trình duyệt, nếu thấy giao diện này là bạn đã thành công:
+- **Swagger API:** http://localhost:5002/swagger
+- **Health Check:** http://localhost:5002/health
 
 ## Local dependencies
 
