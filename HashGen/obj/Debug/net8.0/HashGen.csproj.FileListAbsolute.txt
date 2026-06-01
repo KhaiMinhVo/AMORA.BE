@@ -1,0 +1,15 @@
+D:\FPTU\EXE\AMORA.BE\HashGen\bin\Debug\net8.0\HashGen.exe
+D:\FPTU\EXE\AMORA.BE\HashGen\bin\Debug\net8.0\HashGen.deps.json
+D:\FPTU\EXE\AMORA.BE\HashGen\bin\Debug\net8.0\HashGen.runtimeconfig.json
+D:\FPTU\EXE\AMORA.BE\HashGen\bin\Debug\net8.0\HashGen.dll
+D:\FPTU\EXE\AMORA.BE\HashGen\bin\Debug\net8.0\HashGen.pdb
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\HashGen.GeneratedMSBuildEditorConfig.editorconfig
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\HashGen.AssemblyInfoInputs.cache
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\HashGen.AssemblyInfo.cs
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\HashGen.csproj.CoreCompileInputs.cache
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\HashGen.sourcelink.json
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\HashGen.dll
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\refint\HashGen.dll
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\HashGen.pdb
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\HashGen.genruntimeconfig.cache
+D:\FPTU\EXE\AMORA.BE\HashGen\obj\Debug\net8.0\ref\HashGen.dll

@@ -95,7 +95,8 @@ public sealed class AmoraDbContext : DbContext
                 {
                     Id = Guid.Parse("99999999-9999-9999-9999-999999999999"),
                     DisplayName = "Amora Admin",
-                    Email = "admin@amora.app",
+                    Email = "admin@gmail.com",
+                    PasswordHash = "iofIl2qd9dzVVSm7ut0vWA==.RDDiARZIjoB+UTXq/fUhGdOrsjUfZkGWoiP1wGacbno=",
                     AvatarUrl = "admin.png",
                     Role = "Admin",
                     CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
