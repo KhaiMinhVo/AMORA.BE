@@ -40,13 +40,20 @@ public sealed class AuthService
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             throw new ValidationApiException("Email and password are required.");
 
-        if (await _users.GetByEmailAsync(request.Email.Trim().ToLowerInvariant(), cancellationToken) is not null)
+        var email = request.Email.Trim().ToLowerInvariant();
+        var cacheKey = $"OTP_{email}";
+        if (!_memoryCache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
+            throw new ValidationApiException("Invalid or expired OTP.");
+        
+        _memoryCache.Remove(cacheKey);
+
+        if (await _users.GetByEmailAsync(email, cancellationToken) is not null)
             throw new ConflictApiException("Email already registered.");
 
         var user = new AppUser
         {
             Id = Guid.NewGuid(),
-            Email = request.Email.Trim().ToLowerInvariant(),
+            Email = email,
             PasswordHash = PasswordHasher.Hash(request.Password),
             DisplayName = string.IsNullOrWhiteSpace(request.DisplayName) ? "Amora User" : request.DisplayName.Trim(),
             AvatarUrl = "default_avatar.png",
@@ -145,50 +152,52 @@ public sealed class AuthService
         return BuildResponse(user);
     }
 
-    public async Task SendEmailOtpAsync(SendEmailOtpRequest request, CancellationToken cancellationToken)
+    public async Task SendRegisterOtpAsync(SendEmailOtpRequest request, CancellationToken cancellationToken)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        if (await _users.GetByEmailAsync(email, cancellationToken) is not null)
+            throw new ConflictApiException("Email already registered.");
+
+        await SendOtpInternalAsync(email, "AMORA - Mã xác nhận đăng ký", cancellationToken);
+    }
+
+    public async Task SendForgotPasswordOtpAsync(SendEmailOtpRequest request, CancellationToken cancellationToken)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        if (await _users.GetByEmailAsync(email, cancellationToken) is null)
+            throw new NotFoundApiException("Account not found.");
+
+        await SendOtpInternalAsync(email, "AMORA - Mã xác nhận đặt lại mật khẩu", cancellationToken);
+    }
+
+    private async Task SendOtpInternalAsync(string email, string subject, CancellationToken cancellationToken)
     {
         var otp = new Random().Next(100000, 999999).ToString();
-        var subject = "AMORA - Mã xác nhận đăng nhập";
         var body = $"<h3>Mã xác nhận của bạn là: <strong>{otp}</strong></h3><p>Mã có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>";
 
-        var success = await _emailService.SendEmailAsync(request.Email, subject, body, cancellationToken);
+        var success = await _emailService.SendEmailAsync(email, subject, body, cancellationToken);
         if (!success)
-        {
             throw new ValidationApiException("Failed to send OTP to the provided email.");
-        }
 
-        var cacheKey = $"OTP_{request.Email}";
+        var cacheKey = $"OTP_{email}";
         _memoryCache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
     }
 
-    public async Task<AuthResponseDto> LoginWithEmailOtpAsync(LoginWithEmailOtpRequest request, CancellationToken cancellationToken)
+    public async Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken)
     {
-        var cacheKey = $"OTP_{request.Email}";
+        var email = request.Email.Trim().ToLowerInvariant();
+        var cacheKey = $"OTP_{email}";
         if (!_memoryCache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
-        {
             throw new ValidationApiException("Invalid or expired OTP.");
-        }
 
         _memoryCache.Remove(cacheKey);
 
-        var user = await _users.GetByEmailForAuthAsync(request.Email, cancellationToken);
-        if (user is null)
-        {
-            user = new AppUser
-            {
-                Id = Guid.NewGuid(),
-                Email = request.Email,
-                DisplayName = "User_" + new Random().Next(1000, 9999),
-                AvatarUrl = "default_avatar.png",
-                Diamonds = 0,
-                CreatedAt = DateTimeOffset.UtcNow,
-                RequiresPasswordUpdate = true
-            };
-            await _users.AddAsync(user, cancellationToken);
-        }
+        var user = await _users.GetByEmailForAuthAsync(email, cancellationToken)
+            ?? throw new NotFoundApiException("Account not found.");
 
-        await _petCoins.TryGrantDailyLoginBonusAsync(user, cancellationToken);
-        return BuildResponse(user);
+        user.PasswordHash = PasswordHasher.Hash(request.NewPassword);
+        user.RequiresPasswordUpdate = false;
+        await _users.UpdateAsync(user, cancellationToken);
     }
 
     public async Task SetPasswordAsync(Guid userId, SetPasswordRequest request, CancellationToken cancellationToken)

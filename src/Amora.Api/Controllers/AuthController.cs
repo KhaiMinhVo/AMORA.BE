@@ -55,29 +55,42 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Gui ma OTP den Email.
+    /// Gui ma OTP de dang ky tai khoan moi.
     /// </summary>
-    [HttpPost("email/send-otp")]
+    [HttpPost("register/send-otp")]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<string>>> SendEmailOtp(
+    public async Task<ActionResult<ApiResponse<string>>> SendRegisterOtp(
         [FromBody] SendEmailOtpRequest request,
         CancellationToken cancellationToken)
     {
-        await _authService.SendEmailOtpAsync(request, cancellationToken);
-        return Ok(ApiResponse<string>.Ok("OTP sent.", "OTP sent successfully to email."));
+        await _authService.SendRegisterOtpAsync(request, cancellationToken);
+        return Ok(ApiResponse<string>.Ok("OTP sent.", "OTP sent successfully for registration."));
     }
 
     /// <summary>
-    /// Xac minh OTP va dang nhap bang Email.
+    /// Gui ma OTP de lay lai mat khau.
     /// </summary>
-    [HttpPost("email/verify")]
-    [ProducesResponseType(typeof(ApiResponse<AuthResponseDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<AuthResponseDto>>> EmailOtpLogin(
-        [FromBody] LoginWithEmailOtpRequest request,
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<string>>> ForgotPassword(
+        [FromBody] SendEmailOtpRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _authService.LoginWithEmailOtpAsync(request, cancellationToken);
-        return Ok(ApiResponse<AuthResponseDto>.Ok(result, "Email OTP login successful."));
+        await _authService.SendForgotPasswordOtpAsync(request, cancellationToken);
+        return Ok(ApiResponse<string>.Ok("OTP sent.", "OTP sent successfully for password reset."));
+    }
+
+    /// <summary>
+    /// Xac minh OTP va dat lai mat khau moi.
+    /// </summary>
+    [HttpPost("reset-password")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<string>>> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _authService.ResetPasswordAsync(request, cancellationToken);
+        return Ok(ApiResponse<string>.Ok("Password reset.", "Password has been successfully reset."));
     }
 
     /// <summary>
