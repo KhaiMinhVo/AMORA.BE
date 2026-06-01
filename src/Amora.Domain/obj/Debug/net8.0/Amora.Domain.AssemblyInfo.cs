@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Amora.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+526a8f3452221d2fae41efb47a82e8a559082ed5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4c423e106aef9e382562773869444687acb2ecd9")]
 [assembly: System.Reflection.AssemblyProductAttribute("Amora.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Amora.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

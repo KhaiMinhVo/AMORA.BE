@@ -15,17 +15,20 @@ public sealed class PetCoordinator
     private readonly IMatchConnectionRepository _matchRepository;
     private readonly IMessagePublisher _messagePublisher;
     private readonly IPetRealtimeNotifier _petNotifier;
+    private readonly IChatMessageRepository _chatMessageRepository;
 
     public PetCoordinator(
         IPetRepository petRepository,
         IMatchConnectionRepository matchRepository,
         IMessagePublisher messagePublisher,
-        IPetRealtimeNotifier petNotifier)
+        IPetRealtimeNotifier petNotifier,
+        IChatMessageRepository chatMessageRepository)
     {
         _petRepository = petRepository;
         _matchRepository = matchRepository;
         _messagePublisher = messagePublisher;
         _petNotifier = petNotifier;
+        _chatMessageRepository = chatMessageRepository;
     }
 
     public async Task<Pet> CreateForMatchAsync(Guid matchId, CancellationToken cancellationToken)
@@ -61,7 +64,7 @@ public sealed class PetCoordinator
         PetEngine.AwardTextRp(pet);
 
         var replyDelay = ComputeReplyDelayMinutes(pet, senderId);
-        pet.Stage = PetEngine.EvaluateStage(pet);
+        await EvaluateStageAndTypeAsync(pet, cancellationToken);
         pet.UpdatedAt = DateTimeOffset.UtcNow;
         pet.LastPartnerMessageAt = DateTimeOffset.UtcNow;
 
@@ -100,7 +103,7 @@ public sealed class PetCoordinator
         PetEngine.AwardVoiceRp(pet, result.DurationSeconds);
 
         var replyDelay = ComputeReplyDelayMinutes(pet, result.UserId);
-        pet.Stage = PetEngine.EvaluateStage(pet);
+        await EvaluateStageAndTypeAsync(pet, cancellationToken);
         pet.LastInteractionAt = DateTimeOffset.UtcNow;
         pet.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -119,7 +122,7 @@ public sealed class PetCoordinator
             if (loss > 0)
             {
                 count++;
-                pet.Stage = PetEngine.EvaluateStage(pet);
+                await EvaluateStageAndTypeAsync(pet, cancellationToken);
                 await LogAsync(pet, "Decay", new { loss }, cancellationToken);
                 await SaveAndNotifyAsync(pet, cancellationToken);
             }
@@ -136,6 +139,8 @@ public sealed class PetCoordinator
         Rp = pet.Rp,
         Stage = (int)pet.Stage,
         StageName = PetFeatureUnlocks.StageDisplayName(pet.Stage),
+        Type = pet.Type.ToString(),
+        TypeName = PetFeatureUnlocks.PetTypeName(pet.Type),
         IsFrozen = pet.IsFrozen,
         ExpiresAtHint = pet.LastInteractionAt.AddHours(6),
         UnlockedFeatures = PetFeatureUnlocks.ForStage(pet.Stage)
@@ -164,6 +169,65 @@ public sealed class PetCoordinator
         var match = await _matchRepository.GetByIdAsync(pet.MatchId, cancellationToken);
         if (match is not null)
             await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, cancellationToken);
+    }
+
+    private async Task EvaluateStageAndTypeAsync(Pet pet, CancellationToken cancellationToken)
+    {
+        var oldStage = pet.Stage;
+        pet.Stage = PetEngine.EvaluateStage(pet);
+
+        if (oldStage == GrowthStage.ResonanceSeed && pet.Stage >= GrowthStage.Sprout && pet.Type == PetType.None)
+        {
+            pet.Type = await EvaluateInitiativeBalanceAsync(pet.MatchId, cancellationToken);
+        }
+    }
+
+    private async Task<PetType> EvaluateInitiativeBalanceAsync(Guid matchId, CancellationToken cancellationToken)
+    {
+        var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
+        if (match == null) return PetType.Dog;
+
+        var result = await _chatMessageRepository.GetByMatchAsync(matchId, null, 500, cancellationToken);
+        var messages = result.Items.Where(x => x.MessageType == MessageType.Text).ToList();
+        
+        if (messages.Count == 0) return PetType.Dog;
+
+        int countA = 0, countB = 0, lenA = 0, lenB = 0;
+        var responseTimes = new List<double>();
+        Guid? lastSender = null;
+        DateTimeOffset? lastMsgTime = null;
+
+        foreach (var msg in messages.OrderBy(m => m.CreatedAt))
+        {
+            if (msg.SenderId == match.UserAId)
+            {
+                countA++;
+                lenA += msg.Content?.Length ?? 0;
+            }
+            else if (msg.SenderId == match.UserBId)
+            {
+                countB++;
+                lenB += msg.Content?.Length ?? 0;
+            }
+
+            if (lastSender != null && lastSender != msg.SenderId && lastMsgTime != null)
+            {
+                var delay = (msg.CreatedAt - lastMsgTime.Value).TotalSeconds;
+                if (delay >= 0) responseTimes.Add(delay);
+            }
+
+            lastSender = msg.SenderId;
+            lastMsgTime = msg.CreatedAt;
+        }
+
+        double avgResponseTime = responseTimes.Count > 0 ? responseTimes.Average() : 30;
+        double avgLen = messages.Count > 0 ? (double)(lenA + lenB) / messages.Count : 0;
+        double ratioA = countA + countB > 0 ? (double)countA / (countA + countB) : 0.5;
+
+        if (avgResponseTime <= 15) return PetType.Rabbit;
+        if (avgResponseTime > 60 && avgLen > 30) return PetType.Bear;
+        if (ratioA > 0.65 || ratioA < 0.35) return PetType.Cat;
+        return PetType.Dog;
     }
 
     private async Task LogAsync(Pet pet, string eventType, object payload, CancellationToken cancellationToken)

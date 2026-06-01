@@ -37,12 +37,31 @@ public class S3StorageService : IStorageService
             BucketName = _bucketName,
             Key = fileName,
             Verb = HttpVerb.PUT,
-            Expires = DateTime.UtcNow.AddMinutes(5)
+            Expires = DateTime.UtcNow.AddMinutes(5),
+            Protocol = _publicBaseUrl.StartsWith("http://") ? Protocol.HTTP : Protocol.HTTPS
         };
 
         string uploadUrl = _s3Client.GetPreSignedURL(request);
         string publicUrl = $"{_publicBaseUrl}/{fileName}";
 
         return await Task.FromResult((uploadUrl, publicUrl));
+    }
+
+    public async Task<string> UploadFileAsync(Stream fileStream, string fileExtension, string? folder, string? contentType = null)
+    {
+        var safeFolder = string.IsNullOrWhiteSpace(folder) ? "files" : folder.Trim().Trim('/');
+        var fileName = $"{safeFolder}/{Guid.NewGuid()}{fileExtension}";
+
+        var putRequest = new PutObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = fileName,
+            InputStream = fileStream,
+            ContentType = contentType ?? "application/octet-stream"
+        };
+
+        await _s3Client.PutObjectAsync(putRequest);
+
+        return $"{_publicBaseUrl}/{fileName}";
     }
 }

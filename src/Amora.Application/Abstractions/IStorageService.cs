@@ -8,4 +8,6 @@ public interface IStorageService
     Task<(string UploadUrl, string PublicUrl)> GeneratePreSignedUploadUrlAsync(string fileExtension);
 
     Task<(string UploadUrl, string PublicUrl)> GeneratePreSignedUploadUrlAsync(string fileExtension, string? folder);
+
+    Task<string> UploadFileAsync(Stream fileStream, string fileExtension, string? folder, string? contentType = null);
 }

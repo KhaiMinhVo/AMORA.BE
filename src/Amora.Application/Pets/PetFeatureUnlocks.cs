@@ -22,4 +22,14 @@ public static class PetFeatureUnlocks
         GrowthStage.Legend => "Huyền Thoại",
         _ => "Unknown"
     };
+
+    public static string PetTypeName(PetType type) => type switch
+    {
+        PetType.None => "Chưa nở",
+        PetType.Dog => "Chó (Cân bằng)",
+        PetType.Cat => "Mèo (Kẻ đuổi - Người chạy)",
+        PetType.Rabbit => "Thỏ (Cuồng nhiệt)",
+        PetType.Bear => "Gấu (Trưởng thành)",
+        _ => "Unknown"
+    };
 }

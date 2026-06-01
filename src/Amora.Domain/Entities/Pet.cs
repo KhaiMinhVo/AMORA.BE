@@ -14,6 +14,8 @@ public sealed class Pet : BaseEntity
 
     public GrowthStage Stage { get; set; } = GrowthStage.ResonanceSeed;
 
+    public PetType Type { get; set; } = PetType.None;
+
     /// <summary>HP = 0 → đóng băng, không nhận RP.</summary>
     public bool IsFrozen { get; set; }
 

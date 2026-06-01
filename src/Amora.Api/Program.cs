@@ -1,4 +1,5 @@
 using System.Text;
+using Amazon.Runtime;
 using Amora.Api.Infrastructure;
 using Amora.Api.Middleware;
 using Amora.Application;
@@ -124,12 +125,20 @@ builder.Services.AddScoped<ProfileService>();
 
 var awsOptions = builder.Configuration.GetAWSOptions();
 var awsServiceUrl = builder.Configuration["AWS:ServiceURL"];
+Amazon.AWSConfigsS3.UseSignatureVersion4 = true;
 var s3Config = new AmazonS3Config();
+s3Config.AuthenticationRegion = !string.IsNullOrWhiteSpace(awsServiceUrl) 
+    ? "us-east-1" 
+    : (awsOptions.Region?.SystemName ?? "ap-southeast-1");
+
 if (!string.IsNullOrWhiteSpace(awsServiceUrl))
     s3Config.ServiceURL = awsServiceUrl;
 
 if (builder.Configuration.GetValue<bool?>("AWS:ForcePathStyle") == true)
     s3Config.ForcePathStyle = true;
+
+if (awsServiceUrl?.StartsWith("http://") == true)
+    s3Config.UseHttp = true;
 
 if (awsOptions.Region is not null && string.IsNullOrWhiteSpace(awsServiceUrl))
     s3Config.RegionEndpoint = awsOptions.Region;
@@ -137,6 +146,15 @@ if (awsOptions.Region is not null && string.IsNullOrWhiteSpace(awsServiceUrl))
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddSingleton<IAmazonS3>(_ =>
 {
+    var accessKey = builder.Configuration["AWS:AccessKey"];
+    var secretKey = builder.Configuration["AWS:SecretKey"];
+
+    if (!string.IsNullOrWhiteSpace(accessKey) && !string.IsNullOrWhiteSpace(secretKey))
+    {
+        var credentials = new BasicAWSCredentials(accessKey, secretKey);
+        return new AmazonS3Client(credentials, s3Config);
+    }
+
     return awsOptions.Credentials is not null
         ? new AmazonS3Client(awsOptions.Credentials, s3Config)
         : new AmazonS3Client(s3Config);
