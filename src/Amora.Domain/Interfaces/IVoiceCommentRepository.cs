@@ -15,4 +15,6 @@ public interface IVoiceCommentRepository
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(VoiceComment comment, CancellationToken cancellationToken = default);
 }

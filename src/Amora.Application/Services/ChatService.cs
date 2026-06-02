@@ -19,6 +19,7 @@ public sealed class ChatService
     private readonly IMediator _mediator;
     private readonly PetFeatureGateService _featureGate;
     private readonly IChatReadStateRepository _readState;
+    private readonly AiModerationService _aiModerationService;
 
     public ChatService(
         ICurrentUserService currentUserService,
@@ -27,7 +28,8 @@ public sealed class ChatService
         IRealtimeNotifier realtimeNotifier,
         IMediator mediator,
         PetFeatureGateService featureGate,
-        IChatReadStateRepository readState)
+        IChatReadStateRepository readState,
+        AiModerationService aiModerationService)
     {
         _currentUserService = currentUserService;
         _matchConnectionRepository = matchConnectionRepository;
@@ -36,6 +38,7 @@ public sealed class ChatService
         _mediator = mediator;
         _featureGate = featureGate;
         _readState = readState;
+        _aiModerationService = aiModerationService;
     }
 
     public async Task<MessageHistoryResponseDto> GetHistoryAsync(Guid matchId, string? cursor, int limit, CancellationToken cancellationToken = default)
@@ -100,6 +103,15 @@ public sealed class ChatService
         await _featureGate.ValidateSendAsync(matchId, messageType, cancellationToken);
         if (messageType == MessageType.Image)
             await _featureGate.RegisterImageSentAsync(matchId, _currentUserService.UserId, cancellationToken);
+
+        if (messageType == MessageType.Text && !string.IsNullOrWhiteSpace(request.Content))
+        {
+            bool isToxic = await _aiModerationService.IsMessageToxicAsync(request.Content, cancellationToken);
+            if (isToxic)
+            {
+                throw new ValidationApiException("Nội dung chat vi phạm tiêu chuẩn cộng đồng (Anti-toxic).");
+            }
+        }
 
         var message = new ChatMessage
         {

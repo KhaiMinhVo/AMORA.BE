@@ -111,6 +111,19 @@ public sealed class AuthController : ControllerBase
         return Ok(ApiResponse<string>.Ok("Password set.", "Password updated successfully."));
     }
 
+    /// <summary>
+    /// Gui yeu cau khieu nai neu tai khoan bi khoa.
+    /// </summary>
+    [HttpPost("appeal")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<string>>> SubmitAppeal(
+        [FromBody] SubmitAppealRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _authService.SubmitAppealAsync(request, cancellationToken);
+        return Ok(ApiResponse<string>.Ok("Appeal submitted.", "Your appeal has been submitted successfully and is pending review."));
+    }
+
     /// <summary>Development — JWT cho seed user hoặc user mới.</summary>
     [HttpPost("dev-token")]
     public async Task<ActionResult<ApiResponse<AuthResponseDto>>> DevToken(

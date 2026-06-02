@@ -32,6 +32,19 @@ public sealed class PostsController : ControllerBase
     }
 
     /// <summary>
+    /// Lay danh sach voice post cua chinh minh.
+    /// </summary>
+    [HttpGet("me")]
+    public async Task<ActionResult<ApiResponse<FeedResponseDto>>> GetMyPosts(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _voicePostService.GetMyPostsAsync(page, pageSize, cancellationToken);
+        return Ok(ApiResponse<FeedResponseDto>.Ok(result));
+    }
+
+    /// <summary>
     /// Tao voice post moi cho user hien tai.
     /// </summary>
     [HttpPost]

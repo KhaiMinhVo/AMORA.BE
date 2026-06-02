@@ -14,6 +14,12 @@ public interface IVoicePostRepository
         int pageSize,
         CancellationToken cancellationToken = default);
 
+    Task<(IReadOnlyList<VoicePost> Items, int TotalCount)> GetMyPostsPageAsync(
+        Guid posterId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(VoicePost post, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(VoicePost post, CancellationToken cancellationToken = default);

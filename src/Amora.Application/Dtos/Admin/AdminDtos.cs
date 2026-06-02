@@ -39,3 +39,19 @@ public sealed class BanUserRequest
     public string? Reason { get; init; }
     public int? DurationDays { get; init; }
 }
+
+public sealed class AppealDto
+{
+    public Guid UserId { get; init; }
+    public string DisplayName { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string? BanReason { get; init; }
+    public DateTimeOffset? BannedUntil { get; init; }
+    public string? AppealReason { get; init; }
+}
+
+public sealed class ResolveAppealRequest
+{
+    /// <summary>Approve (Unban) or Reject (Keep ban)</summary>
+    public string Action { get; init; } = string.Empty;
+}

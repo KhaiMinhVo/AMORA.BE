@@ -59,4 +59,27 @@ public sealed class AdminModerationController : ControllerBase
         await _adminService.UnbanUserAsync(userId, cancellationToken);
         return Ok(new { message = "User has been unbanned." });
     }
+
+    /// <summary>
+    /// Lấy danh sách các tài khoản đang khiếu nại (Appeal)
+    /// </summary>
+    [HttpGet("appeals")]
+    public async Task<IActionResult> GetAppeals([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+        var result = await _adminService.GetPendingAppealsAsync(page, pageSize, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Xử lý đơn khiếu nại (Approve/Reject)
+    /// </summary>
+    [HttpPost("appeals/{userId:guid}/resolve")]
+    public async Task<IActionResult> ResolveAppeal(Guid userId, [FromBody] ResolveAppealRequest request, CancellationToken cancellationToken = default)
+    {
+        await _adminService.ResolveAppealAsync(userId, request, cancellationToken);
+        return Ok(new { message = "Appeal resolved successfully." });
+    }
 }

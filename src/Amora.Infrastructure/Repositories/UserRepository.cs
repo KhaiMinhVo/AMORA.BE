@@ -43,4 +43,12 @@ public sealed class UserRepository : IUserRepository
         _dbContext.Users.Update(user);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<(IEnumerable<AppUser> Items, int TotalCount)> GetUsersWithPendingAppealsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Users.Where(u => u.HasPendingAppeal);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(u => u.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        return (items, totalCount);
+    }
 }

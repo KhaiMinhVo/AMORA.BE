@@ -1361,11 +1361,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
+      "projectUniqueName": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
       "projectName": "Amora.Application",
-      "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
+      "projectPath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
       "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
-      "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\obj\\",
+      "outputPath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1387,8 +1387,8 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj": {
-              "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj"
+            "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj": {
+              "projectPath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj"
             }
           }
         }

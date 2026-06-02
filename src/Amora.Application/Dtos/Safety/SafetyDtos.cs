@@ -4,6 +4,8 @@ public sealed class CreateReportRequest
 {
     public string Reason { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public Guid? TargetPostId { get; set; }
+    public Guid? TargetCommentId { get; set; }
 }
 
 public sealed class ReportResponseDto

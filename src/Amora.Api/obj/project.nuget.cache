@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "7WsVlFFv8Cc=",
+  "dgSpecHash": "DaBJLUO6bxs=",
   "success": true,
-  "projectFilePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
+  "projectFilePath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vopha\\.nuget\\packages\\awssdk.core\\3.7.304.16\\awssdk.core.3.7.304.16.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\awssdk.extensions.netcore.setup\\3.7.7\\awssdk.extensions.netcore.setup.3.7.7.nupkg.sha512",
@@ -154,9 +154,9 @@
       "code": "NU1902",
       "level": "Warning",
       "message": "Package 'OpenTelemetry.Exporter.OpenTelemetryProtocol' 1.10.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-4625-4j76-fww9",
-      "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
+      "projectPath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
       "warningLevel": 1,
-      "filePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
+      "filePath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
       "libraryId": "OpenTelemetry.Exporter.OpenTelemetryProtocol",
       "targetGraphs": [
         "net8.0"

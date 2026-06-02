@@ -52,6 +52,27 @@ public sealed class VoicePostRepository : IVoicePostRepository
         return (items, totalCount);
     }
 
+    public async Task<(IReadOnlyList<VoicePost> Items, int TotalCount)> GetMyPostsPageAsync(
+        Guid posterId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.VoicePosts
+            .AsNoTracking()
+            .Where(x => x.PosterId == posterId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
     public async Task AddAsync(VoicePost post, CancellationToken cancellationToken = default)
     {
         await _dbContext.VoicePosts.AddAsync(post, cancellationToken);

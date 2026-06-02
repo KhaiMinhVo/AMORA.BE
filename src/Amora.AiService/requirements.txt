@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+torch
+transformers
+faster-whisper
+requests
+pydantic
+sentencepiece
+tiktoken

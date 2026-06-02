@@ -28,6 +28,9 @@ namespace Amora.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AppealReason")
+                        .HasColumnType("text");
+
                     b.Property<string>("AvatarUrl")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -78,6 +81,9 @@ namespace Amora.Infrastructure.Data.Migrations
 
                     b.Property<string>("GoogleId")
                         .HasColumnType("text");
+
+                    b.Property<bool>("HasPendingAppeal")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Interests")
                         .HasMaxLength(500)
@@ -142,6 +148,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Diamonds = 0,
                             DisplayName = "Amora Alice",
                             Gender = "PreferNotToSay",
+                            HasPendingAppeal = false,
                             IsBanned = false,
                             IsGold = false,
                             IsPremium = false,
@@ -158,6 +165,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Diamonds = 0,
                             DisplayName = "Amora Bob",
                             Gender = "PreferNotToSay",
+                            HasPendingAppeal = false,
                             IsBanned = false,
                             IsGold = false,
                             IsPremium = false,
@@ -174,6 +182,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             Diamonds = 0,
                             DisplayName = "Amora Carol",
                             Gender = "PreferNotToSay",
+                            HasPendingAppeal = false,
                             IsBanned = false,
                             IsGold = false,
                             IsPremium = false,
@@ -191,6 +200,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             DisplayName = "Amora Admin",
                             Email = "admin@gmail.com",
                             Gender = "PreferNotToSay",
+                            HasPendingAppeal = false,
                             IsBanned = false,
                             IsGold = false,
                             IsPremium = false,
@@ -926,6 +936,12 @@ namespace Amora.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("TargetCommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TargetPostId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("TargetUserId")
                         .HasColumnType("uuid");

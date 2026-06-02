@@ -13,17 +13,29 @@ public sealed class TrustSafetyService
     private readonly IUserReportRepository _reportRepository;
     private readonly IUserBlockRepository _blockRepository;
     private readonly IUserRepository _userRepository;
+    private readonly AiModerationService _aiModerationService;
+    private readonly AdminModerationService _adminModerationService;
+    private readonly IVoicePostRepository _voicePostRepository;
+    private readonly IVoiceCommentRepository _voiceCommentRepository;
 
     public TrustSafetyService(
         ICurrentUserService currentUserService,
         IUserReportRepository reportRepository,
         IUserBlockRepository blockRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        AiModerationService aiModerationService,
+        AdminModerationService adminModerationService,
+        IVoicePostRepository voicePostRepository,
+        IVoiceCommentRepository voiceCommentRepository)
     {
         _currentUserService = currentUserService;
         _reportRepository = reportRepository;
         _blockRepository = blockRepository;
         _userRepository = userRepository;
+        _aiModerationService = aiModerationService;
+        _adminModerationService = adminModerationService;
+        _voicePostRepository = voicePostRepository;
+        _voiceCommentRepository = voiceCommentRepository;
     }
 
     // ── Report ──────────────────────────────────────────────────────────────
@@ -52,6 +64,8 @@ public sealed class TrustSafetyService
             Id = Guid.NewGuid(),
             ReporterId = reporterId,
             TargetUserId = targetUserId,
+            TargetPostId = request.TargetPostId,
+            TargetCommentId = request.TargetCommentId,
             Reason = reason,
             Description = request.Description,
             Status = ReportStatus.Pending,
@@ -59,6 +73,46 @@ public sealed class TrustSafetyService
         };
 
         await _reportRepository.AddAsync(report, cancellationToken);
+
+        // -- AI Auto Evaluation --
+        string reportedContent = "";
+        if (request.TargetPostId.HasValue)
+        {
+            var post = await _voicePostRepository.GetByIdAsync(request.TargetPostId.Value, cancellationToken);
+            if (post != null && !string.IsNullOrWhiteSpace(post.AudioUrl))
+            {
+                var text = await _aiModerationService.TranscribeAudioAsync(post.AudioUrl, cancellationToken);
+                reportedContent = text ?? "";
+            }
+        }
+        else if (request.TargetCommentId.HasValue)
+        {
+            var comment = await _voiceCommentRepository.GetByIdAsync(request.TargetCommentId.Value, cancellationToken);
+            if (comment != null && !string.IsNullOrWhiteSpace(comment.AudioUrl))
+            {
+                var text = await _aiModerationService.TranscribeAudioAsync(comment.AudioUrl, cancellationToken);
+                reportedContent = text ?? "";
+            }
+        }
+        
+        var aiVerdict = await _aiModerationService.EvaluateReportAsync(report, reportedContent, cancellationToken);
+        if (aiVerdict == "BAN")
+        {
+            await _adminModerationService.ResolveReportAsync(report.Id, new Dtos.Admin.ResolveReportRequest
+            {
+                Action = "Ban",
+                ResolutionNote = "[AI AUTOMATED] Banned due to severe violation.",
+                BanDurationDays = 3 // Standard auto-ban duration
+            }, cancellationToken);
+        }
+        else if (aiVerdict == "IGNORE")
+        {
+            await _adminModerationService.ResolveReportAsync(report.Id, new Dtos.Admin.ResolveReportRequest
+            {
+                Action = "Ignore",
+                ResolutionNote = "[AI AUTOMATED] Ignored. Deemed safe or false report."
+            }, cancellationToken);
+        }
 
         return new ReportResponseDto
         {

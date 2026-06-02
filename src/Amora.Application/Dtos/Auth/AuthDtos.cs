@@ -34,3 +34,9 @@ public sealed class AuthResponseDto
 
     public bool RequiresPasswordUpdate { get; init; }
 }
+
+public sealed class SubmitAppealRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public string AppealReason { get; set; } = string.Empty;
+}

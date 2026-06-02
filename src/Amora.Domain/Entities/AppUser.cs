@@ -29,6 +29,9 @@ public sealed class AppUser
     public DateTimeOffset? BannedUntil { get; set; }
     public string? BanReason { get; set; }
 
+    public bool HasPendingAppeal { get; set; }
+    public string? AppealReason { get; set; }
+
     // ── Profile mở rộng ─────────────────────────────────────────────────
 
     public DateOnly? DateOfBirth { get; set; }

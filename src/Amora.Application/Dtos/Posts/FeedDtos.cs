@@ -11,7 +11,7 @@ public sealed class PosterPreviewDto
 
 public sealed class FeedPostItemDto
 {
-    public Guid PostId { get; init; }
+    public Guid Id { get; init; }
 
     public PosterPreviewDto Poster { get; init; } = new();
 

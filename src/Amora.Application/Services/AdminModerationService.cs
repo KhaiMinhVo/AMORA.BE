@@ -128,6 +128,60 @@ public sealed class AdminModerationService
         user.IsBanned = false;
         user.BannedUntil = null;
         user.BanReason = null;
+        user.HasPendingAppeal = false;
+        user.AppealReason = null;
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
+    }
+
+    public async Task<PaginatedList<AppealDto>> GetPendingAppealsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var (users, totalCount) = await _userRepository.GetUsersWithPendingAppealsAsync(page, pageSize, cancellationToken);
+
+        var dtos = users.Select(u => new AppealDto
+        {
+            UserId = u.Id,
+            DisplayName = u.DisplayName,
+            Email = u.Email ?? "",
+            BanReason = u.BanReason,
+            BannedUntil = u.BannedUntil,
+            AppealReason = u.AppealReason
+        }).ToList();
+
+        return new PaginatedList<AppealDto>
+        {
+            Items = dtos,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task ResolveAppealAsync(Guid userId, ResolveAppealRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("User not found.");
+
+        if (!user.HasPendingAppeal)
+            throw new ValidationApiException("User does not have a pending appeal.");
+
+        if (request.Action.Equals("Approve", StringComparison.OrdinalIgnoreCase))
+        {
+            user.IsBanned = false;
+            user.BannedUntil = null;
+            user.BanReason = null;
+            user.HasPendingAppeal = false;
+            user.AppealReason = null;
+        }
+        else if (request.Action.Equals("Reject", StringComparison.OrdinalIgnoreCase))
+        {
+            user.HasPendingAppeal = false;
+            user.AppealReason = null;
+        }
+        else
+        {
+            throw new ValidationApiException("Invalid action. Supported: Approve, Reject.");
+        }
 
         await _userRepository.UpdateAsync(user, cancellationToken);
     }

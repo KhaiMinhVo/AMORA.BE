@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj": {}
+    "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj": {}
   },
   "projects": {
-    "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj": {
+    "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
+        "projectUniqueName": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
         "projectName": "Amora.Domain",
-        "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
+        "projectPath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\Amora.Domain.csproj",
         "packagesPath": "C:\\Users\\vopha\\.nuget\\packages\\",
-        "outputPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\obj\\",
+        "outputPath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -210,6 +210,32 @@ public sealed class AuthService
         await _users.UpdateAsync(user, cancellationToken);
     }
 
+    public async Task SubmitAppealAsync(SubmitAppealRequest request, CancellationToken cancellationToken)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        var user = await _users.GetByEmailForAuthAsync(email, cancellationToken)
+            ?? throw new NotFoundApiException("Account not found.");
+
+        if (!user.IsBanned)
+        {
+            throw new ValidationApiException("This account is not banned. No appeal needed.");
+        }
+
+        if (user.HasPendingAppeal)
+        {
+            throw new ConflictApiException("You already have a pending appeal.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.AppealReason))
+        {
+            throw new ValidationApiException("Appeal reason is required.");
+        }
+
+        user.HasPendingAppeal = true;
+        user.AppealReason = request.AppealReason.Trim();
+        await _users.UpdateAsync(user, cancellationToken);
+    }
+
     private AuthResponseDto BuildResponse(AppUser user)
     {
         var token = _jwt.CreateToken(user);

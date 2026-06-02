@@ -22,7 +22,7 @@ public sealed class VoiceCommentRepository : IVoiceCommentRepository
 
     public Task<VoiceComment?> GetByIdAsync(Guid commentId, CancellationToken cancellationToken = default)
     {
-        return _dbContext.VoiceComments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == commentId, cancellationToken);
+        return _dbContext.VoiceComments.FirstOrDefaultAsync(x => x.Id == commentId, cancellationToken);
     }
 
     public Task<bool> HasUserCommentedOnPostAsync(Guid userId, Guid postId, CancellationToken cancellationToken = default)
@@ -40,5 +40,11 @@ public sealed class VoiceCommentRepository : IVoiceCommentRepository
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return (items, totalCount);
+    }
+
+    public async Task UpdateAsync(VoiceComment comment, CancellationToken cancellationToken = default)
+    {
+        _dbContext.VoiceComments.Update(comment);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

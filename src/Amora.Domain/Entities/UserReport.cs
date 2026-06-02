@@ -9,8 +9,13 @@ public sealed class UserReport
     /// <summary>Người gửi báo cáo.</summary>
     public Guid ReporterId { get; set; }
 
-    /// <summary>Người bị báo cáo.</summary>
     public Guid TargetUserId { get; set; }
+
+    /// <summary>Bài viết bị báo cáo (nếu có).</summary>
+    public Guid? TargetPostId { get; set; }
+
+    /// <summary>Bình luận bị báo cáo (nếu có).</summary>
+    public Guid? TargetCommentId { get; set; }
 
     public ReportReason Reason { get; set; }
 

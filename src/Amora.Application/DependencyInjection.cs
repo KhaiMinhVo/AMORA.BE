@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<Iap.DiamondRewardService>();
         services.AddScoped<AuthService>();
         services.AddScoped<Payment.PaymentService>();
+        services.AddHttpClient<AiModerationService>();
         return services;
     }
 }

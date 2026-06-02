@@ -5,6 +5,7 @@ using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Amora.Application.Services;
 
@@ -15,19 +16,22 @@ public sealed class VoicePostService
     private readonly IUserRepository _userRepository;
     private readonly AudioProcessingService _audioProcessingService;
     private readonly string? _storageBucketName;
+    private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
 
     public VoicePostService(
         ICurrentUserService currentUserService,
         IVoicePostRepository voicePostRepository,
         IUserRepository userRepository,
         AudioProcessingService audioProcessingService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
         _userRepository = userRepository;
         _audioProcessingService = audioProcessingService;
         _storageBucketName = configuration["Storage:BucketName"] ?? configuration["AWS:BucketName"];
+        _scopeFactory = scopeFactory;
     }
 
     public async Task<CreateVoicePostResponseDto> CreateAsync(CreateVoicePostRequest request, CancellationToken cancellationToken = default)
@@ -62,6 +66,40 @@ public sealed class VoicePostService
         // Ví dụ: "https://amora-voice-bucket.s3.amazonaws.com/voices/abc.m4a" → "voices/abc.m4a"
         var s3FileKey = ExtractS3KeyFromUrl(post.AudioUrl, _storageBucketName);
         await _audioProcessingService.EnqueueAudioProcessingAsync(post.Id, s3FileKey, cancellationToken);
+
+        // Run AI Moderation in the background
+        _ = Task.Run(async () =>
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var aiModeration = scope.ServiceProvider.GetRequiredService<AiModerationService>();
+            var postRepo = scope.ServiceProvider.GetRequiredService<IVoicePostRepository>();
+            var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+            var text = await aiModeration.TranscribeAudioAsync(request.AudioUrl);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                bool isToxic = await aiModeration.IsMessageToxicAsync(text);
+                if (isToxic)
+                {
+                    // Ban user and close post
+                    var p = await postRepo.GetByIdAsync(post.Id);
+                    if (p != null)
+                    {
+                        p.Status = VoicePostStatus.Closed;
+                        await postRepo.UpdateAsync(p);
+                    }
+
+                    var u = await userRepo.GetByIdAsync(userId);
+                    if (u != null)
+                    {
+                        u.IsBanned = true;
+                        u.BannedUntil = DateTimeOffset.UtcNow.AddDays(7);
+                        u.BanReason = "[AI AUTOMATED] Voice post contained toxic/offensive language.";
+                        await userRepo.UpdateAsync(u);
+                    }
+                }
+            }
+        });
 
         return new CreateVoicePostResponseDto
         {
@@ -111,7 +149,42 @@ public sealed class VoicePostService
 
             feedItems.Add(new FeedPostItemDto
             {
-                PostId = post.Id,
+                Id = post.Id,
+                Poster = new PosterPreviewDto
+                {
+                    Id = post.PosterId,
+                    DisplayName = poster?.DisplayName ?? $"Ẩn danh #{post.PosterId.ToString()[..4]}",
+                    AvatarUrl = "anonymous.png"
+                },
+                AudioUrl = post.AudioUrl,
+                MatchCount = post.MatchCount,
+                Status = post.Status.ToString(),
+                CreatedAt = post.CreatedAt
+            });
+        }
+
+        return new FeedResponseDto
+        {
+            TotalCount = totalCount,
+            Items = feedItems
+        };
+    }
+
+    public async Task<FeedResponseDto> GetMyPostsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+
+        var (items, totalCount) = await _voicePostRepository.GetMyPostsPageAsync(_currentUserService.UserId, page, pageSize, cancellationToken);
+        var feedItems = new List<FeedPostItemDto>();
+
+        foreach (var post in items)
+        {
+            var poster = await _userRepository.GetByIdAsync(post.PosterId, cancellationToken);
+
+            feedItems.Add(new FeedPostItemDto
+            {
+                Id = post.Id,
                 Poster = new PosterPreviewDto
                 {
                     Id = post.PosterId,
