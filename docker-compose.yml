@@ -92,6 +92,7 @@ services:
       ConnectionStrings__MongoDb: mongodb://mongodb:27017
       ConnectionStrings__Redis: redis:6379
       RabbitMQ__Url: amqp://guest:guest@rabbitmq:5672//
+      AiService__Url: http://host.docker.internal:8000
     depends_on:
       postgres:
         condition: service_healthy

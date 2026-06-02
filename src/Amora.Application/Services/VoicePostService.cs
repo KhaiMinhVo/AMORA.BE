@@ -6,6 +6,7 @@ using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Amora.Application.Services;
 
@@ -17,6 +18,7 @@ public sealed class VoicePostService
     private readonly AudioProcessingService _audioProcessingService;
     private readonly string? _storageBucketName;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
+    private readonly Microsoft.Extensions.Logging.ILogger<VoicePostService> _logger;
 
     public VoicePostService(
         ICurrentUserService currentUserService,
@@ -24,7 +26,8 @@ public sealed class VoicePostService
         IUserRepository userRepository,
         AudioProcessingService audioProcessingService,
         IConfiguration configuration,
-        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
+        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
+        Microsoft.Extensions.Logging.ILogger<VoicePostService> logger)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -32,6 +35,7 @@ public sealed class VoicePostService
         _audioProcessingService = audioProcessingService;
         _storageBucketName = configuration["Storage:BucketName"] ?? configuration["AWS:BucketName"];
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
     public async Task<CreateVoicePostResponseDto> CreateAsync(CreateVoicePostRequest request, CancellationToken cancellationToken = default)
@@ -42,7 +46,7 @@ public sealed class VoicePostService
         }
 
         var userId = _currentUserService.UserId;
-        var since = DateTimeOffset.UtcNow.Date;
+        var since = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
         var todayCount = await _voicePostRepository.CountByPosterSinceAsync(userId, since, cancellationToken);
 
         if (todayCount >= 3)
@@ -65,7 +69,14 @@ public sealed class VoicePostService
         // Trích xuất S3 file key từ publicUrl (bỏ phần domain, giữ lại path)
         // Ví dụ: "https://amora-voice-bucket.s3.amazonaws.com/voices/abc.m4a" → "voices/abc.m4a"
         var s3FileKey = ExtractS3KeyFromUrl(post.AudioUrl, _storageBucketName);
-        await _audioProcessingService.EnqueueAudioProcessingAsync(post.Id, s3FileKey, cancellationToken);
+        try
+        {
+            await _audioProcessingService.EnqueueAudioProcessingAsync(post.Id, s3FileKey, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to enqueue audio processing for voice post {PostId}.", post.Id);
+        }
 
         // Run AI Moderation in the background
         _ = Task.Run(async () =>
