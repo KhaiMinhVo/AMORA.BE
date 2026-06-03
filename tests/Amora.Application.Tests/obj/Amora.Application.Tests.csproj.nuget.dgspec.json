@@ -56,9 +56,17 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.74.0, )"
+            },
             "MediatR": {
               "target": "Package",
               "version": "[12.4.1, )"
+            },
+            "Microsoft.Extensions.Caching.Memory": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             },
             "Microsoft.Extensions.Configuration.Abstractions": {
               "target": "Package",
@@ -75,6 +83,10 @@
             "Microsoft.Extensions.Options": {
               "target": "Package",
               "version": "[8.0.2, )"
+            },
+            "payOS": {
+              "target": "Package",
+              "version": "[2.1.0, )"
             }
           },
           "imports": [
