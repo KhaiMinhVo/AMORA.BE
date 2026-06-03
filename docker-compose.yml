@@ -93,6 +93,10 @@ services:
       ConnectionStrings__Redis: redis:6379
       RabbitMQ__Url: amqp://guest:guest@rabbitmq:5672//
       AiService__Url: http://host.docker.internal:8000
+      AWS__AccessKey: ${AWS_ACCESS_KEY_ID}
+      AWS__SecretKey: ${AWS_SECRET_ACCESS_KEY}
+      EmailSettings__Password: ${SMTP_PASSWORD}
+      Webhooks__Secret: ${WEBHOOK_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
