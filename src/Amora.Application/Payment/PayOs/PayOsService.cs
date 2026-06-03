@@ -57,13 +57,15 @@ public sealed class PayOsService
 
         await _paymentRepo.AddAsync(transaction, cancellationToken);
 
+        var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost:5173";
+
         var paymentRequest = new global::PayOS.Models.V2.PaymentRequests.CreatePaymentLinkRequest
         {
             OrderCode = orderCode,
             Amount = amountVnd,
             Description = $"Nap {diamonds} Diamonds",
-            CancelUrl = _payOsConfig.CancelUrl,
-            ReturnUrl = _payOsConfig.ReturnUrl
+            CancelUrl = $"{frontendUrl}/payment/cancel",
+            ReturnUrl = $"{frontendUrl}/payment/success"
         };
 
         try

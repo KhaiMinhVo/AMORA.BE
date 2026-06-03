@@ -95,19 +95,7 @@ public sealed class PaymentsController : ControllerBase
         return Ok(ApiResponse<string>.Ok(url, "Success"));
     }
 
-    [AllowAnonymous]
-    [HttpGet("payos/callback")]
-    public IActionResult PayOsCallback()
-    {
-        return Ok("Giao dịch PayOS hoàn tất. Vui lòng quay lại ứng dụng.");
-    }
 
-    [AllowAnonymous]
-    [HttpGet("payos/cancel")]
-    public IActionResult PayOsCancel()
-    {
-        return BadRequest("Giao dịch PayOS đã bị hủy.");
-    }
 
     [AllowAnonymous]
     [HttpPost("payos/ipn")]

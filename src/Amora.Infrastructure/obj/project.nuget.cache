@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "so/9cPhmc4k=",
+  "dgSpecHash": "EqPZh8fawcw=",
   "success": true,
-  "projectFilePath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Infrastructure\\Amora.Infrastructure.csproj",
+  "projectFilePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Infrastructure\\Amora.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vopha\\.nuget\\packages\\awssdk.core\\3.7.304.16\\awssdk.core.3.7.304.16.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\awssdk.s3\\3.7.309.4\\awssdk.s3.3.7.309.4.nupkg.sha512",

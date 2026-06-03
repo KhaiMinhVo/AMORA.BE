@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "NPnwcR3bB+g=",
+  "dgSpecHash": "FE8bX7VrgN4=",
   "success": true,
-  "projectFilePath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
+  "projectFilePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vopha\\.nuget\\packages\\google.apis\\1.74.0\\google.apis.1.74.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\google.apis.auth\\1.74.0\\google.apis.auth.1.74.0.nupkg.sha512",
@@ -36,9 +36,9 @@
       "code": "NU1903",
       "level": "Warning",
       "message": "Package 'Microsoft.Extensions.Caching.Memory' 8.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-qj66-m88j-hmgj",
-      "projectPath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
+      "projectPath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
       "warningLevel": 1,
-      "filePath": "d:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
+      "filePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
       "libraryId": "Microsoft.Extensions.Caching.Memory",
       "targetGraphs": [
         "net8.0"

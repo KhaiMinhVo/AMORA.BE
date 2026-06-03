@@ -21,7 +21,7 @@ public class UploadController : ControllerBase
     {
         // Validate định dạng cho phép
         extension = extension.ToLowerInvariant();
-        if (extension != ".m4a" && extension != ".aac" && extension != ".mp3")
+        if (extension != ".m4a" && extension != ".aac" && extension != ".mp3" && extension != ".webm")
             return BadRequest(new { success = false, message = "Định dạng không hỗ trợ" });
 
         var (uploadUrl, publicUrl) = await _storageService.GeneratePreSignedUploadUrlAsync(extension);
@@ -112,7 +112,7 @@ public class UploadController : ControllerBase
             return BadRequest(new { success = false, message = "Không có file nào được gửi lên." });
 
         var extension = Path.GetExtension(file.FileName)?.ToLowerInvariant() ?? ".m4a";
-        if (extension is not ".m4a" and not ".aac" and not ".mp3" and not ".wav")
+        if (extension is not ".m4a" and not ".aac" and not ".mp3" and not ".wav" and not ".webm")
             return BadRequest(new { success = false, message = "Định dạng âm thanh không hỗ trợ." });
 
         using var stream = file.OpenReadStream();
@@ -123,6 +123,7 @@ public class UploadController : ControllerBase
             ".aac" => "audio/aac",
             ".mp3" => "audio/mpeg",
             ".wav" => "audio/wav",
+            ".webm" => "audio/webm",
             _ => "application/octet-stream"
         };
 
