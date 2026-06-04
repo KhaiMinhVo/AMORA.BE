@@ -49,9 +49,9 @@ public sealed class VoicePostService
         var since = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
         var todayCount = await _voicePostRepository.CountByPosterSinceAsync(userId, since, cancellationToken);
 
-        if (todayCount >= 3)
+        if (todayCount >= 100)
         {
-            throw new ConflictApiException("You have reached the daily limit of 3 voice posts.");
+            throw new ConflictApiException("You have reached the daily limit of 100 voice posts.");
         }
 
         var post = new VoicePost
