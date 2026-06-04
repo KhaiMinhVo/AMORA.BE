@@ -23,5 +23,9 @@ jobs:
           # Kéo code mới nhất từ nhánh main
           git pull origin main
           
+          # Dọn dẹp các container bị treo (để tránh lỗi Conflict)
+          docker-compose down
+          docker rm -f amora-api || true
+          
           # Build lại và chạy các thay đổi mới
           docker-compose up -d --build
