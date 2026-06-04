@@ -128,10 +128,7 @@ public sealed class VoiceCommentService
         var post = await _voicePostRepository.GetByIdAsync(postId, cancellationToken)
             ?? throw new NotFoundApiException("Voice post not found.");
 
-        if (post.PosterId != _currentUserService.UserId)
-        {
-            throw new ForbiddenApiException("You are not allowed to view this private queue.");
-        }
+        // Đã gỡ bỏ check: Mọi người đều có thể xem danh sách comment của bài post này (giống Facebook)
 
         var (items, totalCount) = await _voiceCommentRepository.GetPagedByPostIdAsync(postId, page, pageSize, cancellationToken);
 
