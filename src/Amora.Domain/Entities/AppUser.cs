@@ -44,6 +44,9 @@ public sealed class AppUser
     /// <summary>Giới thiệu ngắn về bản thân (tối đa 300 ký tự).</summary>
     public string? Bio { get; set; }
 
+    /// <summary>File âm thanh giới thiệu bản thân.</summary>
+    public string? VoiceIntroUrl { get; set; }
+
     /// <summary>Danh sách sở thích, phân tách bởi dấu phẩy. Ví dụ: "Nhạc,Phim,Du lịch"</summary>
     public string? Interests { get; set; }
 

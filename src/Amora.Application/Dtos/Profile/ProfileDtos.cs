@@ -9,6 +9,7 @@ public sealed class UpdateProfileRequest
     public string? Gender { get; set; }       // "Male", "Female", "NonBinary", "Other", "PreferNotToSay"
     public string? City { get; set; }
     public string? Bio { get; set; }
+    public string? VoiceIntroUrl { get; set; }
     public string[]? Interests { get; set; }
 }
 
@@ -22,6 +23,7 @@ public sealed class ProfileResponseDto
     public string Gender { get; init; } = string.Empty;
     public string? City { get; init; }
     public string? Bio { get; init; }
+    public string? VoiceIntroUrl { get; init; }
     public string[] Interests { get; init; } = [];
     public bool IsProfileComplete { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
@@ -42,5 +44,6 @@ public sealed class PublicProfileResponseDto
     public string Gender { get; init; } = string.Empty;
     public string? City { get; init; }
     public string? Bio { get; init; }
+    public string? VoiceIntroUrl { get; init; }
     public string[] Interests { get; init; } = [];
 }

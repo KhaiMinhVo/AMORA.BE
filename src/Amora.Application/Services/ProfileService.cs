@@ -56,6 +56,7 @@ public sealed class ProfileService
             Gender = target.Gender.ToString(),
             City = target.City,
             Bio = target.Bio,
+            VoiceIntroUrl = target.VoiceIntroUrl,
             Interests = ParseInterests(target.Interests)
         };
     }
@@ -108,6 +109,9 @@ public sealed class ProfileService
         if (request.Interests is not null)
             user.Interests = string.Join(",", request.Interests.Select(i => i.Trim()).Where(i => i.Length > 0));
 
+        if (request.VoiceIntroUrl is not null)
+            user.VoiceIntroUrl = request.VoiceIntroUrl.Trim();
+
         // Kiểm tra đã đủ thông tin chưa: có avatar, có DOB, có giới tính, và có ít nhất 2 ảnh.
         user.IsProfileComplete = !string.IsNullOrWhiteSpace(user.DisplayName)
                                   && !string.IsNullOrWhiteSpace(user.AvatarUrl)
@@ -130,6 +134,7 @@ public sealed class ProfileService
         Gender = user.Gender.ToString(),
         City = user.City,
         Bio = user.Bio,
+        VoiceIntroUrl = user.VoiceIntroUrl,
         Interests = ParseInterests(user.Interests),
         IsProfileComplete = user.IsProfileComplete,
         CreatedAt = user.CreatedAt,
