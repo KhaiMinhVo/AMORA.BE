@@ -71,7 +71,7 @@ services:
       - ../amora-audio-worker/.env
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
-      DOTNET_WEBHOOK_URL: http://host.docker.internal:5002/api/webhooks/audio-processed
+      DOTNET_WEBHOOK_URL: http://amora-api:8080/api/webhooks/audio-processed
     depends_on:
       rabbitmq:
         condition: service_healthy
