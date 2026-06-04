@@ -97,6 +97,7 @@ services:
       AWS__SecretKey: ${AWS_SECRET_ACCESS_KEY}
       EmailSettings__Username: ${SMTP_USERNAME}
       EmailSettings__Password: ${SMTP_PASSWORD}
+      EmailSettings__FromEmail: ${SMTP_FROM}
       Webhooks__Secret: ${WEBHOOK_SECRET}
     depends_on:
       postgres:
