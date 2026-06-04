@@ -48,25 +48,11 @@ public sealed class AudioProcessingService
         var post = await _voicePostRepository.GetByIdAsync(payload.PostId, cancellationToken)
             ?? throw new NotFoundApiException($"Post {payload.PostId} không tồn tại.");
 
-        if (payload.Status == "Success" && payload.PetVibeData is not null && !string.IsNullOrEmpty(payload.CleanAudioUrl))
+        if (payload.Status == "Success" && !string.IsNullOrEmpty(payload.CleanAudioUrl))
         {
             // Cập nhật URL âm thanh sang file đã lọc nhiễu
             post.AudioUrl = payload.CleanAudioUrl;
             post.Status = VoicePostStatus.Open; // Bây giờ mới hiện lên Feed
-
-            // Gắn dữ liệu Pet vào Post
-            post.PetVibeData = new PetVibeData
-            {
-                Id = Guid.NewGuid(),
-                PostId = post.Id,
-                Energy = payload.PetVibeData.Energy,
-                Pitch = payload.PetVibeData.Pitch,
-                PitchVariance = payload.PetVibeData.PitchVariance,
-                IsMonotone = payload.PetVibeData.IsMonotone,
-                DurationSec = payload.PetVibeData.DurationSec,
-                CleanAudioUrl = payload.CleanAudioUrl,
-                ProcessedAt = DateTimeOffset.UtcNow,
-            };
         }
         else
         {
