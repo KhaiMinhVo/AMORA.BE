@@ -91,6 +91,7 @@ builder.Services.AddScoped<IIapPurchaseRepository, IapPurchaseRepository>();
 builder.Services.AddScoped<IChatReadStateRepository, ChatReadStateRepository>();
 builder.Services.AddScoped<IMatchMediaUsageRepository, MatchMediaUsageRepository>();
 builder.Services.AddScoped<IIapWebhookEventRepository, IapWebhookEventRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<Amora.Application.Payment.VnPayConfig>(builder.Configuration.GetSection("VnPay"));
@@ -122,6 +123,7 @@ builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<TrustSafetyService>();
 builder.Services.AddScoped<AdminModerationService>();
 builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<NotificationService>();
 
 var awsOptions = builder.Configuration.GetAWSOptions();
 var awsServiceUrl = builder.Configuration["AWS:ServiceURL"];

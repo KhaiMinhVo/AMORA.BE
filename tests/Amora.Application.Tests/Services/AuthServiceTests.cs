@@ -3,6 +3,8 @@ using Amora.Application.Dtos.Auth;
 using Amora.Application.Exceptions;
 using Amora.Application.Iap;
 using Amora.Application.Services;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Amora.Domain.Entities;
 using Amora.Domain.Interfaces;
 using FluentAssertions;
@@ -15,20 +17,28 @@ public class AuthServiceTests
 {
     private readonly Mock<IUserRepository> _mockUserRepository;
     private readonly Mock<IJwtTokenService> _mockJwtTokenService;
+    private readonly Mock<IEmailService> _mockEmailService;
+    private readonly Mock<IMemoryCache> _mockCache;
+    private readonly Mock<IConfiguration> _mockConfig;
     private readonly AuthService _authService;
 
     public AuthServiceTests()
     {
         _mockUserRepository = new Mock<IUserRepository>();
         _mockJwtTokenService = new Mock<IJwtTokenService>();
+        _mockEmailService = new Mock<IEmailService>();
+        _mockCache = new Mock<IMemoryCache>();
+        _mockConfig = new Mock<IConfiguration>();
 
-        // PetCoinRewardService is concrete but we mock its dependency
-        var petCoinService = new PetCoinRewardService(_mockUserRepository.Object);
+        // DiamondRewardService is concrete but we mock its dependency
+        var diamondRewardService = new DiamondRewardService(_mockUserRepository.Object);
+
+        
 
         _authService = new AuthService(
             _mockUserRepository.Object,
             _mockJwtTokenService.Object,
-            petCoinService
+            diamondRewardService
         );
 
         _mockJwtTokenService.Setup(j => j.CreateToken(It.IsAny<AppUser>()))
@@ -67,12 +77,12 @@ public class AuthServiceTests
         result.Should().NotBeNull();
         result.AccessToken.Should().Be("test_token");
         result.DisplayName.Should().Be("Minh Khai");
-        result.PetCoins.Should().Be(100);
+        result.Diamonds.Should().Be(100);
 
         _mockUserRepository.Verify(u => u.AddAsync(It.Is<AppUser>(user => 
             user.Email == "test@test.com" && 
             user.DisplayName == "Minh Khai" &&
-            user.PetCoins == 100
+            user.Diamonds == 100
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -107,8 +117,8 @@ public class AuthServiceTests
         { 
             Email = "test@test.com", 
             PasswordHash = PasswordHasher.Hash("correct_password"),
-            PetCoins = 100,
-            LastPetCoinRewardDate = yesterday
+            Diamonds = 100,
+            LastDiamondRewardDate = yesterday
         };
         _mockUserRepository.Setup(u => u.GetByEmailForAuthAsync("test@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -117,8 +127,8 @@ public class AuthServiceTests
 
         result.Should().NotBeNull();
         result.AccessToken.Should().Be("test_token");
-        user.PetCoins.Should().Be(115); // +15 daily login bonus
-        user.LastPetCoinRewardDate.Should().Be(DateOnly.FromDateTime(DateTime.UtcNow));
+        user.Diamonds.Should().Be(115); // +15 daily login bonus
+        user.LastDiamondRewardDate.Should().Be(DateOnly.FromDateTime(DateTime.UtcNow));
 
         _mockUserRepository.Verify(u => u.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
     }

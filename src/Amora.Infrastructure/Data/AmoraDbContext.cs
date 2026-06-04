@@ -50,6 +50,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<IapWebhookEvent> IapWebhookEvents => Set<IapWebhookEvent>();
 
+    public DbSet<Notification> Notifications => Set<Notification>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -306,6 +308,20 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.EventType).HasMaxLength(50);
             entity.Property(x => x.TransactionId).HasMaxLength(200);
             entity.Property(x => x.RawPayload).HasMaxLength(4000);
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.ToTable("Notifications");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.CreatedAt });
+            entity.HasIndex(x => new { x.UserId, x.IsRead });
+            entity.Property(x => x.Type).HasConversion<string>().HasMaxLength(30);
+            entity.Property(x => x.Title).HasMaxLength(200);
+            entity.Property(x => x.Body).HasMaxLength(1000);
+            entity.Property(x => x.DataJson).HasColumnType("jsonb");
+
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         base.OnModelCreating(modelBuilder);

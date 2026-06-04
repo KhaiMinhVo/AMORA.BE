@@ -21,6 +21,7 @@ public sealed class MatchService
     private readonly IMediator _mediator;
     private readonly IPetRepository _petRepository;
     private readonly IChatReadStateRepository _readState;
+    private readonly NotificationService _notificationService;
 
     public MatchService(
         ICurrentUserService currentUserService,
@@ -32,7 +33,8 @@ public sealed class MatchService
         IRealtimeNotifier realtimeNotifier,
         IMediator mediator,
         IPetRepository petRepository,
-        IChatReadStateRepository readState)
+        IChatReadStateRepository readState,
+        NotificationService notificationService)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -44,6 +46,7 @@ public sealed class MatchService
         _mediator = mediator;
         _petRepository = petRepository;
         _readState = readState;
+        _notificationService = notificationService;
     }
 
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
@@ -85,6 +88,30 @@ public sealed class MatchService
         await _mediator.Send(new CreatePetCommand(result.MatchConnection.Id), cancellationToken);
         await _realtimeNotifier.NotifyMatchCreatedAsync(result.MatchConnection, cancellationToken);
         await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
+
+        // Send notifications
+        var payload = $"{{\"matchId\": \"{result.MatchConnection.Id}\"}}";
+        
+        await _notificationService.SendNotificationAsync(
+            result.MatchConnection.UserBId, 
+            NotificationType.Matching, 
+            "Kết nối thành công!", 
+            "Người ấy đã chấp nhận yêu cầu kết nối của bạn.", 
+            payload, cancellationToken);
+
+        await _notificationService.SendNotificationAsync(
+            result.MatchConnection.UserAId, 
+            NotificationType.Pet, 
+            "Trứng Pet đã xuất hiện!", 
+            "Pet của hai bạn đã được tạo, hãy vào chăm sóc nhé.", 
+            payload, cancellationToken);
+
+        await _notificationService.SendNotificationAsync(
+            result.MatchConnection.UserBId, 
+            NotificationType.Pet, 
+            "Trứng Pet đã xuất hiện!", 
+            "Pet của hai bạn đã được tạo, hãy vào chăm sóc nhé.", 
+            payload, cancellationToken);
 
         return new MatchCreatedResponseDto
         {

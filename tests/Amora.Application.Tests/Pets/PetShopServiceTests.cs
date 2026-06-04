@@ -46,14 +46,14 @@ public class PetShopServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var itemId = Guid.NewGuid();
-        var user = new AppUser { Id = userId, PetCoins = 50 };
-        var item = new ShopItem { Id = itemId, PricePetCoins = 100 };
+        var user = new AppUser { Id = userId, Diamonds = 50 };
+        var item = new ShopItem { Id = itemId, PriceDiamonds = 100 };
 
         _mockShopRepository.Setup(s => s.GetItemByIdAsync(itemId, It.IsAny<CancellationToken>())).ReturnsAsync(item);
         _mockUserRepository.Setup(u => u.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
         // Act
-        var act = async () => await _petShopService.BuyAsync(userId, new BuyItemRequest { ItemId = itemId, UseAmoraGems = false }, CancellationToken.None);
+        var act = async () => await _petShopService.BuyAsync(userId, new BuyItemRequest { ItemId = itemId,  }, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ValidationApiException>().WithMessage("Không đủ Pet Coin.");
@@ -72,7 +72,7 @@ public class PetShopServiceTests
         _mockUserRepository.Setup(u => u.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
         // Act
-        var act = async () => await _petShopService.BuyAsync(userId, new BuyItemRequest { ItemId = itemId, UseAmoraGems = true }, CancellationToken.None);
+        var act = async () => await _petShopService.BuyAsync(userId, new BuyItemRequest { ItemId = itemId,  }, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ValidationApiException>().WithMessage("Không đủ Amora Gem.");
@@ -84,8 +84,8 @@ public class PetShopServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var itemId = Guid.NewGuid();
-        var user = new AppUser { Id = userId, PetCoins = 100 };
-        var item = new ShopItem { Id = itemId, PricePetCoins = 50 };
+        var user = new AppUser { Id = userId, Diamonds = 100 };
+        var item = new ShopItem { Id = itemId, PriceDiamonds = 50 };
 
         _mockShopRepository.Setup(s => s.GetItemByIdAsync(itemId, It.IsAny<CancellationToken>())).ReturnsAsync(item);
         _mockUserRepository.Setup(u => u.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
@@ -93,16 +93,16 @@ public class PetShopServiceTests
             .ReturnsAsync((UserInventory)null!);
 
         // Act
-        await _petShopService.BuyAsync(userId, new BuyItemRequest { ItemId = itemId, UseAmoraGems = false }, CancellationToken.None);
+        await _petShopService.BuyAsync(userId, new BuyItemRequest { ItemId = itemId,  }, CancellationToken.None);
 
         // Assert
-        user.PetCoins.Should().Be(50);
+        user.Diamonds.Should().Be(50);
         _mockUserRepository.Verify(u => u.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
         _mockShopRepository.Verify(s => s.AddInventoryAsync(It.Is<UserInventory>(inv => 
             inv.UserId == userId && inv.ShopItemId == itemId && inv.Quantity == 1
         ), It.IsAny<CancellationToken>()), Times.Once);
         _mockTransactionRepository.Verify(t => t.AddAsync(It.Is<PetTransaction>(pt => 
-            pt.UserId == userId && pt.ShopItemId == itemId && pt.TransactionType == "Purchase" && pt.PetCoinsDelta == -50
+            pt.UserId == userId && pt.ShopItemId == itemId && pt.TransactionType == "Purchase" && pt.DiamondsDelta == -50
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 

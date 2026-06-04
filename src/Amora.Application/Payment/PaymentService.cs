@@ -3,6 +3,7 @@ using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using Amora.Application.Payment.VnPay;
 using Microsoft.Extensions.Options;
+using Amora.Application.Services;
 
 namespace Amora.Application.Payment;
 
@@ -11,15 +12,18 @@ public sealed class PaymentService
     private readonly IPaymentTransactionRepository _paymentRepo;
     private readonly IUserRepository _userRepo;
     private readonly VnPayConfig _vnPayConfig;
+    private readonly NotificationService _notificationService;
 
     public PaymentService(
         IPaymentTransactionRepository paymentRepo,
         IUserRepository userRepo,
-        IOptions<VnPayConfig> vnPayConfigOptions)
+        IOptions<VnPayConfig> vnPayConfigOptions,
+        NotificationService notificationService)
     {
         _paymentRepo = paymentRepo;
         _userRepo = userRepo;
         _vnPayConfig = vnPayConfigOptions.Value;
+        _notificationService = notificationService;
     }
 
     public async Task<string> CreateVnPayUrlAsync(Guid userId, int diamonds, CancellationToken cancellationToken)
@@ -111,6 +115,16 @@ public sealed class PaymentService
             {
                 user.Diamonds += transaction.DiamondsReceived;
                 await _userRepo.UpdateAsync(user, cancellationToken);
+                
+                // Gửi thông báo nạp kim cương thành công
+                await _notificationService.SendNotificationAsync(
+                    user.Id,
+                    NotificationType.Payment,
+                    "Nạp Kim cương thành công!",
+                    $"Bạn vừa nạp thành công {transaction.DiamondsReceived} Kim cương vào tài khoản.",
+                    $"{{\"transactionId\": \"{transaction.Id}\"}}",
+                    cancellationToken
+                );
             }
         }
         else

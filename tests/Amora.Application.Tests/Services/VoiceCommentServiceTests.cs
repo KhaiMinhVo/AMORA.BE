@@ -7,6 +7,7 @@ using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using FluentAssertions;
 using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Amora.Application.Tests.Services;

@@ -13,7 +13,7 @@ public sealed class PetEngineTests
         MatchId = Guid.NewGuid(),
         Hp = hp,
         Rp = rp,
-        Mood = PetMood.Neutral,
+        Level = PetLevel.Neutral,
         LastInteractionAt = DateTimeOffset.UtcNow,
         HpGainWindowStart = DateTimeOffset.UtcNow,
         RpStatsDate = DateOnly.FromDateTime(DateTime.UtcNow)
@@ -65,7 +65,7 @@ public sealed class PetEngineTests
 
         Assert.Equal(0, pet.Hp);
         Assert.True(pet.IsFrozen);
-        Assert.Equal(PetMood.Lonely, pet.Mood);
+        Assert.Equal(PetLevel.Lonely, pet.Level);
     }
 
     [Fact]
@@ -128,24 +128,24 @@ public sealed class PetEngineTests
     }
 
     [Fact]
-    public void ComputeMood_Grumpy_AfterThreeNegativeVibes()
+    public void ComputeLevel_Grumpy_AfterThreeNegativeExps()
     {
         var pet = CreatePet();
-        pet.ConsecutiveNegativeVibes = 3;
+        pet.TotalInteractions = 3;
 
-        var mood = PetEngine.ComputeMood(pet, vibeScore: 5, replyDelayMinutes: 1);
+        var mood = PetEngine.ComputeLevel(pet, vibeScore: 5, replyDelayMinutes: 1);
 
-        Assert.Equal(PetMood.Grumpy, mood);
+        Assert.Equal(PetLevel.Grumpy, mood);
     }
 
     [Fact]
-    public void ComputeMood_Excited_FastReplyHighVibe()
+    public void ComputeLevel_Excited_FastReplyHighExp()
     {
         var pet = CreatePet();
 
-        var mood = PetEngine.ComputeMood(pet, vibeScore: 6, replyDelayMinutes: 3);
+        var mood = PetEngine.ComputeLevel(pet, vibeScore: 6, replyDelayMinutes: 3);
 
-        Assert.Equal(PetMood.Excited, mood);
+        Assert.Equal(PetLevel.Excited, mood);
     }
 
     [Fact]
@@ -161,13 +161,13 @@ public sealed class PetEngineTests
     }
 
     [Fact]
-    public void RegisterVibe_ResetsOnPositive()
+    public void GainExp_ResetsOnPositive()
     {
         var pet = CreatePet();
-        pet.ConsecutiveNegativeVibes = 2;
+        pet.TotalInteractions = 2;
 
-        PetEngine.RegisterVibe(pet, 3);
+        PetEngine.GainExp(pet, 3);
 
-        Assert.Equal(0, pet.ConsecutiveNegativeVibes);
+        Assert.Equal(0, pet.TotalInteractions);
     }
 }

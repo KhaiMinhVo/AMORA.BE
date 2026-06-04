@@ -16,19 +16,22 @@ public sealed class PetCoordinator
     private readonly IMessagePublisher _messagePublisher;
     private readonly IPetRealtimeNotifier _petNotifier;
     private readonly IChatMessageRepository _chatMessageRepository;
+    private readonly Services.NotificationService _notificationService;
 
     public PetCoordinator(
         IPetRepository petRepository,
         IMatchConnectionRepository matchRepository,
         IMessagePublisher messagePublisher,
         IPetRealtimeNotifier petNotifier,
-        IChatMessageRepository chatMessageRepository)
+        IChatMessageRepository chatMessageRepository,
+        Services.NotificationService notificationService)
     {
         _petRepository = petRepository;
         _matchRepository = matchRepository;
         _messagePublisher = messagePublisher;
         _petNotifier = petNotifier;
         _chatMessageRepository = chatMessageRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<Pet> CreateForMatchAsync(Guid matchId, CancellationToken cancellationToken)
@@ -175,6 +178,19 @@ public sealed class PetCoordinator
     {
         var oldStage = pet.Stage;
         pet.Stage = PetEngine.EvaluateStage(pet);
+
+        if (oldStage != pet.Stage)
+        {
+            var match = await _matchRepository.GetByIdAsync(pet.MatchId, cancellationToken);
+            if (match != null)
+            {
+                var payload = $"{{\"matchId\": \"{match.Id}\"}}";
+                var body = $"Pet của hai bạn đã tiến hóa lên cấp độ mới: {PetFeatureUnlocks.StageDisplayName(pet.Stage)}!";
+                
+                await _notificationService.SendNotificationAsync(match.UserAId, NotificationType.Pet, "Pet đã tiến hóa! 🌟", body, payload, cancellationToken);
+                await _notificationService.SendNotificationAsync(match.UserBId, NotificationType.Pet, "Pet đã tiến hóa! 🌟", body, payload, cancellationToken);
+            }
+        }
 
         if (oldStage == GrowthStage.ResonanceSeed && pet.Stage >= GrowthStage.Sprout && pet.Type == PetType.None)
         {

@@ -14,17 +14,20 @@ public sealed class VoiceCommentService
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IVoiceCommentRepository _voiceCommentRepository;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
+    private readonly NotificationService _notificationService;
 
     public VoiceCommentService(
         ICurrentUserService currentUserService,
         IVoicePostRepository voicePostRepository,
         IVoiceCommentRepository voiceCommentRepository,
-        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
+        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
+        NotificationService notificationService)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
         _voiceCommentRepository = voiceCommentRepository;
         _scopeFactory = scopeFactory;
+        _notificationService = notificationService;
     }
 
     public async Task<CreateCommentResponseDto> CreateCommentAsync(Guid postId, CreateVoiceCommentRequest request, CancellationToken cancellationToken = default)
@@ -65,6 +68,18 @@ public sealed class VoiceCommentService
         };
 
         await _voiceCommentRepository.AddAsync(comment, cancellationToken);
+        
+        if (post.PosterId != userId)
+        {
+            await _notificationService.SendNotificationAsync(
+                post.PosterId,
+                NotificationType.VoiceFeed,
+                "Có người vừa phản hồi bài đăng của bạn!",
+                "Một giọng nói ẩn danh vừa để lại lời nhắn cho Voice Post của bạn.",
+                $"{{\"postId\": \"{post.Id}\"}}",
+                cancellationToken
+            );
+        }
 
         // Run AI Moderation in the background for comments
         _ = Task.Run(async () =>

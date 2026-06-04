@@ -104,7 +104,7 @@ public class IapWebhookServiceTests
     {
         var userId = Guid.NewGuid();
         var record = new IapPurchaseRecord { UserId = userId, GemsGranted = 100 };
-        var user = new AppUser { Id = userId, AmoraGems = 150 };
+        var user = new AppUser { Id = userId, Diamonds = 150 };
 
         _mockIapRepo.Setup(i => i.GetByPlatformTransactionIdAsync("Apple", "txn_123", It.IsAny<CancellationToken>())).ReturnsAsync(record);
         _mockUserRepo.Setup(u => u.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
@@ -112,13 +112,13 @@ public class IapWebhookServiceTests
         var result = await _webhookService.HandleRefundAsync("Apple", "txn_123", "User requested", CancellationToken.None);
 
         result.Should().BeTrue();
-        user.AmoraGems.Should().Be(50); // 150 - 100
+        user.Diamonds.Should().Be(50); // 150 - 100
         record.RefundedAt.Should().NotBeNull();
         record.RefundReason.Should().Be("User requested");
 
         _mockUserRepo.Verify(u => u.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
         _mockTransactionRepo.Verify(t => t.AddAsync(It.Is<PetTransaction>(pt => 
-            pt.UserId == userId && pt.TransactionType == "IapRefund" && pt.AmoraGemsDelta == -100
+            pt.UserId == userId && pt.TransactionType == "IapRefund" && pt.DiamondsDelta == -100
         ), It.IsAny<CancellationToken>()), Times.Once);
         _mockIapRepo.Verify(i => i.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

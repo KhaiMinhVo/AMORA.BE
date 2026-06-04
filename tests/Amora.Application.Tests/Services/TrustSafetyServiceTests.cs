@@ -30,7 +30,11 @@ public class TrustSafetyServiceTests
             _mockCurrentUserService.Object,
             _mockReportRepository.Object,
             _mockBlockRepository.Object,
-            _mockUserRepository.Object
+            _mockUserRepository.Object,
+            null!,
+            null!,
+            null!,
+            null!
         );
     }
 
