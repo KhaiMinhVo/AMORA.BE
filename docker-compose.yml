@@ -95,6 +95,7 @@ services:
       AiService__Url: http://host.docker.internal:8000
       AWS__AccessKey: ${AWS_ACCESS_KEY_ID}
       AWS__SecretKey: ${AWS_SECRET_ACCESS_KEY}
+      EmailSettings__Username: ${SMTP_USERNAME}
       EmailSettings__Password: ${SMTP_PASSWORD}
       Webhooks__Secret: ${WEBHOOK_SECRET}
     depends_on:
