@@ -7,10 +7,12 @@ namespace Amora.Api.Middleware;
 public sealed class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next)
+    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -27,8 +29,9 @@ public sealed class ExceptionHandlingMiddleware
         {
             await WriteResponseAsync(context, StatusCodes.Status400BadRequest, ex.Message, "bad_request");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Unhandled exception occurred during request processing.");
             await WriteResponseAsync(context, StatusCodes.Status500InternalServerError, "An unexpected error occurred.", "server_error");
         }
     }

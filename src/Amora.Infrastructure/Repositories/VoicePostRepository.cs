@@ -16,7 +16,7 @@ public sealed class VoicePostRepository : IVoicePostRepository
 
     public Task<VoicePost?> GetByIdAsync(Guid postId, CancellationToken cancellationToken = default)
     {
-        return _dbContext.VoicePosts.AsNoTracking().FirstOrDefaultAsync(x => x.Id == postId, cancellationToken);
+        return _dbContext.VoicePosts.FirstOrDefaultAsync(x => x.Id == postId, cancellationToken);
     }
 
     public Task<int> CountByPosterSinceAsync(Guid posterId, DateTimeOffset since, CancellationToken cancellationToken = default)
@@ -81,7 +81,10 @@ public sealed class VoicePostRepository : IVoicePostRepository
 
     public async Task UpdateAsync(VoicePost post, CancellationToken cancellationToken = default)
     {
-        _dbContext.VoicePosts.Update(post);
+        if (_dbContext.Entry(post).State == EntityState.Detached)
+        {
+            _dbContext.VoicePosts.Update(post);
+        }
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }
