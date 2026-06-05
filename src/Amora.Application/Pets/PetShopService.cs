@@ -340,6 +340,7 @@ public sealed class PetShopService
         Name = item.Name,
         Description = item.Description,
         ItemType = item.ItemType.ToString(),
-        PriceDiamonds = item.PriceDiamonds
+        PriceDiamonds = item.PriceDiamonds,
+        IsActive = item.IsActive
     };
 }

@@ -37,6 +37,8 @@ public sealed class AdminShopController : ControllerBase
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
+        await _shopRepository.AddItemAsync(item, cancellationToken);
+        await _shopRepository.SaveChangesAsync(cancellationToken);
 
         return Ok(new { success = true, data = new { item.Id, item.Code, item.Name } });
     }

@@ -23,6 +23,7 @@ public sealed class ShopItemDto
     public string Description { get; init; } = string.Empty;
     public string ItemType { get; init; } = string.Empty;
     public int PriceDiamonds { get; init; }
+    public bool IsActive { get; init; }
 }
 
 public sealed class InventoryItemDto
