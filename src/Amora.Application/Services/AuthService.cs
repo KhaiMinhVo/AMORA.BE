@@ -210,6 +210,20 @@ public sealed class AuthService
         await _users.UpdateAsync(user, cancellationToken);
     }
 
+    public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var user = await _users.GetByIdForUpdateAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("User not found.");
+
+        if (string.IsNullOrEmpty(user.PasswordHash) || !PasswordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            throw new ValidationApiException("Current password is incorrect.");
+        }
+
+        user.PasswordHash = PasswordHasher.Hash(request.NewPassword);
+        await _users.UpdateAsync(user, cancellationToken);
+    }
+
     public async Task SubmitAppealAsync(SubmitAppealRequest request, CancellationToken cancellationToken)
     {
         var email = request.Email.Trim().ToLowerInvariant();

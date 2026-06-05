@@ -137,6 +137,28 @@ public sealed class AuthController : ControllerBase
         var result = await _authService.DevTokenAsync(request.UserId, name, cancellationToken);
         return Ok(ApiResponse<AuthResponseDto>.Ok(result));
     }
+
+    /// <summary>
+    /// Thay doi mat khau cho tai khoan dang dang nhap.
+    /// </summary>
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<string>>> ChangePassword(
+        [FromBody] ChangePasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("id")?.Value;
+
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        await _authService.ChangePasswordAsync(userId, request, cancellationToken);
+        return Ok(ApiResponse<string>.Ok("Password changed.", "Your password has been successfully updated."));
+    }
 }
 
 public sealed class DevTokenRequest
