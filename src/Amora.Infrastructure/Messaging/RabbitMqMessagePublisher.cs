@@ -19,9 +19,34 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher, IAsyncDisposab
     public static async Task<RabbitMqMessagePublisher> CreateAsync(string amqpUrl)
     {
         var factory = new ConnectionFactory { Uri = new Uri(amqpUrl) };
-        var connection = await factory.CreateConnectionAsync();
-        var channel = await connection.CreateChannelAsync();
-        return new RabbitMqMessagePublisher(connection, channel);
+        IConnection? connection = null;
+        IChannel? channel = null;
+
+        for (int i = 0; i < 5; i++)
+        {
+            try
+            {
+                connection = await factory.CreateConnectionAsync();
+                channel = await connection.CreateChannelAsync();
+                break;
+            }
+            catch (Exception)
+            {
+                if (i == 4) throw;
+                await Task.Delay(2000);
+            }
+        }
+
+        // Đảm bảo exchange "chat_vibe_commands" tồn tại
+        await channel!.ExchangeDeclareAsync(
+            exchange: "chat_vibe_commands",
+            type: ExchangeType.Direct,
+            durable: true,
+            autoDelete: false,
+            arguments: null
+        );
+
+        return new RabbitMqMessagePublisher(connection!, channel);
     }
 
     public async Task PublishAsync<T>(string queueName, T payload, CancellationToken cancellationToken = default)

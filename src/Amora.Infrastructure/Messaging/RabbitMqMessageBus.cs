@@ -24,11 +24,26 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
     public static async Task<RabbitMqMessageBus> CreateAsync(string amqpUrl)
     {
         var factory = new ConnectionFactory { Uri = new Uri(amqpUrl) };
-        var connection = await factory.CreateConnectionAsync();
-        var channel = await connection.CreateChannelAsync();
+        IConnection? connection = null;
+        IChannel? channel = null;
+
+        for (int i = 0; i < 5; i++)
+        {
+            try
+            {
+                connection = await factory.CreateConnectionAsync();
+                channel = await connection.CreateChannelAsync();
+                break;
+            }
+            catch (Exception)
+            {
+                if (i == 4) throw;
+                await Task.Delay(2000);
+            }
+        }
 
         // Đảm bảo queue "celery" tồn tại, durable để không mất khi restart RabbitMQ
-        await channel.QueueDeclareAsync(
+        await channel!.QueueDeclareAsync(
             queue: "celery",
             durable: true,
             exclusive: false,
@@ -36,7 +51,7 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
             arguments: null
         );
 
-        return new RabbitMqMessageBus(connection, channel);
+        return new RabbitMqMessageBus(connection!, channel);
     }
 
     public async Task PublishAsync(string taskName, object[] args, CancellationToken cancellationToken = default)

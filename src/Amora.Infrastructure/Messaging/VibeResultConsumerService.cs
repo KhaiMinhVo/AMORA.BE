@@ -35,39 +35,51 @@ public sealed class VibeResultConsumerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var factory = new ConnectionFactory { Uri = new Uri(_amqpUrl) };
-        _connection = await factory.CreateConnectionAsync(stoppingToken);
-        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
-
-        await _channel.QueueDeclareAsync(QueueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
-        await _channel.BasicQosAsync(0, 1, false, cancellationToken: stoppingToken);
-
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-        consumer.ReceivedAsync += async (_, ea) =>
+        while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                var json = Encoding.UTF8.GetString(ea.Body.ToArray());
-                var message = JsonSerializer.Deserialize<ChatVibeResultMessage>(json, JsonOptions)
-                    ?? throw new InvalidOperationException("Invalid vibe result payload.");
+                var factory = new ConnectionFactory { Uri = new Uri(_amqpUrl) };
+                _connection = await factory.CreateConnectionAsync(stoppingToken);
+                _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
-                using var scope = _scopeFactory.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                await mediator.Send(new UpdatePetAfterVoiceCommand(message), stoppingToken);
+                await _channel.QueueDeclareAsync(QueueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+                await _channel.BasicQosAsync(0, 1, false, cancellationToken: stoppingToken);
 
-                await _channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+                consumer.ReceivedAsync += async (_, ea) =>
+                {
+                    try
+                    {
+                        var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+                        var message = JsonSerializer.Deserialize<ChatVibeResultMessage>(json, JsonOptions)
+                            ?? throw new InvalidOperationException("Invalid vibe result payload.");
+
+                        using var scope = _scopeFactory.CreateScope();
+                        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                        await mediator.Send(new UpdatePetAfterVoiceCommand(message), stoppingToken);
+
+                        await _channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed processing vibe result.");
+                        await _channel.BasicNackAsync(ea.DeliveryTag, false, requeue: true, stoppingToken);
+                    }
+                };
+
+                await _channel.BasicConsumeAsync(QueueName, autoAck: false, consumer, stoppingToken);
+                _logger.LogInformation("VibeResultConsumer listening on {Queue}", QueueName);
+
+                // Wait until cancellation is requested
+                await Task.Delay(Timeout.Infinite, stoppingToken);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogError(ex, "Failed processing vibe result.");
-                await _channel.BasicNackAsync(ea.DeliveryTag, false, requeue: true, stoppingToken);
+                _logger.LogWarning(ex, "RabbitMQ connection failed. Retrying in 5 seconds...");
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
-        };
-
-        await _channel.BasicConsumeAsync(QueueName, autoAck: false, consumer, stoppingToken);
-        _logger.LogInformation("VibeResultConsumer listening on {Queue}", QueueName);
-
-        await Task.Delay(Timeout.Infinite, stoppingToken);
+        }
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
