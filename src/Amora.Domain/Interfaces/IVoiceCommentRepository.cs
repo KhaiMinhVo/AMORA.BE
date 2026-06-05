@@ -17,4 +17,6 @@ public interface IVoiceCommentRepository
         CancellationToken cancellationToken = default);
 
     Task UpdateAsync(VoiceComment comment, CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(VoiceComment comment, CancellationToken cancellationToken = default);
 }

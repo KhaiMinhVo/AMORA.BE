@@ -46,4 +46,17 @@ public sealed class PostsCommentsController : ControllerBase
         var result = await _voiceCommentService.GetCommentsAsync(postId, page, pageSize, cancellationToken);
         return Ok(ApiResponse<VoiceCommentListResponseDto>.Ok(result));
     }
+
+    /// <summary>
+    /// Xoa comment cua chinh minh.
+    /// </summary>
+    [HttpDelete("{commentId:guid}")]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteComment(
+        Guid postId,
+        Guid commentId,
+        CancellationToken cancellationToken)
+    {
+        await _voiceCommentService.DeleteCommentAsync(commentId, cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Voice comment deleted successfully."));
+    }
 }

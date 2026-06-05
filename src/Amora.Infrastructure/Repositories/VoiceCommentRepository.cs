@@ -47,4 +47,10 @@ public sealed class VoiceCommentRepository : IVoiceCommentRepository
         _dbContext.VoiceComments.Update(comment);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task DeleteAsync(VoiceComment comment, CancellationToken cancellationToken = default)
+    {
+        _dbContext.VoiceComments.Remove(comment);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

@@ -151,4 +151,17 @@ public sealed class VoiceCommentService
             }).ToList()
         };
     }
+
+    public async Task DeleteCommentAsync(Guid commentId, CancellationToken cancellationToken = default)
+    {
+        var comment = await _voiceCommentRepository.GetByIdAsync(commentId, cancellationToken)
+            ?? throw new NotFoundApiException("Voice comment not found.");
+
+        if (comment.CommenterId != _currentUserService.UserId)
+        {
+            throw new ForbiddenApiException("You can only delete your own comments.");
+        }
+
+        await _voiceCommentRepository.DeleteAsync(comment, cancellationToken);
+    }
 }
