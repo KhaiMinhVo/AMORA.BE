@@ -92,6 +92,7 @@ builder.Services.AddScoped<IChatReadStateRepository, ChatReadStateRepository>();
 builder.Services.AddScoped<IMatchMediaUsageRepository, MatchMediaUsageRepository>();
 builder.Services.AddScoped<IIapWebhookEventRepository, IapWebhookEventRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IPostBoostRecordRepository, PostBoostRecordRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<Amora.Application.Payment.VnPayConfig>(builder.Configuration.GetSection("VnPay"));

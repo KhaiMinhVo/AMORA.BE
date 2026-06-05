@@ -52,6 +52,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<Notification> Notifications => Set<Notification>();
 
+    public DbSet<PostBoostRecord> PostBoostRecords => Set<PostBoostRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -64,6 +66,7 @@ public sealed class AmoraDbContext : DbContext
             entity.HasIndex(x => x.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL");
             entity.Property(x => x.AvatarUrl).HasMaxLength(1000).IsRequired();
             entity.Property(x => x.Gender).HasConversion<string>().HasMaxLength(20).HasDefaultValue(Amora.Domain.Enums.Gender.PreferNotToSay);
+            entity.Property(x => x.SubscriptionType).HasConversion<string>().HasMaxLength(20).HasDefaultValue(Amora.Domain.Enums.SubscriptionType.Free);
             entity.Property(x => x.City).HasMaxLength(100);
             entity.Property(x => x.Bio).HasMaxLength(300);
             entity.Property(x => x.Interests).HasMaxLength(500);
@@ -121,6 +124,7 @@ public sealed class AmoraDbContext : DbContext
                     AudioUrl = "https://amora-s3.bucket.com/voices/post_1.m4a",
                     MatchCount = 0,
                     Status = VoicePostStatus.Open,
+                    MaxMatchSlots = 3,
                     CreatedAt = new DateTimeOffset(2026, 5, 15, 8, 0, 0, TimeSpan.Zero)
                 },
                 new VoicePost
@@ -130,8 +134,18 @@ public sealed class AmoraDbContext : DbContext
                     AudioUrl = "https://amora-s3.bucket.com/voices/post_2.m4a",
                     MatchCount = 1,
                     Status = VoicePostStatus.Open,
+                    MaxMatchSlots = 3,
                     CreatedAt = new DateTimeOffset(2026, 5, 15, 9, 0, 0, TimeSpan.Zero)
                 });
+        });
+
+        modelBuilder.Entity<PostBoostRecord>(entity =>
+        {
+            entity.ToTable("PostBoostRecords");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.BoostType).HasConversion<string>().HasMaxLength(30);
+            entity.HasIndex(x => new { x.PostId, x.ExpiresAt });
+            entity.HasIndex(x => new { x.UserId, x.CreatedAt });
         });
 
         modelBuilder.Entity<VoiceComment>(entity =>

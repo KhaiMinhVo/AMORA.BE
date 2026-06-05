@@ -17,6 +17,8 @@ public static class DependencyInjection
         services.AddScoped<Iap.IapWebhookService>();
         services.AddScoped<Iap.DiamondRewardService>();
         services.AddScoped<AuthService>();
+        services.AddScoped<SubscriptionService>();
+        services.AddScoped<PostPromotionService>();
         services.AddScoped<Payment.PaymentService>();
         services.AddHttpClient<AiModerationService>();
         return services;

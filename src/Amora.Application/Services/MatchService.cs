@@ -59,6 +59,11 @@ public sealed class MatchService
             throw new ForbiddenApiException("You are not allowed to match on this post.");
         }
 
+        if (post.MatchCount >= post.MaxMatchSlots)
+        {
+            throw new ConflictApiException($"Bài Post này đã đạt giới hạn Match ({post.MaxMatchSlots} người). Hãy nâng cấp gói cước hoặc mua thêm Slot để Match tiếp!");
+        }
+
         var comment = await _voiceCommentRepository.GetByIdAsync(request.CommentId, cancellationToken)
             ?? throw new NotFoundApiException("Voice comment not found.");
 

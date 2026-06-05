@@ -28,7 +28,8 @@ public sealed class ProfileResponseDto
     public bool IsProfileComplete { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public int Diamonds { get; init; }
-    public bool IsPremium { get; init; }
+    public string SubscriptionType { get; init; } = "Free";
+    public DateTimeOffset? SubscriptionEndDate { get; init; }
 }
 
 /// <summary>

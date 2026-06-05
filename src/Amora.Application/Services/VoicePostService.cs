@@ -47,11 +47,21 @@ public sealed class VoicePostService
 
         var userId = _currentUserService.UserId;
         var since = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("User not found.");
+
+        int maxMatchSlots = user.SubscriptionType switch
+        {
+            SubscriptionType.Gold => 8,
+            SubscriptionType.Premium => 5,
+            _ => 3
+        };
+
         var todayCount = await _voicePostRepository.CountByPosterSinceAsync(userId, since, cancellationToken);
 
-        if (todayCount >= 3)
+        if (todayCount >= 3 && user.SubscriptionType == SubscriptionType.Free)
         {
-            throw new ConflictApiException("Bạn đã đạt giới hạn đăng 3 bài Voice Post trong ngày hôm nay.");
+            throw new ConflictApiException("Bạn đã đạt giới hạn đăng 3 bài Voice Post trong ngày hôm nay. Hãy nâng cấp gói Premium/Gold để đăng không giới hạn.");
         }
 
         var post = new VoicePost
@@ -60,6 +70,7 @@ public sealed class VoicePostService
             PosterId = userId,
             AudioUrl = request.AudioUrl,
             MatchCount = 0,
+            MaxMatchSlots = maxMatchSlots,
             Status = VoicePostStatus.Processing, // Worker sẽ chuyển sang Open sau khi xử lý xong
             CreatedAt = DateTimeOffset.UtcNow
         };

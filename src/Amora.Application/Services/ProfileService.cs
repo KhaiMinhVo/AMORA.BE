@@ -139,7 +139,8 @@ public sealed class ProfileService
         IsProfileComplete = user.IsProfileComplete,
         CreatedAt = user.CreatedAt,
         Diamonds = user.Diamonds,
-        IsPremium = user.IsPremium
+        SubscriptionType = user.SubscriptionType.ToString(),
+        SubscriptionEndDate = user.SubscriptionEndDate
     };
 
     private static string[] ParseInterests(string? interests)

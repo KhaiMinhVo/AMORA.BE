@@ -317,15 +317,19 @@ public sealed class PetShopService
         
         if (root.TryGetProperty("premium_days", out var premiumDays))
         {
-            user.IsPremium = true;
-            var currentEnd = user.PremiumUntil > DateTimeOffset.UtcNow ? user.PremiumUntil.Value : DateTimeOffset.UtcNow;
-            user.PremiumUntil = currentEnd.AddDays(premiumDays.GetInt32() * quantity);
+            user.SubscriptionType = SubscriptionType.Premium;
+            var currentEnd = user.SubscriptionEndDate.HasValue && user.SubscriptionEndDate.Value > DateTimeOffset.UtcNow 
+                ? user.SubscriptionEndDate.Value 
+                : DateTimeOffset.UtcNow;
+            user.SubscriptionEndDate = currentEnd.AddDays(premiumDays.GetInt32() * quantity);
         }
         else if (root.TryGetProperty("gold_days", out var goldDays))
         {
-            user.IsGold = true;
-            var currentEnd = user.GoldUntil > DateTimeOffset.UtcNow ? user.GoldUntil.Value : DateTimeOffset.UtcNow;
-            user.GoldUntil = currentEnd.AddDays(goldDays.GetInt32() * quantity);
+            user.SubscriptionType = SubscriptionType.Gold;
+            var currentEnd = user.SubscriptionEndDate.HasValue && user.SubscriptionEndDate.Value > DateTimeOffset.UtcNow 
+                ? user.SubscriptionEndDate.Value 
+                : DateTimeOffset.UtcNow;
+            user.SubscriptionEndDate = currentEnd.AddDays(goldDays.GetInt32() * quantity);
         }
     }
 

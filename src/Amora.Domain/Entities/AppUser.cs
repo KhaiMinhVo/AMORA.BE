@@ -63,9 +63,12 @@ public sealed class AppUser
     public DateOnly? LastCoPresenceCoinDate { get; set; }
 
     // ── Subscriptions ───────────────────────────────────────────────────
-    public bool IsPremium { get; set; }
-    public DateTimeOffset? PremiumUntil { get; set; }
+    public SubscriptionType SubscriptionType { get; set; } = SubscriptionType.Free;
+    
+    public DateTimeOffset? SubscriptionEndDate { get; set; }
 
-    public bool IsGold { get; set; }
-    public DateTimeOffset? GoldUntil { get; set; }
+    public bool HasActiveSubscription(SubscriptionType type)
+    {
+        return SubscriptionType == type && SubscriptionEndDate.HasValue && SubscriptionEndDate.Value > DateTimeOffset.UtcNow;
+    }
 }
