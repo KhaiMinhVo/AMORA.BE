@@ -48,9 +48,4 @@ public sealed class ShopRepository : IShopRepository
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
         => _db.SaveChangesAsync(cancellationToken);
-
-    public void DeleteItem(ShopItem item)
-    {
-        _db.ShopItems.Remove(item);
-    }
 }

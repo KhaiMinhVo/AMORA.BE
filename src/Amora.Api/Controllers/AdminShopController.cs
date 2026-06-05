@@ -62,26 +62,6 @@ public sealed class AdminShopController : ControllerBase
         return Ok(new { success = true, data = new { item.Id, item.Code, item.Name } });
     }
 
-    /// <summary>Xóa vật phẩm.</summary>
-    [HttpDelete("items/{itemId:guid}")]
-    public async Task<IActionResult> DeleteItem(Guid itemId, CancellationToken cancellationToken)
-    {
-        var item = await _shopRepository.GetItemByIdAsync(itemId, cancellationToken);
-        if (item is null) return NotFound(new { success = false, message = "Item not found." });
-
-        _shopRepository.DeleteItem(item);
-        
-        try
-        {
-            await _shopRepository.SaveChangesAsync(cancellationToken);
-            return Ok(new { success = true, message = "Item deleted successfully." });
-        }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
-        {
-            return BadRequest(new { success = false, message = "Cannot delete this item because it is already owned by users. Please use the Active/Inactive toggle instead." });
-        }
-    }
-
     /// <summary>Khởi tạo toàn bộ dữ liệu Shop.</summary>
     [HttpPost("seed-items")]
     public async Task<IActionResult> SeedItems(CancellationToken cancellationToken)

@@ -268,21 +268,11 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-string? migrationError = null;
 using (var scope = app.Services.CreateScope())
 {
-    try 
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AmoraDbContext>();
-        await db.Database.MigrateAsync();
-    }
-    catch (Exception ex)
-    {
-        migrationError = ex.ToString();
-    }
+    var db = scope.ServiceProvider.GetRequiredService<AmoraDbContext>();
+    await db.Database.MigrateAsync();
 }
-
-app.MapGet("/api/migration-error", () => string.IsNullOrEmpty(migrationError) ? "No error" : migrationError);
 
 app.UseSerilogRequestLogging(opts =>
 {

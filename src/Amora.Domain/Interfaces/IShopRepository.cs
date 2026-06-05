@@ -20,7 +20,5 @@ public interface IShopRepository
 
     Task AddItemsAsync(IEnumerable<ShopItem> items, CancellationToken cancellationToken = default);
 
-    void DeleteItem(ShopItem item);
-
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }
