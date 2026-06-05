@@ -242,8 +242,8 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: $"comment:{userId}:{postId}",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 1,
-                Window = TimeSpan.FromDays(1),
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
                 AutoReplenishment = true
             });
