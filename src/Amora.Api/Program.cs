@@ -291,6 +291,23 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.MapGet("/api/logs", () => 
+{
+    try 
+    {
+        var logDir = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
+        var logFile = Directory.GetFiles(logDir, "*.txt").OrderByDescending(f => f).FirstOrDefault();
+        if (logFile == null) return "No log files found.";
+        
+        var lines = System.IO.File.ReadLines(logFile).Reverse().Take(100).Reverse();
+        return string.Join("\n", lines);
+    }
+    catch (Exception ex)
+    {
+        return ex.ToString();
+    }
+});
+
 app.UseRouting();
 app.UseCors("AllowSpecificOrigins");
 app.UseAuthentication();
