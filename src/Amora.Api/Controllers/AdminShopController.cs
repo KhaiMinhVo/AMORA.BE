@@ -4,6 +4,8 @@ using Amora.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using Amora.Application.Dtos.Pets;
+
 namespace Amora.Api.Controllers;
 
 [ApiController]
@@ -16,6 +18,26 @@ public sealed class AdminShopController : ControllerBase
     public AdminShopController(IShopRepository shopRepository)
     {
         _shopRepository = shopRepository;
+    }
+
+    /// <summary>Lấy danh sách TẤT CẢ vật phẩm (bao gồm cả Tạm ngưng).</summary>
+    [HttpGet("items")]
+    public async Task<IActionResult> GetAllItems(CancellationToken cancellationToken)
+    {
+        var items = await _shopRepository.GetAllItemsAsync(cancellationToken);
+        
+        var dtos = items.Select(item => new ShopItemDto
+        {
+            Id = item.Id,
+            Code = item.Code,
+            Name = item.Name,
+            Description = item.Description,
+            ItemType = item.ItemType.ToString(),
+            PriceDiamonds = item.PriceDiamonds,
+            IsActive = item.IsActive
+        }).ToList();
+
+        return Ok(new { success = true, data = dtos });
     }
 
     /// <summary>Thêm vật phẩm mới vào cửa hàng.</summary>

@@ -14,6 +14,9 @@ public sealed class ShopRepository : IShopRepository
     public async Task<IReadOnlyList<ShopItem>> GetActiveItemsAsync(CancellationToken cancellationToken = default)
         => await _db.ShopItems.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<ShopItem>> GetAllItemsAsync(CancellationToken cancellationToken = default)
+        => await _db.ShopItems.AsNoTracking().OrderBy(x => x.Name).ToListAsync(cancellationToken);
+
     public Task<ShopItem?> GetItemByIdAsync(Guid itemId, CancellationToken cancellationToken = default)
         => _db.ShopItems.FirstOrDefaultAsync(x => x.Id == itemId, cancellationToken);
 

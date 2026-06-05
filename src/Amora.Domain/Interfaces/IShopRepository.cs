@@ -6,6 +6,8 @@ public interface IShopRepository
 {
     Task<IReadOnlyList<ShopItem>> GetActiveItemsAsync(CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<ShopItem>> GetAllItemsAsync(CancellationToken cancellationToken = default);
+
     Task<ShopItem?> GetItemByIdAsync(Guid itemId, CancellationToken cancellationToken = default);
 
     Task<ShopItem?> GetItemByCodeAsync(string code, CancellationToken cancellationToken = default);
