@@ -157,9 +157,14 @@ public sealed class VoiceCommentService
         var comment = await _voiceCommentRepository.GetByIdAsync(commentId, cancellationToken)
             ?? throw new NotFoundApiException("Voice comment not found.");
 
-        if (comment.CommenterId != _currentUserService.UserId)
+        var post = await _voicePostRepository.GetByIdAsync(comment.PostId, cancellationToken);
+        
+        bool isCommenter = comment.CommenterId == _currentUserService.UserId;
+        bool isPoster = post?.PosterId == _currentUserService.UserId;
+
+        if (!isCommenter && !isPoster)
         {
-            throw new ForbiddenApiException("You can only delete your own comments.");
+            throw new ForbiddenApiException("You do not have permission to delete this comment.");
         }
 
         await _voiceCommentRepository.DeleteAsync(comment, cancellationToken);
