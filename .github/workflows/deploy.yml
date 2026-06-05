@@ -20,7 +20,10 @@ jobs:
           # Di chuyển vào thư mục code
           cd ~/AMORA.BE
           
-          # Kéo code mới nhất từ nhánh main
+          # Kéo code mới nhất từ nhánh main (Xóa đè các file bị sửa trên server nếu có)
+          git fetch origin main
+          git reset --hard origin/main
+          git clean -fd
           git pull origin main
           
           # Dọn dẹp các container bị treo (để tránh lỗi Conflict)
