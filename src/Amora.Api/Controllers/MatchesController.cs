@@ -45,6 +45,26 @@ public sealed class MatchesController : ControllerBase
     }
 
     /// <summary>
+    /// Chap nhan yeu cau ket noi (Danh cho UserB).
+    /// </summary>
+    [HttpPost("{matchId:guid}/accept")]
+    public async Task<ActionResult<ApiResponse<object>>> AcceptMatch(Guid matchId, CancellationToken cancellationToken)
+    {
+        await _matchService.AcceptMatchAsync(matchId, cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Match request accepted successfully."));
+    }
+
+    /// <summary>
+    /// Tu choi yeu cau ket noi (Danh cho UserB).
+    /// </summary>
+    [HttpPost("{matchId:guid}/reject")]
+    public async Task<ActionResult<ApiResponse<object>>> RejectMatch(Guid matchId, CancellationToken cancellationToken)
+    {
+        await _matchService.RejectMatchAsync(matchId, cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Match request rejected successfully."));
+    }
+
+    /// <summary>
     /// Lay inbox match theo trang thai (neu co).
     /// </summary>
     [HttpGet]

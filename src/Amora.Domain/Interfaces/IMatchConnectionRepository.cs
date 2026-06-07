@@ -29,4 +29,6 @@ public interface IMatchConnectionRepository
     Task ExtendHandshakeAsync(Guid matchId, CancellationToken cancellationToken = default);
 
     Task<bool> UnmatchAsync(Guid matchId, Guid userId, CancellationToken cancellationToken = default);
+
+    Task<bool> UpdateStatusAsync(Guid matchId, Amora.Domain.Enums.MatchStatus newStatus, CancellationToken cancellationToken = default);
 }

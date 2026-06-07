@@ -60,6 +60,10 @@ public sealed class InboxItemDto
 
     public PetStateDto PetState { get; init; } = new();
 
+    public string Status { get; init; } = string.Empty;
+
+    public bool IsSender { get; init; }
+
     /// <summary>Handshake 24h: thời điểm match sẽ hết hạn nếu không nhắn tin.</summary>
     public DateTimeOffset ExpiresAt { get; init; }
 }

@@ -79,43 +79,13 @@ public sealed class MatchService
 
         var result = await _matchConnectionRepository.CreateConnectionAsync(post.Id, comment.Id, post.PosterId, cancellationToken);
 
-        var systemMessage = new ChatMessage
-        {
-            Id = Guid.NewGuid().ToString("N"),
-            MatchId = result.MatchConnection.Id,
-            SenderId = null,
-            MessageType = MessageType.System,
-            Content = $"Hai bạn đã kết nối thành công từ bài Post {post.Id}.",
-            CreatedAt = DateTimeOffset.UtcNow
-        };
-
-        await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
-        await _mediator.Send(new CreatePetCommand(result.MatchConnection.Id), cancellationToken);
-        await _realtimeNotifier.NotifyMatchCreatedAsync(result.MatchConnection, cancellationToken);
-        await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
-
-        // Send notifications
         var payload = $"{{\"matchId\": \"{result.MatchConnection.Id}\"}}";
         
         await _notificationService.SendNotificationAsync(
             result.MatchConnection.UserBId, 
             NotificationType.Matching, 
-            "Kết nối thành công!", 
-            "Người ấy đã chấp nhận yêu cầu kết nối của bạn.", 
-            payload, cancellationToken);
-
-        await _notificationService.SendNotificationAsync(
-            result.MatchConnection.UserAId, 
-            NotificationType.Pet, 
-            "Trứng Pet đã xuất hiện!", 
-            "Pet của hai bạn đã được tạo, hãy vào chăm sóc nhé.", 
-            payload, cancellationToken);
-
-        await _notificationService.SendNotificationAsync(
-            result.MatchConnection.UserBId, 
-            NotificationType.Pet, 
-            "Trứng Pet đã xuất hiện!", 
-            "Pet của hai bạn đã được tạo, hãy vào chăm sóc nhé.", 
+            "Yêu cầu kết nối mới!", 
+            "Có một người muốn kết nối với bạn.", 
             payload, cancellationToken);
 
         return new MatchCreatedResponseDto
@@ -126,6 +96,82 @@ public sealed class MatchService
             PostClosed = result.PostClosed,
             ExpiresAt = result.MatchConnection.ExpiresAt
         };
+    }
+
+    public async Task AcceptMatchAsync(Guid matchId, CancellationToken cancellationToken = default)
+    {
+        var match = await _matchConnectionRepository.GetByIdAsync(matchId, cancellationToken)
+            ?? throw new NotFoundApiException("Match request not found.");
+
+        if (match.UserBId != _currentUserService.UserId)
+        {
+            throw new ForbiddenApiException("You are not allowed to accept this match request.");
+        }
+
+        if (match.Status != MatchStatus.Pending)
+        {
+            throw new ConflictApiException("This match request is not pending.");
+        }
+
+        await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Active, cancellationToken);
+        match.Status = MatchStatus.Active;
+
+        var systemMessage = new ChatMessage
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            MatchId = match.Id,
+            SenderId = null,
+            MessageType = MessageType.System,
+            Content = $"Hai bạn đã kết nối thành công từ bài Post {match.PostId}.",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
+        await _mediator.Send(new CreatePetCommand(match.Id), cancellationToken);
+        await _realtimeNotifier.NotifyMatchCreatedAsync(match, cancellationToken);
+        await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
+
+        // Send notifications
+        var payload = $"{{\"matchId\": \"{match.Id}\"}}";
+        
+        await _notificationService.SendNotificationAsync(
+            match.UserAId, 
+            NotificationType.Matching, 
+            "Kết nối thành công!", 
+            "Người ấy đã chấp nhận yêu cầu kết nối của bạn.", 
+            payload, cancellationToken);
+
+        await _notificationService.SendNotificationAsync(
+            match.UserAId, 
+            NotificationType.Pet, 
+            "Trứng Pet đã xuất hiện!", 
+            "Pet của hai bạn đã được tạo, hãy vào chăm sóc nhé.", 
+            payload, cancellationToken);
+
+        await _notificationService.SendNotificationAsync(
+            match.UserBId, 
+            NotificationType.Pet, 
+            "Trứng Pet đã xuất hiện!", 
+            "Pet của hai bạn đã được tạo, hãy vào chăm sóc nhé.", 
+            payload, cancellationToken);
+    }
+
+    public async Task RejectMatchAsync(Guid matchId, CancellationToken cancellationToken = default)
+    {
+        var match = await _matchConnectionRepository.GetByIdAsync(matchId, cancellationToken)
+            ?? throw new NotFoundApiException("Match request not found.");
+
+        if (match.UserBId != _currentUserService.UserId)
+        {
+            throw new ForbiddenApiException("You are not allowed to reject this match request.");
+        }
+
+        if (match.Status != MatchStatus.Pending)
+        {
+            throw new ConflictApiException("This match request is not pending.");
+        }
+
+        await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Rejected, cancellationToken);
     }
 
     public async Task<IReadOnlyList<InboxItemDto>> GetInboxAsync(string? status, CancellationToken cancellationToken = default)
@@ -178,6 +224,8 @@ public sealed class MatchService
                     },
                 UnreadCount = unreadMap.GetValueOrDefault(match.Id),
                 PetState = petDto,
+                Status = match.Status.ToString(),
+                IsSender = match.UserAId == userId,
                 ExpiresAt = match.ExpiresAt
             });
         }

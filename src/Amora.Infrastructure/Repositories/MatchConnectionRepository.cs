@@ -73,9 +73,9 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
             PostId = post.Id,
             UserAId = post.PosterId,
             UserBId = comment.CommenterId,
-            Status = MatchStatus.Active,
+            Status = MatchStatus.Pending,
             CreatedAt = DateTimeOffset.UtcNow,
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(24)
+            ExpiresAt = DateTimeOffset.UtcNow.AddHours(24) // Pending expires in 24h
         };
 
         _dbContext.MatchConnections.Add(matchConnection);
@@ -92,7 +92,7 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
     {
         return await _dbContext.MatchConnections
             .AsNoTracking()
-            .Where(x => x.Status == MatchStatus.Active && (x.UserAId == userId || x.UserBId == userId))
+            .Where(x => (x.Status == MatchStatus.Active || x.Status == MatchStatus.Pending) && (x.UserAId == userId || x.UserBId == userId))
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -121,7 +121,7 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
         var now = DateTimeOffset.UtcNow;
 
         return await _dbContext.MatchConnections
-            .Where(x => x.Status == MatchStatus.Active && x.ExpiresAt <= now)
+            .Where(x => (x.Status == MatchStatus.Active || x.Status == MatchStatus.Pending) && x.ExpiresAt <= now)
             .OrderBy(x => x.ExpiresAt)
             .Take(batchSize)
             .ToListAsync(cancellationToken);
@@ -132,7 +132,7 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
         if (matchIds.Count == 0) return 0;
 
         return await _dbContext.MatchConnections
-            .Where(x => matchIds.Contains(x.Id) && x.Status == MatchStatus.Active)
+            .Where(x => matchIds.Contains(x.Id) && (x.Status == MatchStatus.Active || x.Status == MatchStatus.Pending))
             .ExecuteUpdateAsync(
                 setter => setter.SetProperty(x => x.Status, MatchStatus.Expired),
                 cancellationToken);
@@ -157,6 +157,17 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
                         && (x.UserAId == userId || x.UserBId == userId))
             .ExecuteUpdateAsync(
                 setter => setter.SetProperty(x => x.Status, MatchStatus.Unmatched),
+                cancellationToken);
+
+        return updated > 0;
+    }
+
+    public async Task<bool> UpdateStatusAsync(Guid matchId, MatchStatus newStatus, CancellationToken cancellationToken = default)
+    {
+        var updated = await _dbContext.MatchConnections
+            .Where(x => x.Id == matchId)
+            .ExecuteUpdateAsync(
+                setter => setter.SetProperty(x => x.Status, newStatus),
                 cancellationToken);
 
         return updated > 0;
