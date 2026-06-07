@@ -26,8 +26,7 @@ using Amora.Infrastructure.Messaging;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 
-// Tắt ánh xạ tự động claim để giữ nguyên "role" thay vì chuyển sang SOAP URI
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+// Removed DefaultInboundClaimTypeMap.Clear() because we use ClaimTypes.Role directly now.
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -202,7 +201,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = signingKey,
             NameClaimType = "name",
-            RoleClaimType = "role"
+            RoleClaimType = System.Security.Claims.ClaimTypes.Role
         };
 
         options.Events = new JwtBearerEvents
