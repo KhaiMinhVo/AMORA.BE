@@ -24,6 +24,10 @@ using Amora.Infrastructure.Scheduling;
 using Amora.Infrastructure.Services;
 using Amora.Infrastructure.Messaging;
 using Serilog;
+using System.IdentityModel.Tokens.Jwt;
+
+// Tắt ánh xạ tự động claim để giữ nguyên "role" thay vì chuyển sang SOAP URI
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
 
