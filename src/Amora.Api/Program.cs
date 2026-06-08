@@ -80,6 +80,7 @@ builder.Services.AddSingleton<MongoDB.Driver.IMongoClient>(_ =>
 });
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserBanRepository, UserBanRepository>();
 builder.Services.AddScoped<IVoicePostRepository, VoicePostRepository>();
 builder.Services.AddScoped<IVoiceCommentRepository, VoiceCommentRepository>();
 builder.Services.AddScoped<IMatchConnectionRepository, MatchConnectionRepository>();

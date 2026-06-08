@@ -88,6 +88,7 @@ public sealed class VoiceCommentService
             var aiModeration = scope.ServiceProvider.GetRequiredService<AiModerationService>();
             var commentRepo = scope.ServiceProvider.GetRequiredService<IVoiceCommentRepository>();
             var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            var userBanRepo = scope.ServiceProvider.GetRequiredService<IUserBanRepository>();
 
             var text = await aiModeration.TranscribeAudioAsync(request.AudioUrl);
             if (!string.IsNullOrWhiteSpace(text))
@@ -107,9 +108,19 @@ public sealed class VoiceCommentService
                     if (u != null)
                     {
                         u.IsBanned = true;
-                        u.BannedUntil = DateTimeOffset.UtcNow.AddDays(7);
-                        u.BanReason = "[AI AUTOMATED] Voice comment contained toxic/offensive language.";
+                        
+                        var ban = new Amora.Domain.Entities.UserBan
+                        {
+                            Id = Guid.NewGuid(),
+                            UserId = u.Id,
+                            BanReason = "[AI AUTOMATED] Voice comment contained toxic/offensive language.",
+                            BannedUntil = DateTimeOffset.UtcNow.AddDays(7),
+                            CreatedAt = DateTimeOffset.UtcNow,
+                            IsActive = true
+                        };
+
                         await userRepo.UpdateAsync(u);
+                        await userBanRepo.AddAsync(ban);
                     }
                 }
             }

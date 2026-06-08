@@ -30,6 +30,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<UserBlock> UserBlocks => Set<UserBlock>();
 
+    public DbSet<UserBan> UserBans => Set<UserBan>();
+
     public DbSet<Pet> Pets => Set<Pet>();
 
     public DbSet<PetStateHistory> PetStateHistories => Set<PetStateHistory>();
@@ -72,7 +74,6 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.Interests).HasMaxLength(500);
 
             entity.Property(x => x.Role).HasMaxLength(50).HasDefaultValue("User");
-            entity.Property(x => x.BanReason).HasMaxLength(500);
 
             entity.HasData(
                 new AppUser
@@ -205,6 +206,19 @@ public sealed class AmoraDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.BlockerId, x.BlockedUserId }).IsUnique();
             entity.HasIndex(x => x.BlockerId); // Filter feed query
+        });
+
+        modelBuilder.Entity<UserBan>(entity =>
+        {
+            entity.ToTable("UserBans");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.BanReason).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.AppealReason).HasMaxLength(1000);
+            
+            entity.HasOne(x => x.User)
+                .WithMany(u => u.Bans)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Pet>(entity =>

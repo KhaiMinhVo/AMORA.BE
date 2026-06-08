@@ -25,12 +25,9 @@ public sealed class AppUser
     public string[] Photos { get; set; } = [];
 
     // ── Moderation ──────────────────────────────────────────────────────
+    // Navigation property for user bans
+    public ICollection<UserBan> Bans { get; set; } = new List<UserBan>();
     public bool IsBanned { get; set; }
-    public DateTimeOffset? BannedUntil { get; set; }
-    public string? BanReason { get; set; }
-
-    public bool HasPendingAppeal { get; set; }
-    public string? AppealReason { get; set; }
 
     // ── Profile mở rộng ─────────────────────────────────────────────────
 

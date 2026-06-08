@@ -18,6 +18,7 @@ public sealed class AuthService
     private readonly IEmailService _emailService;
     private readonly IMemoryCache _memoryCache;
     private readonly IConfiguration _configuration;
+    private readonly IUserBanRepository _userBanRepository;
 
     public AuthService(
         IUserRepository users, 
@@ -25,7 +26,8 @@ public sealed class AuthService
         DiamondRewardService petCoins,
         IEmailService emailService,
         IMemoryCache memoryCache,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IUserBanRepository userBanRepository)
     {
         _users = users;
         _jwt = jwt;
@@ -33,6 +35,7 @@ public sealed class AuthService
         _emailService = emailService;
         _memoryCache = memoryCache;
         _configuration = configuration;
+        _userBanRepository = userBanRepository;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
@@ -235,7 +238,13 @@ public sealed class AuthService
             throw new ValidationApiException("This account is not banned. No appeal needed.");
         }
 
-        if (user.HasPendingAppeal)
+        var activeBan = await _userBanRepository.GetActiveBanByUserIdAsync(user.Id, cancellationToken);
+        if (activeBan == null)
+        {
+            throw new ValidationApiException("No active ban record found to appeal.");
+        }
+
+        if (activeBan.AppealStatus == Amora.Domain.Enums.AppealStatus.Pending)
         {
             throw new ConflictApiException("You already have a pending appeal.");
         }
@@ -245,9 +254,9 @@ public sealed class AuthService
             throw new ValidationApiException("Appeal reason is required.");
         }
 
-        user.HasPendingAppeal = true;
-        user.AppealReason = request.AppealReason.Trim();
-        await _users.UpdateAsync(user, cancellationToken);
+        activeBan.AppealStatus = Amora.Domain.Enums.AppealStatus.Pending;
+        activeBan.AppealReason = request.AppealReason.Trim();
+        await _userBanRepository.UpdateAsync(activeBan, cancellationToken);
     }
 
     private AuthResponseDto BuildResponse(AppUser user)

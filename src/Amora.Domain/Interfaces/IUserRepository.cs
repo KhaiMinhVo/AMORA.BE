@@ -19,6 +19,4 @@ public interface IUserRepository
     Task AddAsync(AppUser user, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(AppUser user, CancellationToken cancellationToken = default);
-
-    Task<(IEnumerable<AppUser> Items, int TotalCount)> GetUsersWithPendingAppealsAsync(int page, int pageSize, CancellationToken cancellationToken = default);
 }

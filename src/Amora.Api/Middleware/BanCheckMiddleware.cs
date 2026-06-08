@@ -15,7 +15,7 @@ public sealed class BanCheckMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, IUserRepository userRepository)
+    public async Task InvokeAsync(HttpContext context, IUserRepository userRepository, IUserBanRepository userBanRepository)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
@@ -28,38 +28,49 @@ public sealed class BanCheckMiddleware
                     // Check permanent ban or temporary ban
                     if (user.IsBanned)
                     {
-                        bool stillBanned = true;
-                        
-                        // If it's a temporary ban, check if it has expired
-                        if (user.BannedUntil.HasValue)
+                        var activeBan = await userBanRepository.GetActiveBanByUserIdAsync(user.Id);
+                        if (activeBan != null)
                         {
-                            if (DateTimeOffset.UtcNow > user.BannedUntil.Value)
+                            bool stillBanned = true;
+                            
+                            // If it's a temporary ban, check if it has expired
+                            if (activeBan.BannedUntil.HasValue)
                             {
-                                // Ban has expired
-                                stillBanned = false;
-                                
-                                // Optionally auto-unban them in db
-                                user.IsBanned = false;
-                                user.BannedUntil = null;
-                                user.BanReason = null;
-                                await userRepository.UpdateAsync(user);
+                                if (DateTimeOffset.UtcNow > activeBan.BannedUntil.Value)
+                                {
+                                    // Ban has expired
+                                    stillBanned = false;
+                                    
+                                    // Auto-unban them in db
+                                    user.IsBanned = false;
+                                    await userRepository.UpdateAsync(user);
+                                    
+                                    activeBan.IsActive = false;
+                                    await userBanRepository.UpdateAsync(activeBan);
+                                }
+                            }
+
+                            if (stillBanned)
+                            {
+                                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                                context.Response.ContentType = "application/json";
+
+                                var reason = activeBan.BanReason ?? "Your account has been suspended.";
+                                if (activeBan.BannedUntil.HasValue)
+                                {
+                                    reason += $" Ban expires at {activeBan.BannedUntil.Value:yyyy-MM-dd HH:mm} UTC.";
+                                }
+
+                                var payload = ApiResponse<object>.Fail(reason, "account_banned");
+                                await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
+                                return;
                             }
                         }
-
-                        if (stillBanned)
+                        else
                         {
-                            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                            context.Response.ContentType = "application/json";
-
-                            var reason = user.BanReason ?? "Your account has been suspended.";
-                            if (user.BannedUntil.HasValue)
-                            {
-                                reason += $" Ban expires at {user.BannedUntil.Value:yyyy-MM-dd HH:mm} UTC.";
-                            }
-
-                            var payload = ApiResponse<object>.Fail(reason, "account_banned");
-                            await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
-                            return;
+                            // Missing active ban record, auto fix
+                            user.IsBanned = false;
+                            await userRepository.UpdateAsync(user);
                         }
                     }
                 }

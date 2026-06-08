@@ -10,15 +10,18 @@ public sealed class AdminModerationService
 {
     private readonly IUserReportRepository _reportRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IUserBanRepository _userBanRepository;
     private readonly IRealtimeNotifier _realtimeNotifier;
 
     public AdminModerationService(
         IUserReportRepository reportRepository,
         IUserRepository userRepository,
+        IUserBanRepository userBanRepository,
         IRealtimeNotifier realtimeNotifier)
     {
         _reportRepository = reportRepository;
         _userRepository = userRepository;
+        _userBanRepository = userBanRepository;
         _realtimeNotifier = realtimeNotifier;
     }
 
@@ -103,18 +106,25 @@ public sealed class AdminModerationService
             throw new ValidationApiException("Cannot ban an admin.");
 
         user.IsBanned = true;
-        user.BanReason = request.Reason;
         
+        DateTimeOffset? bannedUntil = null;
         if (request.DurationDays.HasValue && request.DurationDays.Value > 0)
         {
-            user.BannedUntil = DateTimeOffset.UtcNow.AddDays(request.DurationDays.Value);
-        }
-        else
-        {
-            user.BannedUntil = null; // Permanent ban
+            bannedUntil = DateTimeOffset.UtcNow.AddDays(request.DurationDays.Value);
         }
 
+        var ban = new Amora.Domain.Entities.UserBan
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            BanReason = request.Reason ?? "Banned by Admin",
+            BannedUntil = bannedUntil,
+            CreatedAt = DateTimeOffset.UtcNow,
+            IsActive = true
+        };
+
         await _userRepository.UpdateAsync(user, cancellationToken);
+        await _userBanRepository.AddAsync(ban, cancellationToken);
 
         // Disconnect user from SignalR
         await _realtimeNotifier.DisconnectUserAsync(userId, request.Reason ?? "You have been banned.", cancellationToken);
@@ -126,26 +136,28 @@ public sealed class AdminModerationService
             ?? throw new NotFoundApiException("User not found.");
 
         user.IsBanned = false;
-        user.BannedUntil = null;
-        user.BanReason = null;
-        user.HasPendingAppeal = false;
-        user.AppealReason = null;
-
         await _userRepository.UpdateAsync(user, cancellationToken);
+
+        var activeBan = await _userBanRepository.GetActiveBanByUserIdAsync(userId, cancellationToken);
+        if (activeBan != null)
+        {
+            activeBan.IsActive = false;
+            await _userBanRepository.UpdateAsync(activeBan, cancellationToken);
+        }
     }
 
     public async Task<PaginatedList<AppealDto>> GetPendingAppealsAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var (users, totalCount) = await _userRepository.GetUsersWithPendingAppealsAsync(page, pageSize, cancellationToken);
+        var (bans, totalCount) = await _userBanRepository.GetPendingAppealsAsync(page, pageSize, cancellationToken);
 
-        var dtos = users.Select(u => new AppealDto
+        var dtos = bans.Select(b => new AppealDto
         {
-            UserId = u.Id,
-            DisplayName = u.DisplayName,
-            Email = u.Email ?? "",
-            BanReason = u.BanReason,
-            BannedUntil = u.BannedUntil,
-            AppealReason = u.AppealReason
+            UserId = b.UserId,
+            DisplayName = b.User?.DisplayName ?? "Unknown",
+            Email = b.User?.Email ?? "",
+            BanReason = b.BanReason,
+            BannedUntil = b.BannedUntil,
+            AppealReason = b.AppealReason
         }).ToList();
 
         return new PaginatedList<AppealDto>
@@ -162,21 +174,21 @@ public sealed class AdminModerationService
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("User not found.");
 
-        if (!user.HasPendingAppeal)
+        var activeBan = await _userBanRepository.GetActiveBanByUserIdAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("Active ban not found.");
+
+        if (activeBan.AppealStatus != AppealStatus.Pending)
             throw new ValidationApiException("User does not have a pending appeal.");
 
         if (request.Action.Equals("Approve", StringComparison.OrdinalIgnoreCase))
         {
             user.IsBanned = false;
-            user.BannedUntil = null;
-            user.BanReason = null;
-            user.HasPendingAppeal = false;
-            user.AppealReason = null;
+            activeBan.IsActive = false;
+            activeBan.AppealStatus = AppealStatus.Approved;
         }
         else if (request.Action.Equals("Reject", StringComparison.OrdinalIgnoreCase))
         {
-            user.HasPendingAppeal = false;
-            user.AppealReason = null;
+            activeBan.AppealStatus = AppealStatus.Rejected;
         }
         else
         {
@@ -184,5 +196,6 @@ public sealed class AdminModerationService
         }
 
         await _userRepository.UpdateAsync(user, cancellationToken);
+        await _userBanRepository.UpdateAsync(activeBan, cancellationToken);
     }
 }
