@@ -47,4 +47,13 @@ public sealed class UserBlockRepository : IUserBlockRepository
             .Select(x => x.BlockedUserId)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<UserBlock>> GetBlockedUsersAsync(Guid blockerId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.UserBlocks
+            .AsNoTracking()
+            .Where(x => x.BlockerId == blockerId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
 }

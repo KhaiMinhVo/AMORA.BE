@@ -13,4 +13,7 @@ public interface IUserBlockRepository
 
     /// <summary>Lấy danh sách ID mà user đã block (dùng để filter Feed).</summary>
     Task<IReadOnlyList<Guid>> GetBlockedUserIdsAsync(Guid blockerId, CancellationToken cancellationToken = default);
+
+    /// <summary>Lấy danh sách chi tiết những người dùng đã bị block.</summary>
+    Task<IReadOnlyList<UserBlock>> GetBlockedUsersAsync(Guid blockerId, CancellationToken cancellationToken = default);
 }

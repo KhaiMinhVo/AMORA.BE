@@ -20,3 +20,11 @@ public sealed class BlockResponseDto
     public Guid BlockedUserId { get; init; }
     public string Status { get; init; } = string.Empty;
 }
+
+public sealed class BlockedUserDto
+{
+    public Guid UserId { get; init; }
+    public string DisplayName { get; init; } = string.Empty;
+    public string AvatarUrl { get; init; } = string.Empty;
+    public DateTimeOffset BlockedAt { get; init; }
+}

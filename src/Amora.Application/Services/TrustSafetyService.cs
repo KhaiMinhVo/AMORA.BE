@@ -163,4 +163,27 @@ public sealed class TrustSafetyService
 
         await _blockRepository.RemoveAsync(blockerId, targetUserId, cancellationToken);
     }
+
+    public async Task<IEnumerable<BlockedUserDto>> GetBlockedUsersAsync(CancellationToken cancellationToken = default)
+    {
+        var blockerId = _currentUserService.UserId;
+        var blocks = await _blockRepository.GetBlockedUsersAsync(blockerId, cancellationToken);
+
+        var dtos = new List<BlockedUserDto>();
+        foreach (var b in blocks)
+        {
+            var u = await _userRepository.GetByIdAsync(b.BlockedUserId, cancellationToken);
+            if (u != null)
+            {
+                dtos.Add(new BlockedUserDto
+                {
+                    UserId = u.Id,
+                    DisplayName = u.DisplayName,
+                    AvatarUrl = u.AvatarUrl,
+                    BlockedAt = b.CreatedAt
+                });
+            }
+        }
+        return dtos;
+    }
 }

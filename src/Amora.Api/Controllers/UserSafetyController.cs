@@ -7,7 +7,7 @@ namespace Amora.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/users/{userId:guid}")]
+[Route("api/users")]
 public sealed class UserSafetyController : ControllerBase
 {
     private readonly TrustSafetyService _trustSafetyService;
@@ -21,7 +21,7 @@ public sealed class UserSafetyController : ControllerBase
     /// Bao cao nguoi dung vi pham.
     /// Luu thong tin ly do va mo ta.
     /// </summary>
-    [HttpPost("report")]
+    [HttpPost("{userId:guid}/report")]
     public async Task<IActionResult> ReportUser(
         Guid userId,
         [FromBody] CreateReportRequest request,
@@ -35,7 +35,7 @@ public sealed class UserSafetyController : ControllerBase
     /// Block mot nguoi dung de an nhau tren feed.
     /// Tao ban ghi chan tuong tac.
     /// </summary>
-    [HttpPost("block")]
+    [HttpPost("{userId:guid}/block")]
     public async Task<IActionResult> BlockUser(Guid userId, CancellationToken cancellationToken)
     {
         var result = await _trustSafetyService.BlockUserAsync(userId, cancellationToken);
@@ -44,12 +44,22 @@ public sealed class UserSafetyController : ControllerBase
 
     /// <summary>
     /// Bo block mot nguoi dung.
-    /// Khoi phuc kha nang tuong tac.
+    /// Khoi phuc kha nang tuong tuong tac.
     /// </summary>
-    [HttpDelete("block")]
+    [HttpDelete("{userId:guid}/block")]
     public async Task<IActionResult> UnblockUser(Guid userId, CancellationToken cancellationToken)
     {
         await _trustSafetyService.UnblockUserAsync(userId, cancellationToken);
         return Ok(new { success = true, message = "User unblocked." });
+    }
+
+    /// <summary>
+    /// Lay danh sach nguoi dung dang bi ban block.
+    /// </summary>
+    [HttpGet("me/blocks")]
+    public async Task<IActionResult> GetBlockedUsers(CancellationToken cancellationToken)
+    {
+        var result = await _trustSafetyService.GetBlockedUsersAsync(cancellationToken);
+        return Ok(new { success = true, data = result });
     }
 }
