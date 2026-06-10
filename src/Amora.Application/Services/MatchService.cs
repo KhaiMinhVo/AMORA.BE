@@ -137,7 +137,7 @@ public sealed class MatchService
                     MatchId = match.Id,
                     SenderId = null,
                     MessageType = MessageType.System,
-                    Content = $"Hai bạn đã kết nối thành công từ bài Post {match.PostId}.",
+                    Content = "Hai bạn đã kết nối thành công.",
                     CreatedAt = DateTimeOffset.UtcNow
                 };
 
