@@ -11,4 +11,6 @@ public interface IChatMessageRepository
         string? cursor,
         int limit,
         CancellationToken cancellationToken = default);
+
+    Task<ChatMessage?> GetByIdAsync(string id, CancellationToken cancellationToken = default);
 }

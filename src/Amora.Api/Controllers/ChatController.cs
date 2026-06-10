@@ -46,4 +46,17 @@ public sealed class ChatController : ControllerBase
         var result = await _chatService.SendMessageAsync(matchId, request, cancellationToken);
         return Ok(ApiResponse<SendMessageResponseDto>.Ok(result, "Message sent successfully."));
     }
+
+    /// <summary>
+    /// Đánh dấu đã đọc tin nhắn trong match.
+    /// </summary>
+    [HttpPatch("read")]
+    public async Task<ActionResult<ApiResponse<MarkMessagesAsReadResponseDto>>> MarkAsRead(
+        Guid matchId,
+        [FromBody] MarkMessagesAsReadRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _chatService.MarkMessagesAsReadAsync(matchId, request, cancellationToken);
+        return Ok(ApiResponse<MarkMessagesAsReadResponseDto>.Ok(result, "Messages marked as read."));
+    }
 }

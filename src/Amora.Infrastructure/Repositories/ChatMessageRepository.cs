@@ -89,4 +89,13 @@ public sealed class ChatMessageRepository : IChatMessageRepository
             CreatedAt = document.CreatedAt
         };
     }
+
+    public async Task<ChatMessage?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var document = await _collection
+            .Find(Builders<ChatMessageDocument>.Filter.Eq(x => x.Id, id))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return document is null ? null : MapToDomain(document);
+    }
 }

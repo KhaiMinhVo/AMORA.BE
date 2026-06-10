@@ -40,8 +40,11 @@ public sealed class ChatReadStateRepository : IChatReadStateRepository
         }
         else
         {
-            state.LastReadAt = readAt;
-            state.UpdatedAt = DateTimeOffset.UtcNow;
+            if (readAt > state.LastReadAt)
+            {
+                state.LastReadAt = readAt;
+                state.UpdatedAt = DateTimeOffset.UtcNow;
+            }
         }
 
         await _db.SaveChangesAsync(cancellationToken);

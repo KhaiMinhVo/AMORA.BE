@@ -6,7 +6,9 @@ public interface IRealtimeNotifier
 {
     Task NotifyMatchCreatedAsync(MatchConnection matchConnection, CancellationToken cancellationToken = default);
 
-    Task NotifyNewMessageAsync(ChatMessage message, DateTimeOffset? handshakeExpiresAt = null, CancellationToken cancellationToken = default);
+    Task NotifyNewMessageAsync(ChatMessage message, int? unreadCount = null, DateTimeOffset? handshakeExpiresAt = null, CancellationToken cancellationToken = default);
+
+    Task NotifyMessagesReadAsync(Guid matchId, Guid userId, string lastReadMessageId, int unreadCount, CancellationToken cancellationToken = default);
 
     Task NotifyMatchExpiredAsync(MatchConnection matchConnection, CancellationToken cancellationToken = default);
 

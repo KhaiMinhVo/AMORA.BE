@@ -35,7 +35,7 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
             .SendAsync("ReceiveMatchCreated", payload, cancellationToken);
     }
 
-    public async Task NotifyNewMessageAsync(ChatMessage message, DateTimeOffset? handshakeExpiresAt = null, CancellationToken cancellationToken = default)
+    public async Task NotifyNewMessageAsync(ChatMessage message, int? unreadCount = null, DateTimeOffset? handshakeExpiresAt = null, CancellationToken cancellationToken = default)
     {
         var payload = new
         {
@@ -47,11 +47,26 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
             content = message.Content,
             duration = message.Duration,
             createdAt = message.CreatedAt,
+            unreadCount = unreadCount,
             expiresAt = handshakeExpiresAt
         };
 
         await _hubContext.Clients.Group(RealtimeGroupNames.Match(message.MatchId.ToString()))
             .SendAsync("ReceiveNewMessage", payload, cancellationToken);
+    }
+
+    public async Task NotifyMessagesReadAsync(Guid matchId, Guid userId, string lastReadMessageId, int unreadCount, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            matchId = matchId,
+            userId = userId,
+            lastReadMessageId = lastReadMessageId,
+            unreadCount = unreadCount
+        };
+
+        await _hubContext.Clients.Group(RealtimeGroupNames.Match(matchId.ToString()))
+            .SendAsync("MessagesRead", payload, cancellationToken);
     }
 
     public async Task NotifyMatchExpiredAsync(MatchConnection matchConnection, CancellationToken cancellationToken = default)

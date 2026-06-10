@@ -145,13 +145,45 @@ public sealed class ChatService
         // Handshake 24h: gia hạn thêm 24h mỗi khi có tin nhắn (trước khi push realtime)
         await _matchConnectionRepository.ExtendHandshakeAsync(matchId, cancellationToken);
         var expiresAt = DateTimeOffset.UtcNow.AddHours(24);
-        await _realtimeNotifier.NotifyNewMessageAsync(message, expiresAt, cancellationToken);
+        
+        var partnerId = match.UserAId == _currentUserService.UserId ? match.UserBId : match.UserAId;
+        var partnerState = await _readState.GetAsync(partnerId, matchId, cancellationToken);
+        var since = partnerState?.LastReadAt ?? DateTimeOffset.MinValue;
+        var unreadCount = await _readState.CountUnreadAsync(partnerId, matchId, since, cancellationToken);
+
+        await _realtimeNotifier.NotifyNewMessageAsync(message, unreadCount, expiresAt, cancellationToken);
 
         return new SendMessageResponseDto
         {
             MessageId = message.Id,
             Status = "Sent",
             CreatedAt = message.CreatedAt
+        };
+    }
+
+    public async Task<MarkMessagesAsReadResponseDto> MarkMessagesAsReadAsync(Guid matchId, MarkMessagesAsReadRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!await _matchConnectionRepository.IsParticipantAsync(matchId, _currentUserService.UserId, cancellationToken))
+        {
+            throw new ForbiddenApiException("You cannot access this chat room.");
+        }
+
+        var message = await _chatMessageRepository.GetByIdAsync(request.MessageId, cancellationToken);
+        if (message is null || message.MatchId != matchId)
+        {
+            throw new NotFoundApiException("Message not found in this match.");
+        }
+
+        await _readState.UpsertReadAsync(_currentUserService.UserId, matchId, message.CreatedAt, cancellationToken);
+        var unreadCount = await _readState.CountUnreadAsync(_currentUserService.UserId, matchId, message.CreatedAt, cancellationToken);
+
+        await _realtimeNotifier.NotifyMessagesReadAsync(matchId, _currentUserService.UserId, request.MessageId, unreadCount, cancellationToken);
+
+        return new MarkMessagesAsReadResponseDto
+        {
+            MatchId = matchId,
+            LastReadMessageId = request.MessageId,
+            UnreadCount = unreadCount
         };
     }
 }
