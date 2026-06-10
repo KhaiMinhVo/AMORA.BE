@@ -104,18 +104,19 @@ public sealed class ChatService
         if (messageType == MessageType.Image)
             await _featureGate.RegisterImageSentAsync(matchId, _currentUserService.UserId, cancellationToken);
 
-        if (messageType == MessageType.Text && !string.IsNullOrWhiteSpace(request.Content))
+        if (messageType == MessageType.Text)
         {
-            bool isToxic = await _aiModerationService.IsMessageToxicAsync(request.Content, cancellationToken);
-            if (isToxic)
-            {
-                throw new ValidationApiException("Nội dung chat vi phạm tiêu chuẩn cộng đồng (Anti-toxic).");
-            }
+            throw new ValidationApiException("Text messages are not allowed. Please use Voice messages.");
+        }
+
+        if (messageType == MessageType.System)
+        {
+            throw new ValidationApiException("You cannot send System messages.");
         }
 
         var message = new ChatMessage
         {
-            Id = Guid.NewGuid().ToString("N"),
+            Id = Guid.NewGuid().ToString("N")[..24], // 24 hex chars for MongoDB ObjectId
             MatchId = matchId,
             SenderId = _currentUserService.UserId,
             MessageType = messageType,
@@ -128,11 +129,7 @@ public sealed class ChatService
         await _chatMessageRepository.AddAsync(message, cancellationToken);
 
         // Pet System — chỉ metadata / loại tin, không đọc nội dung
-        if (messageType == MessageType.Text)
-        {
-            await _mediator.Send(new ProcessTextMessagePetCommand(matchId, _currentUserService.UserId), cancellationToken);
-        }
-        else if (messageType == MessageType.Voice)
+        if (messageType == MessageType.Voice)
         {
             await _mediator.Send(new PublishVoiceForVibeCommand(
                 matchId,
