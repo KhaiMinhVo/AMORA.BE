@@ -31,4 +31,6 @@ public interface IMatchConnectionRepository
     Task<bool> UnmatchAsync(Guid matchId, Guid userId, CancellationToken cancellationToken = default);
 
     Task<bool> UpdateStatusAsync(Guid matchId, Amora.Domain.Enums.MatchStatus newStatus, CancellationToken cancellationToken = default);
+
+    Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default);
 }

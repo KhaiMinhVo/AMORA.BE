@@ -67,6 +67,11 @@ public sealed class MatchService
         var comment = await _voiceCommentRepository.GetByIdAsync(request.CommentId, cancellationToken)
             ?? throw new NotFoundApiException("Voice comment not found.");
 
+        if (await _matchConnectionRepository.AreMatchedAsync(post.PosterId, comment.CommenterId, cancellationToken))
+        {
+            throw new ConflictApiException("Bạn đã match với người dùng này rồi.");
+        }
+
         if (comment.PostId != post.Id)
         {
             throw new ValidationApiException("This comment does not belong to the selected post.");
@@ -113,23 +118,34 @@ public sealed class MatchService
             throw new ConflictApiException("This match request is not pending.");
         }
 
-        await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Active, cancellationToken);
-        match.Status = MatchStatus.Active;
-
-        var systemMessage = new ChatMessage
+        await _matchConnectionRepository.ExecuteInTransactionAsync(async () =>
         {
-            Id = Guid.NewGuid().ToString("N"),
-            MatchId = match.Id,
-            SenderId = null,
-            MessageType = MessageType.System,
-            Content = $"Hai bạn đã kết nối thành công từ bài Post {match.PostId}.",
-            CreatedAt = DateTimeOffset.UtcNow
-        };
+            await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Active, cancellationToken);
+            match.Status = MatchStatus.Active;
 
-        await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
-        await _mediator.Send(new CreatePetCommand(match.Id), cancellationToken);
-        await _realtimeNotifier.NotifyMatchCreatedAsync(match, cancellationToken);
-        await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
+            var systemMessage = new ChatMessage
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                MatchId = match.Id,
+                SenderId = null,
+                MessageType = MessageType.System,
+                Content = $"Hai bạn đã kết nối thành công từ bài Post {match.PostId}.",
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
+            await _mediator.Send(new CreatePetCommand(match.Id), cancellationToken);
+
+            try
+            {
+                await _realtimeNotifier.NotifyMatchCreatedAsync(match, cancellationToken);
+                await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
+            }
+            catch (Exception)
+            {
+                // SignalR is a secondary task, ignore if it fails
+            }
+        }, cancellationToken);
 
         // Send notifications
         var payload = $"{{\"matchId\": \"{match.Id}\"}}";
@@ -204,14 +220,15 @@ public sealed class MatchService
                     Level = (int)pet.Stage
                 };
 
+            var isPending = match.Status == MatchStatus.Pending;
             inboxItems.Add(new InboxItemDto
             {
                 MatchId = match.Id,
                 Partner = new PartnerPreviewDto
                 {
                     Id = partnerId,
-                    DisplayName = partner?.DisplayName ?? $"Ẩn danh #{partnerId.ToString()[..4]}",
-                    AvatarUrl = partner?.AvatarUrl ?? "default_avatar.png"
+                    DisplayName = isPending ? $"Ẩn danh #{partnerId.ToString()[..4]}" : (partner?.DisplayName ?? $"Ẩn danh #{partnerId.ToString()[..4]}"),
+                    AvatarUrl = isPending ? "default_avatar.png" : (partner?.AvatarUrl ?? "default_avatar.png")
                 },
                 LastMessage = lastMessage == null
                     ? null

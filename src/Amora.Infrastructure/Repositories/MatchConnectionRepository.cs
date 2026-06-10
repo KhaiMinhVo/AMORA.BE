@@ -110,7 +110,7 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
     public Task<bool> AreMatchedAsync(Guid userAId, Guid userBId, CancellationToken cancellationToken = default)
     {
         return _dbContext.MatchConnections.AnyAsync(
-            x => x.Status == MatchStatus.Active
+            x => (x.Status == MatchStatus.Active || x.Status == MatchStatus.Pending)
                  && ((x.UserAId == userAId && x.UserBId == userBId)
                      || (x.UserAId == userBId && x.UserBId == userAId)),
             cancellationToken);
@@ -171,5 +171,20 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
                 cancellationToken);
 
         return updated > 0;
+    }
+
+    public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await action();
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 }
