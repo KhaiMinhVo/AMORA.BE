@@ -55,3 +55,13 @@ public sealed class ResolveAppealRequest
     /// <summary>Approve (Unban) or Reject (Keep ban)</summary>
     public string Action { get; init; } = string.Empty;
 }
+
+public sealed class AdminUserDto
+{
+    public Guid Id { get; init; }
+    public string Email { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
+    public string Role { get; init; } = string.Empty;
+    public bool IsBanned { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
+}

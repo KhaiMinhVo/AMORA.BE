@@ -25,6 +25,28 @@ public sealed class AdminModerationService
         _realtimeNotifier = realtimeNotifier;
     }
 
+    public async Task<PaginatedList<AdminUserDto>> GetUsersAsync(int page, int pageSize, string? keyword, CancellationToken cancellationToken = default)
+    {
+        var (users, totalCount) = await _userRepository.GetAllUsersAsync(page, pageSize, keyword, cancellationToken);
+        var dtos = users.Select(u => new AdminUserDto
+        {
+            Id = u.Id,
+            Email = u.Email ?? "",
+            DisplayName = u.DisplayName,
+            Role = u.Role,
+            IsBanned = u.IsBanned,
+            CreatedAt = u.CreatedAt
+        });
+
+        return new PaginatedList<AdminUserDto>
+        {
+            Items = dtos,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
     public async Task<PaginatedList<ReportDto>> GetReportsAsync(int page, int pageSize, string? statusStr, CancellationToken cancellationToken = default)
     {
         ReportStatus? status = null;

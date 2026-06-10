@@ -44,4 +44,25 @@ public sealed class UserRepository : IUserRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetAllUsersAsync(int page, int pageSize, string? keyword = null, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            query = query.Where(x => 
+                x.Email != null && x.Email.Contains(keyword) || 
+                x.DisplayName.Contains(keyword));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, total);
+    }
 }
