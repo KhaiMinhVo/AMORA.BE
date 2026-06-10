@@ -6,6 +6,7 @@ using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Amora.Application.Services;
 
@@ -22,6 +23,7 @@ public sealed class MatchService
     private readonly IPetRepository _petRepository;
     private readonly IChatReadStateRepository _readState;
     private readonly NotificationService _notificationService;
+    private readonly Microsoft.Extensions.Logging.ILogger<MatchService> _logger;
 
     public MatchService(
         ICurrentUserService currentUserService,
@@ -34,7 +36,8 @@ public sealed class MatchService
         IMediator mediator,
         IPetRepository petRepository,
         IChatReadStateRepository readState,
-        NotificationService notificationService)
+        NotificationService notificationService,
+        Microsoft.Extensions.Logging.ILogger<MatchService> logger)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -47,6 +50,7 @@ public sealed class MatchService
         _petRepository = petRepository;
         _readState = readState;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
@@ -118,35 +122,51 @@ public sealed class MatchService
             throw new ConflictApiException("This match request is not pending.");
         }
 
-        await _matchConnectionRepository.ExecuteInTransactionAsync(async () =>
+        try
         {
-            await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Active, cancellationToken);
-            match.Status = MatchStatus.Active;
-
-            var systemMessage = new ChatMessage
+            await _matchConnectionRepository.ExecuteInTransactionAsync(async () =>
             {
-                Id = Guid.NewGuid().ToString("N"),
-                MatchId = match.Id,
-                SenderId = null,
-                MessageType = MessageType.System,
-                Content = $"Hai bạn đã kết nối thành công từ bài Post {match.PostId}.",
-                CreatedAt = DateTimeOffset.UtcNow
-            };
+                _logger.LogInformation("Accept: updating status");
+                await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Active, cancellationToken);
+                match.Status = MatchStatus.Active;
 
-            await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
-            await _mediator.Send(new CreatePetCommand(match.Id), cancellationToken);
+                _logger.LogInformation("Accept: creating system message");
+                var systemMessage = new ChatMessage
+                {
+                    Id = Guid.NewGuid().ToString("N")[..24], // 24 hex chars for MongoDB ObjectId
+                    MatchId = match.Id,
+                    SenderId = null,
+                    MessageType = MessageType.System,
+                    Content = $"Hai bạn đã kết nối thành công từ bài Post {match.PostId}.",
+                    CreatedAt = DateTimeOffset.UtcNow
+                };
 
-            try
-            {
-                await _realtimeNotifier.NotifyMatchCreatedAsync(match, cancellationToken);
-                await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
-            }
-            catch (Exception)
-            {
-                // SignalR is a secondary task, ignore if it fails
-            }
-        }, cancellationToken);
+                await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
+                
+                _logger.LogInformation("Accept: creating pet");
+                await _mediator.Send(new CreatePetCommand(match.Id), cancellationToken);
 
+                _logger.LogInformation("Accept: saving changes");
+                // SaveChanges is handled internally by repository and MediatR
+
+                try
+                {
+                    await _realtimeNotifier.NotifyMatchCreatedAsync(match, cancellationToken);
+                    await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send SignalR notification for match {MatchId}.", match.Id);
+                }
+            }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Accept DB error. MatchId={MatchId}, Inner={Inner}", matchId, ex.InnerException?.Message);
+            throw;
+        }
+
+        _logger.LogInformation("Accept: sending notification");
         // Send notifications
         var payload = $"{{\"matchId\": \"{match.Id}\"}}";
         
