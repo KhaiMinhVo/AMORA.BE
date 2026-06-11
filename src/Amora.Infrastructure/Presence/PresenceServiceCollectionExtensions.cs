@@ -16,10 +16,12 @@ public static class PresenceServiceCollectionExtensions
         {
             services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
             services.AddSingleton<IMatchPresenceTracker, RedisMatchPresenceTracker>();
+            services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>(); // TODO: RedisUserPresenceTracker later
             return services;
         }
 
         services.AddSingleton<IMatchPresenceTracker, InMemoryMatchPresenceTracker>();
+        services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
         return services;
     }
 }

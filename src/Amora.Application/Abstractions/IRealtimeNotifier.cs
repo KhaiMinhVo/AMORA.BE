@@ -13,4 +13,6 @@ public interface IRealtimeNotifier
     Task NotifyMatchExpiredAsync(MatchConnection matchConnection, CancellationToken cancellationToken = default);
 
     Task DisconnectUserAsync(Guid userId, string reason, CancellationToken cancellationToken = default);
+
+    Task NotifyUserPresenceChangedAsync(Guid userId, bool isOnline, DateTimeOffset? lastActiveAt = null, CancellationToken cancellationToken = default);
 }

@@ -4,6 +4,7 @@ using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Amora.Application.Abstractions;
 
 namespace Amora.Api.Hubs;
 
@@ -12,11 +13,31 @@ public sealed class CallHub : Hub
 {
     private readonly IMatchConnectionRepository _matches;
     private readonly PetFeatureGateService _featureGate;
+    private readonly IUserPresenceTracker _presenceTracker;
 
-    public CallHub(IMatchConnectionRepository matches, PetFeatureGateService featureGate)
+    public CallHub(IMatchConnectionRepository matches, PetFeatureGateService featureGate, IUserPresenceTracker presenceTracker)
     {
         _matches = matches;
         _featureGate = featureGate;
+        _presenceTracker = presenceTracker;
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        if (Guid.TryParse(GetUserId(), out var userId))
+        {
+            await _presenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
+        }
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        if (Guid.TryParse(GetUserId(), out var userId))
+        {
+            await _presenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);
+        }
+        await base.OnDisconnectedAsync(exception);
     }
 
     public async Task JoinMatchCall(string matchId)

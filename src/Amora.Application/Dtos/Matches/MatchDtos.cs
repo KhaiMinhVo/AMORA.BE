@@ -28,6 +28,10 @@ public sealed class PartnerPreviewDto
     public string DisplayName { get; init; } = string.Empty;
 
     public string AvatarUrl { get; init; } = string.Empty;
+
+    public bool IsOnline { get; init; }
+
+    public DateTimeOffset? LastActiveAt { get; init; }
 }
 
 public sealed class LastMessagePreviewDto

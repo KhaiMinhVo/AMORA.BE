@@ -52,6 +52,8 @@ public sealed class AppUser
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
+    public DateTimeOffset? LastActiveAt { get; set; }
+
     // ── Economy (Tiền tệ duy nhất) ──────────────────────────────────────
     public int Diamonds { get; set; }
 

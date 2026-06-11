@@ -1,5 +1,6 @@
 using Amora.Application.Abstractions;
 using Amora.Domain.Entities;
+using Amora.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Amora.Api.Infrastructure;
@@ -7,10 +8,12 @@ namespace Amora.Api.Infrastructure;
 public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
 {
     private readonly IHubContext<Hubs.ChatHub> _hubContext;
+    private readonly IMatchConnectionRepository _matchRepository;
 
-    public SignalRRealtimeNotifier(IHubContext<Hubs.ChatHub> hubContext)
+    public SignalRRealtimeNotifier(IHubContext<Hubs.ChatHub> hubContext, IMatchConnectionRepository matchRepository)
     {
         _hubContext = hubContext;
+        _matchRepository = matchRepository;
     }
 
     public async Task NotifyMatchCreatedAsync(MatchConnection matchConnection, CancellationToken cancellationToken = default)
@@ -96,5 +99,23 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
 
         await _hubContext.Clients.Group(RealtimeGroupNames.User(userId.ToString()))
             .SendAsync("ReceiveBanned", payload, cancellationToken);
+    }
+
+    public async Task NotifyUserPresenceChangedAsync(Guid userId, bool isOnline, DateTimeOffset? lastActiveAt = null, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            userId = userId,
+            isOnline = isOnline,
+            lastActiveAt = lastActiveAt
+        };
+
+        // Notify all active matches of this user
+        var activeMatches = await _matchRepository.GetActiveByUserAsync(userId, cancellationToken);
+        foreach (var match in activeMatches)
+        {
+            await _hubContext.Clients.Group(RealtimeGroupNames.Match(match.Id.ToString()))
+                .SendAsync("UserPresenceChanged", payload, cancellationToken);
+        }
     }
 }

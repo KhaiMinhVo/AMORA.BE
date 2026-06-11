@@ -24,6 +24,7 @@ public sealed class MatchService
     private readonly IChatReadStateRepository _readState;
     private readonly NotificationService _notificationService;
     private readonly Microsoft.Extensions.Logging.ILogger<MatchService> _logger;
+    private readonly IUserPresenceTracker _presenceTracker;
 
     public MatchService(
         ICurrentUserService currentUserService,
@@ -37,7 +38,8 @@ public sealed class MatchService
         IPetRepository petRepository,
         IChatReadStateRepository readState,
         NotificationService notificationService,
-        Microsoft.Extensions.Logging.ILogger<MatchService> logger)
+        Microsoft.Extensions.Logging.ILogger<MatchService> logger,
+        IUserPresenceTracker presenceTracker)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -51,6 +53,7 @@ public sealed class MatchService
         _readState = readState;
         _notificationService = notificationService;
         _logger = logger;
+        _presenceTracker = presenceTracker;
     }
 
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
@@ -223,6 +226,9 @@ public sealed class MatchService
         var inboxItems = new List<InboxItemDto>();
         var matchIds = matches.Select(m => m.Id).ToList();
         var unreadMap = await _readState.CountUnreadByMatchesAsync(userId, matchIds, cancellationToken);
+        
+        var partnerIds = matches.Select(m => m.UserAId == userId ? m.UserBId : m.UserAId).Distinct().ToList();
+        var onlineUsersMap = await _presenceTracker.GetOnlineUsersAsync(partnerIds);
 
         foreach (var match in matches)
         {
@@ -248,7 +254,9 @@ public sealed class MatchService
                 {
                     Id = partnerId,
                     DisplayName = isPending ? $"Ẩn danh #{partnerId.ToString()[..4]}" : (partner?.DisplayName ?? $"Ẩn danh #{partnerId.ToString()[..4]}"),
-                    AvatarUrl = isPending ? "default_avatar.png" : (partner?.AvatarUrl ?? "default_avatar.png")
+                    AvatarUrl = isPending ? "default_avatar.png" : (partner?.AvatarUrl ?? "default_avatar.png"),
+                    IsOnline = onlineUsersMap.GetValueOrDefault(partnerId),
+                    LastActiveAt = partner?.LastActiveAt
                 },
                 LastMessage = lastMessage == null
                     ? null

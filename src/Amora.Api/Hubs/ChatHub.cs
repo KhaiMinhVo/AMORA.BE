@@ -2,11 +2,37 @@ using Amora.Api.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
+using Amora.Application.Abstractions;
+
 namespace Amora.Api.Hubs;
 
 [Authorize]
 public sealed class ChatHub : Hub
 {
+    private readonly IUserPresenceTracker _presenceTracker;
+
+    public ChatHub(IUserPresenceTracker presenceTracker)
+    {
+        _presenceTracker = presenceTracker;
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        if (Guid.TryParse(GetUserId(), out var userId))
+        {
+            await _presenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
+        }
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        if (Guid.TryParse(GetUserId(), out var userId))
+        {
+            await _presenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);
+        }
+        await base.OnDisconnectedAsync(exception);
+    }
     public Task JoinMyUserGroup()
     {
         return Groups.AddToGroupAsync(Context.ConnectionId, RealtimeGroupNames.User(GetUserId()));

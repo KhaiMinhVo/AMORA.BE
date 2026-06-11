@@ -13,12 +13,23 @@ public sealed class PetHub : Hub
     private readonly IMediator _mediator;
     private readonly IMatchPresenceTracker _presence;
     private readonly IMatchConnectionRepository _matches;
+    private readonly IUserPresenceTracker _userPresenceTracker;
 
-    public PetHub(IMediator mediator, IMatchPresenceTracker presence, IMatchConnectionRepository matches)
+    public PetHub(IMediator mediator, IMatchPresenceTracker presence, IMatchConnectionRepository matches, IUserPresenceTracker userPresenceTracker)
     {
         _mediator = mediator;
         _presence = presence;
         _matches = matches;
+        _userPresenceTracker = userPresenceTracker;
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        if (Guid.TryParse(GetUserId(), out var userId))
+        {
+            await _userPresenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
+        }
+        await base.OnConnectedAsync();
     }
 
     public Task JoinMyUserGroup()
@@ -46,6 +57,10 @@ public sealed class PetHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        if (Guid.TryParse(GetUserId(), out var userId))
+        {
+            await _userPresenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);
+        }
         // Best-effort cleanup — client nên gọi LeaveMatch trước khi disconnect
         await base.OnDisconnectedAsync(exception);
     }
