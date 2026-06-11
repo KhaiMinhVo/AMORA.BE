@@ -52,6 +52,12 @@ public sealed class ChatReadStateRepository : IChatReadStateRepository
 
     public async Task<int> CountUnreadAsync(Guid userId, Guid matchId, DateTimeOffset? since, CancellationToken cancellationToken = default)
     {
+        // Fix precision mismatch: PostgreSQL truncates 100ns to 1us, causing the exact same message to be > since
+        if (since.HasValue && since.Value > DateTimeOffset.MinValue)
+        {
+            since = since.Value.AddMilliseconds(1);
+        }
+
         var filter = Builders<ChatMessageDocument>.Filter.And(
             Builders<ChatMessageDocument>.Filter.Eq(x => x.MatchId, matchId),
             Builders<ChatMessageDocument>.Filter.Gt(x => x.CreatedAt, since),
