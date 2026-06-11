@@ -192,7 +192,8 @@ public sealed class VoicePostService
                 AudioUrl = post.AudioUrl,
                 MatchCount = post.MatchCount,
                 Status = post.Status.ToString(),
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
+                IsBoosted = post.IsBoosted
             });
         }
 
@@ -227,7 +228,8 @@ public sealed class VoicePostService
                 AudioUrl = post.AudioUrl,
                 MatchCount = post.MatchCount,
                 Status = post.Status.ToString(),
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
+                IsBoosted = post.IsBoosted
             });
         }
 

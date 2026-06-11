@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Amora.Domain.Enums;
 
 namespace Amora.Domain.Entities;
@@ -21,6 +22,8 @@ public sealed class VoicePost
     /// <summary>Dữ liệu Pet được Python Worker ghi vào sau khi xử lý xong.</summary>
     public PetVibeData? PetVibeData { get; set; }
 
-    /// <summary>So luong match toi da cho bai post nay. Mac dinh la 3 (Free), 5 (Premium), 8 (Gold).</summary>
     public int MaxMatchSlots { get; set; } = 3;
+
+    [NotMapped]
+    public bool IsBoosted { get; set; }
 }

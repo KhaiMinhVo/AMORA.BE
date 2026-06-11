@@ -35,13 +35,20 @@ public sealed class VoicePostRepository : IVoicePostRepository
             .Where(b => b.BlockerId == viewerId)
             .Select(b => b.BlockedUserId);
 
+        var now = DateTimeOffset.UtcNow;
         var query = _dbContext.VoicePosts
             .AsNoTracking()
             .Where(x => x.Status == Amora.Domain.Enums.VoicePostStatus.Open
                          && x.PosterId != viewerId
                          && !blockedUserIds.Contains(x.PosterId)) // Ẩn post từ user bị block
-            .OrderByDescending(x => x.CreatedAt)
-            .ThenByDescending(x => x.Id);
+            .Select(x => new
+            {
+                Post = x,
+                IsBoosted = _dbContext.PostBoostRecords.Any(b => b.PostId == x.Id && b.ExpiresAt > now)
+            })
+            .OrderByDescending(x => x.IsBoosted)
+            .ThenByDescending(x => x.Post.CreatedAt)
+            .ThenByDescending(x => x.Post.Id);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
@@ -49,7 +56,13 @@ public sealed class VoicePostRepository : IVoicePostRepository
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return (items, totalCount);
+        var posts = items.Select(x =>
+        {
+            x.Post.IsBoosted = x.IsBoosted;
+            return x.Post;
+        }).ToList();
+
+        return (posts, totalCount);
     }
 
     public async Task<(IReadOnlyList<VoicePost> Items, int TotalCount)> GetMyPostsPageAsync(
@@ -58,11 +71,18 @@ public sealed class VoicePostRepository : IVoicePostRepository
         int pageSize,
         CancellationToken cancellationToken = default)
     {
+        var now = DateTimeOffset.UtcNow;
         var query = _dbContext.VoicePosts
             .AsNoTracking()
             .Where(x => x.PosterId == posterId)
-            .OrderByDescending(x => x.CreatedAt)
-            .ThenByDescending(x => x.Id);
+            .Select(x => new
+            {
+                Post = x,
+                IsBoosted = _dbContext.PostBoostRecords.Any(b => b.PostId == x.Id && b.ExpiresAt > now)
+            })
+            .OrderByDescending(x => x.IsBoosted)
+            .ThenByDescending(x => x.Post.CreatedAt)
+            .ThenByDescending(x => x.Post.Id);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
@@ -70,7 +90,13 @@ public sealed class VoicePostRepository : IVoicePostRepository
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return (items, totalCount);
+        var posts = items.Select(x =>
+        {
+            x.Post.IsBoosted = x.IsBoosted;
+            return x.Post;
+        }).ToList();
+
+        return (posts, totalCount);
     }
 
     public async Task AddAsync(VoicePost post, CancellationToken cancellationToken = default)

@@ -22,6 +22,8 @@ public sealed class FeedPostItemDto
     public string Status { get; init; } = string.Empty;
 
     public DateTimeOffset CreatedAt { get; init; }
+
+    public bool IsBoosted { get; init; }
 }
 
 public sealed class FeedResponseDto
