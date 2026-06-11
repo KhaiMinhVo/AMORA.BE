@@ -33,8 +33,18 @@ public sealed class InMemoryUserPresenceTracker : IUserPresenceTracker
         {
             // The user just came online
             using var scope = _scopeFactory.CreateScope();
+            
+            // Clear LastActiveAt in database
+            var dbContext = scope.ServiceProvider.GetRequiredService<Amora.Infrastructure.Data.AmoraDbContext>();
+            var user = await dbContext.Users.FindAsync(new object[] { userId });
+            if (user != null)
+            {
+                user.LastActiveAt = null;
+                await dbContext.SaveChangesAsync();
+            }
+
             var realtimeNotifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
-            await realtimeNotifier.NotifyUserPresenceChangedAsync(userId, isOnline: true);
+            await realtimeNotifier.NotifyUserPresenceChangedAsync(userId, isOnline: true, lastActiveAt: null);
         }
     }
 

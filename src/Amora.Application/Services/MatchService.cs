@@ -256,7 +256,7 @@ public sealed class MatchService
                     DisplayName = isPending ? $"Ẩn danh #{partnerId.ToString()[..4]}" : (partner?.DisplayName ?? $"Ẩn danh #{partnerId.ToString()[..4]}"),
                     AvatarUrl = isPending ? "default_avatar.png" : (partner?.AvatarUrl ?? "default_avatar.png"),
                     IsOnline = onlineUsersMap.GetValueOrDefault(partnerId),
-                    LastActiveAt = partner?.LastActiveAt
+                    LastActiveAt = onlineUsersMap.GetValueOrDefault(partnerId) ? null : partner?.LastActiveAt
                 },
                 LastMessage = lastMessage == null
                     ? null
