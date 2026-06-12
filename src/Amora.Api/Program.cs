@@ -54,7 +54,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigins", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://amora-fe.vercel.app", "https://amora.pro.vn")
+        policy.WithOrigins("http://localhost:5173", "https://amora-fe.vercel.app", "https://amora.pro.vn", "https://www.amora.pro.vn")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
