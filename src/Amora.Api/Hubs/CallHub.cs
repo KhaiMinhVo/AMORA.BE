@@ -14,16 +14,23 @@ public sealed class CallHub : Hub
     private readonly IMatchConnectionRepository _matches;
     private readonly PetFeatureGateService _featureGate;
     private readonly IUserPresenceTracker _presenceTracker;
+    private readonly ILogger<CallHub> _logger;
 
-    public CallHub(IMatchConnectionRepository matches, PetFeatureGateService featureGate, IUserPresenceTracker presenceTracker)
+    public CallHub(IMatchConnectionRepository matches, PetFeatureGateService featureGate, IUserPresenceTracker presenceTracker, ILogger<CallHub> logger)
     {
         _matches = matches;
         _featureGate = featureGate;
         _presenceTracker = presenceTracker;
+        _logger = logger;
     }
 
     public override async Task OnConnectedAsync()
     {
+        _logger.LogInformation(
+            "CallHub connected: UserId={UserId}, ConnectionId={ConnectionId}",
+            Context.UserIdentifier,
+            Context.ConnectionId);
+
         if (Guid.TryParse(GetUserId(), out var userId))
         {
             await _presenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
@@ -33,6 +40,12 @@ public sealed class CallHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        _logger.LogInformation(
+            exception,
+            "CallHub disconnected: UserId={UserId}, ConnectionId={ConnectionId}",
+            Context.UserIdentifier,
+            Context.ConnectionId);
+
         if (Guid.TryParse(GetUserId(), out var userId))
         {
             await _presenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);

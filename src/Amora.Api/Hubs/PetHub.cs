@@ -14,17 +14,29 @@ public sealed class PetHub : Hub
     private readonly IMatchPresenceTracker _presence;
     private readonly IMatchConnectionRepository _matches;
     private readonly IUserPresenceTracker _userPresenceTracker;
+    private readonly ILogger<PetHub> _logger;
 
-    public PetHub(IMediator mediator, IMatchPresenceTracker presence, IMatchConnectionRepository matches, IUserPresenceTracker userPresenceTracker)
+    public PetHub(
+        IMediator mediator, 
+        IMatchPresenceTracker presence, 
+        IMatchConnectionRepository matches, 
+        IUserPresenceTracker userPresenceTracker,
+        ILogger<PetHub> logger)
     {
         _mediator = mediator;
         _presence = presence;
         _matches = matches;
         _userPresenceTracker = userPresenceTracker;
+        _logger = logger;
     }
 
     public override async Task OnConnectedAsync()
     {
+        _logger.LogInformation(
+            "PetHub connected: UserId={UserId}, ConnectionId={ConnectionId}",
+            Context.UserIdentifier,
+            Context.ConnectionId);
+
         if (Guid.TryParse(GetUserId(), out var userId))
         {
             await _userPresenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
@@ -57,6 +69,12 @@ public sealed class PetHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        _logger.LogInformation(
+            exception,
+            "PetHub disconnected: UserId={UserId}, ConnectionId={ConnectionId}",
+            Context.UserIdentifier,
+            Context.ConnectionId);
+
         if (Guid.TryParse(GetUserId(), out var userId))
         {
             await _userPresenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);

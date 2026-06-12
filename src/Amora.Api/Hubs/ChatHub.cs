@@ -10,14 +10,21 @@ namespace Amora.Api.Hubs;
 public sealed class ChatHub : Hub
 {
     private readonly IUserPresenceTracker _presenceTracker;
+    private readonly ILogger<ChatHub> _logger;
 
-    public ChatHub(IUserPresenceTracker presenceTracker)
+    public ChatHub(IUserPresenceTracker presenceTracker, ILogger<ChatHub> logger)
     {
         _presenceTracker = presenceTracker;
+        _logger = logger;
     }
 
     public override async Task OnConnectedAsync()
     {
+        _logger.LogInformation(
+            "ChatHub connected: UserId={UserId}, ConnectionId={ConnectionId}",
+            Context.UserIdentifier,
+            Context.ConnectionId);
+
         if (Guid.TryParse(GetUserId(), out var userId))
         {
             await _presenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
@@ -27,6 +34,12 @@ public sealed class ChatHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        _logger.LogInformation(
+            exception,
+            "ChatHub disconnected: UserId={UserId}, ConnectionId={ConnectionId}",
+            Context.UserIdentifier,
+            Context.ConnectionId);
+
         if (Guid.TryParse(GetUserId(), out var userId))
         {
             await _presenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);
