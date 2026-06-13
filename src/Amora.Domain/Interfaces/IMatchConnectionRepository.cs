@@ -25,8 +25,8 @@ public interface IMatchConnectionRepository
     /// <summary>Handshake 24h: đánh dấu các match đã hết hạn.</summary>
     Task<int> ExpireMatchesAsync(IReadOnlyList<Guid> matchIds, CancellationToken cancellationToken = default);
 
-    /// <summary>Handshake 24h: gia hạn thêm 24h khi có tin nhắn mới.</summary>
-    Task ExtendHandshakeAsync(Guid matchId, CancellationToken cancellationToken = default);
+    /// <summary>Handshake 24h: gỡ bỏ thời hạn khi có tin nhắn đầu tiên, giúp Match trở thành vĩnh viễn.</summary>
+    Task CompleteHandshakeAsync(Guid matchId, CancellationToken cancellationToken = default);
 
     Task<bool> UnmatchAsync(Guid matchId, Guid userId, CancellationToken cancellationToken = default);
 

@@ -138,14 +138,12 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
                 cancellationToken);
     }
 
-    public async Task ExtendHandshakeAsync(Guid matchId, CancellationToken cancellationToken = default)
+    public async Task CompleteHandshakeAsync(Guid matchId, CancellationToken cancellationToken = default)
     {
-        var newExpiry = DateTimeOffset.UtcNow.AddHours(24);
-
         await _dbContext.MatchConnections
-            .Where(x => x.Id == matchId && x.Status == MatchStatus.Active)
+            .Where(x => x.Id == matchId && x.Status == MatchStatus.Active && x.ExpiresAt != null)
             .ExecuteUpdateAsync(
-                setter => setter.SetProperty(x => x.ExpiresAt, newExpiry),
+                setter => setter.SetProperty(x => x.ExpiresAt, (DateTimeOffset?)null),
                 cancellationToken);
     }
 

@@ -142,9 +142,9 @@ public sealed class ChatService
             await _mediator.Send(new ProcessTextMessagePetCommand(matchId, _currentUserService.UserId), cancellationToken);
         }
 
-        // Handshake 24h: gia hạn thêm 24h mỗi khi có tin nhắn (trước khi push realtime)
-        await _matchConnectionRepository.ExtendHandshakeAsync(matchId, cancellationToken);
-        var expiresAt = DateTimeOffset.UtcNow.AddHours(24);
+        // Handshake 24h: Gỡ bỏ thời hạn khi có tin nhắn đầu tiên, giúp Match trở thành vĩnh viễn.
+        await _matchConnectionRepository.CompleteHandshakeAsync(matchId, cancellationToken);
+        DateTimeOffset? expiresAt = null;
         
         var partnerId = match.UserAId == _currentUserService.UserId ? match.UserBId : match.UserAId;
         var partnerState = await _readState.GetAsync(partnerId, matchId, cancellationToken);
