@@ -72,7 +72,7 @@ public sealed class CallHub : Hub
         var normalizedType = NormalizeCallType(callType);
         var now = DateTimeOffset.UtcNow;
 
-        await _matches.ExtendHandshakeAsync(matchGuid, Context.ConnectionAborted);
+        await _matches.CompleteHandshakeAsync(matchGuid, Context.ConnectionAborted);
 
         var payload = new
         {

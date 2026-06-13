@@ -141,9 +141,9 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
     public async Task CompleteHandshakeAsync(Guid matchId, CancellationToken cancellationToken = default)
     {
         await _dbContext.MatchConnections
-            .Where(x => x.Id == matchId && x.Status == MatchStatus.Active && x.ExpiresAt != null)
+            .Where(x => x.Id == matchId && x.Status == MatchStatus.Active && x.ExpiresAt != DateTimeOffset.MaxValue)
             .ExecuteUpdateAsync(
-                setter => setter.SetProperty(x => x.ExpiresAt, (DateTimeOffset?)null),
+                setter => setter.SetProperty(x => x.ExpiresAt, DateTimeOffset.MaxValue),
                 cancellationToken);
     }
 

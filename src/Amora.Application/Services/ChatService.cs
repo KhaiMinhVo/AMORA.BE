@@ -144,7 +144,7 @@ public sealed class ChatService
 
         // Handshake 24h: Gỡ bỏ thời hạn khi có tin nhắn đầu tiên, giúp Match trở thành vĩnh viễn.
         await _matchConnectionRepository.CompleteHandshakeAsync(matchId, cancellationToken);
-        DateTimeOffset? expiresAt = null;
+        var expiresAt = DateTimeOffset.MaxValue;
         
         var partnerId = match.UserAId == _currentUserService.UserId ? match.UserBId : match.UserAId;
         var partnerState = await _readState.GetAsync(partnerId, matchId, cancellationToken);
