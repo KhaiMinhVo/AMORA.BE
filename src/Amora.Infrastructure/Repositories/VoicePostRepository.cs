@@ -30,6 +30,9 @@ public sealed class VoicePostRepository : IVoicePostRepository
         int pageSize,
         CancellationToken cancellationToken = default)
     {
+        var viewer = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == viewerId, cancellationToken);
+        if (viewer == null) return (Array.Empty<VoicePost>(), 0);
+
         // Lấy danh sách user bị block (subquery trong DB, không load vào RAM)
         var blockedUserIds = _dbContext.UserBlocks
             .Where(b => b.BlockerId == viewerId)
@@ -38,13 +41,25 @@ public sealed class VoicePostRepository : IVoicePostRepository
         var now = DateTimeOffset.UtcNow;
         var query = _dbContext.VoicePosts
             .AsNoTracking()
-            .Where(x => x.Status == Amora.Domain.Enums.VoicePostStatus.Open
-                         && x.PosterId != viewerId
-                         && !blockedUserIds.Contains(x.PosterId)) // Ẩn post từ user bị block
+            .Join(_dbContext.Users, p => p.PosterId, u => u.Id, (p, u) => new { Post = p, Poster = u })
+            .Where(x => x.Post.Status == Amora.Domain.Enums.VoicePostStatus.Open
+                         && x.Post.PosterId != viewerId
+                         && !blockedUserIds.Contains(x.Post.PosterId)) // Ẩn post từ user bị block
+            .Where(x => 
+                 // Viewer's TargetGender matches Poster's Gender
+                 (viewer.TargetGender == Amora.Domain.Enums.TargetGender.Both || 
+                 (viewer.TargetGender == Amora.Domain.Enums.TargetGender.Male && x.Poster.Gender == Amora.Domain.Enums.Gender.Male) ||
+                 (viewer.TargetGender == Amora.Domain.Enums.TargetGender.Female && x.Poster.Gender == Amora.Domain.Enums.Gender.Female))
+                 &&
+                 // Poster's TargetGender matches Viewer's Gender
+                 (x.Poster.TargetGender == Amora.Domain.Enums.TargetGender.Both ||
+                 (x.Poster.TargetGender == Amora.Domain.Enums.TargetGender.Male && viewer.Gender == Amora.Domain.Enums.Gender.Male) ||
+                 (x.Poster.TargetGender == Amora.Domain.Enums.TargetGender.Female && viewer.Gender == Amora.Domain.Enums.Gender.Female))
+            )
             .Select(x => new
             {
-                Post = x,
-                IsBoosted = _dbContext.PostBoostRecords.Any(b => b.PostId == x.Id && b.ExpiresAt > now)
+                Post = x.Post,
+                IsBoosted = _dbContext.PostBoostRecords.Any(b => b.PostId == x.Post.Id && b.ExpiresAt > now)
             })
             .OrderByDescending(x => x.IsBoosted)
             .ThenByDescending(x => x.Post.CreatedAt)
