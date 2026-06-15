@@ -19,6 +19,7 @@ public sealed class AuthService
     private readonly IMemoryCache _memoryCache;
     private readonly IConfiguration _configuration;
     private readonly IUserBanRepository _userBanRepository;
+    private readonly AdminNotificationService _adminNotificationService;
 
     public AuthService(
         IUserRepository users, 
@@ -27,7 +28,8 @@ public sealed class AuthService
         IEmailService emailService,
         IMemoryCache memoryCache,
         IConfiguration configuration,
-        IUserBanRepository userBanRepository)
+        IUserBanRepository userBanRepository,
+        AdminNotificationService adminNotificationService)
     {
         _users = users;
         _jwt = jwt;
@@ -36,6 +38,7 @@ public sealed class AuthService
         _memoryCache = memoryCache;
         _configuration = configuration;
         _userBanRepository = userBanRepository;
+        _adminNotificationService = adminNotificationService;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
@@ -257,6 +260,8 @@ public sealed class AuthService
         activeBan.AppealStatus = Amora.Domain.Enums.AppealStatus.Pending;
         activeBan.AppealReason = request.AppealReason.Trim();
         await _userBanRepository.UpdateAsync(activeBan, cancellationToken);
+        
+        await _adminNotificationService.NotifyNewAppealAsync(user.Id, activeBan.AppealReason, cancellationToken);
     }
 
     private AuthResponseDto BuildResponse(AppUser user)

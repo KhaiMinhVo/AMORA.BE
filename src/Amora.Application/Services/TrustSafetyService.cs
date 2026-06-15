@@ -17,6 +17,7 @@ public sealed class TrustSafetyService
     private readonly AdminModerationService _adminModerationService;
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IVoiceCommentRepository _voiceCommentRepository;
+    private readonly AdminNotificationService _adminNotificationService;
 
     public TrustSafetyService(
         ICurrentUserService currentUserService,
@@ -26,7 +27,8 @@ public sealed class TrustSafetyService
         AiModerationService aiModerationService,
         AdminModerationService adminModerationService,
         IVoicePostRepository voicePostRepository,
-        IVoiceCommentRepository voiceCommentRepository)
+        IVoiceCommentRepository voiceCommentRepository,
+        AdminNotificationService adminNotificationService)
     {
         _currentUserService = currentUserService;
         _reportRepository = reportRepository;
@@ -36,6 +38,7 @@ public sealed class TrustSafetyService
         _adminModerationService = adminModerationService;
         _voicePostRepository = voicePostRepository;
         _voiceCommentRepository = voiceCommentRepository;
+        _adminNotificationService = adminNotificationService;
     }
 
     // ── Report ──────────────────────────────────────────────────────────────
@@ -73,6 +76,9 @@ public sealed class TrustSafetyService
         };
 
         await _reportRepository.AddAsync(report, cancellationToken);
+        
+        string targetType = request.TargetPostId.HasValue ? "VoicePost" : (request.TargetCommentId.HasValue ? "VoiceComment" : "User");
+        await _adminNotificationService.NotifyNewReportAsync(reporterId, targetUserId, targetType, request.Reason, cancellationToken);
 
         // -- AI Auto Evaluation --
         string reportedContent = "";

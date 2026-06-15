@@ -92,6 +92,7 @@ public sealed class VoiceCommentService
             var commentRepo = scope.ServiceProvider.GetRequiredService<IVoiceCommentRepository>();
             var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
             var userBanRepo = scope.ServiceProvider.GetRequiredService<IUserBanRepository>();
+            var adminNotifier = scope.ServiceProvider.GetRequiredService<AdminNotificationService>();
 
             var text = await aiModeration.TranscribeAudioAsync(request.AudioUrl);
             if (!string.IsNullOrWhiteSpace(text))
@@ -124,6 +125,8 @@ public sealed class VoiceCommentService
 
                         await userRepo.UpdateAsync(u);
                         await userBanRepo.AddAsync(ban);
+                        
+                        await adminNotifier.NotifyAutoBlockedContentAsync("Voice Comment", "Chứa nội dung vi phạm/toxic.", userId);
                     }
                 }
             }

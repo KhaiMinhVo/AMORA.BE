@@ -18,6 +18,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<AppUser> Users => Set<AppUser>();
 
+    public DbSet<AdminNotification> AdminNotifications => Set<AdminNotification>();
+
     public DbSet<VoicePost> VoicePosts => Set<VoicePost>();
 
     public DbSet<VoiceComment> VoiceComments => Set<VoiceComment>();
@@ -336,6 +338,18 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.EventType).HasMaxLength(50);
             entity.Property(x => x.TransactionId).HasMaxLength(200);
             entity.Property(x => x.RawPayload).HasMaxLength(4000);
+        });
+
+        modelBuilder.Entity<AdminNotification>(entity =>
+        {
+            entity.ToTable("AdminNotifications");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Type).HasConversion<string>().HasMaxLength(30);
+            entity.Property(x => x.Title).HasMaxLength(255).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.ActionUrl).HasMaxLength(500);
+            entity.HasIndex(x => x.IsRead);
+            entity.HasIndex(x => x.CreatedAt);
         });
 
         modelBuilder.Entity<Notification>(entity =>

@@ -11,19 +11,22 @@ public sealed class IapWebhookService
     private readonly IPetTransactionRepository _transactionRepository;
     private readonly IIapWebhookEventRepository _webhookEventRepository;
     private readonly ILogger<IapWebhookService> _logger;
+    private readonly Services.AdminNotificationService _adminNotificationService;
 
     public IapWebhookService(
         IIapPurchaseRepository iapRepository,
         IUserRepository userRepository,
         IPetTransactionRepository transactionRepository,
         IIapWebhookEventRepository webhookEventRepository,
-        ILogger<IapWebhookService> logger)
+        ILogger<IapWebhookService> logger,
+        Services.AdminNotificationService adminNotificationService)
     {
         _iapRepository = iapRepository;
         _userRepository = userRepository;
         _transactionRepository = transactionRepository;
         _webhookEventRepository = webhookEventRepository;
         _logger = logger;
+        _adminNotificationService = adminNotificationService;
     }
 
     /// <summary>
@@ -109,6 +112,11 @@ public sealed class IapWebhookService
 
         _logger.LogInformation("Refund processed for {Platform}:{TransactionId}. Deducted {Delta} gems from user {UserId}.",
             platform, transactionId, refundable, user.Id);
+            
+        await _adminNotificationService.NotifySystemAlertAsync(
+            "Có giao dịch bị Refund/Thu hồi", 
+            $"Hệ thống đã thu hồi {delta} Kim cương từ người dùng {user.Id.ToString()[..8]} do refund giao dịch {transactionId}.", 
+            cancellationToken);
 
         return true;
     }
@@ -122,6 +130,12 @@ public sealed class IapWebhookService
             // the initial purchase was processed on a different instance or
             // the client-side verify was skipped. Log and return.
             _logger.LogWarning("Renewal webhook received for unknown transaction {Platform}:{TransactionId}.", platform, transactionId);
+            
+            await _adminNotificationService.NotifySystemAlertAsync(
+                "Lỗi giao dịch Webhook (Không tìm thấy)", 
+                $"Nhận được webhook Renewal cho giao dịch {platform}:{transactionId} nhưng không có trong CSDL.", 
+                cancellationToken);
+            
             return;
         }
 

@@ -97,6 +97,7 @@ builder.Services.AddScoped<IMatchMediaUsageRepository, MatchMediaUsageRepository
 builder.Services.AddScoped<IIapWebhookEventRepository, IapWebhookEventRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IPostBoostRecordRepository, PostBoostRecordRepository>();
+builder.Services.AddScoped<IAdminNotificationRepository, AdminNotificationRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<Amora.Application.Payment.VnPayConfig>(builder.Configuration.GetSection("VnPay"));
@@ -120,6 +121,7 @@ builder.Services.AddAmoraQuartzJobs();
 builder.Services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
 builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
 builder.Services.AddScoped<IPetRealtimeNotifier, SignalRPetRealtimeNotifier>();
+builder.Services.AddScoped<IAdminNotifier, AdminNotifier>();
 builder.Services.AddScoped<Amora.Application.Payment.PayOs.PayOsService>();
 builder.Services.AddScoped<VoicePostService>();
 builder.Services.AddScoped<VoiceCommentService>();
@@ -129,6 +131,7 @@ builder.Services.AddScoped<TrustSafetyService>();
 builder.Services.AddScoped<AdminModerationService>();
 builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<AdminNotificationService>();
 
 var awsOptions = builder.Configuration.GetAWSOptions();
 var awsServiceUrl = builder.Configuration["AWS:ServiceURL"];
@@ -331,5 +334,6 @@ app.MapControllers().RequireAuthorization();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<PetHub>("/hubs/pet");
 app.MapHub<CallHub>("/hubs/call");
+app.MapHub<AdminHub>("/hubs/admin");
 
 app.Run();
