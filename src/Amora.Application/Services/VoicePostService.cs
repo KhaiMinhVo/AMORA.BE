@@ -186,8 +186,8 @@ public sealed class VoicePostService
                 Poster = new PosterPreviewDto
                 {
                     Id = post.PosterId,
-                    DisplayName = poster?.DisplayName ?? $"Ẩn danh #{post.PosterId.ToString()[..4]}",
-                    AvatarUrl = "anonymous.png"
+                    DisplayName = poster?.DisplayName ?? $"User #{post.PosterId.ToString()[..4]}",
+                    AvatarUrl = poster?.AvatarUrl ?? "default_avatar.png"
                 },
                 AudioUrl = post.AudioUrl,
                 MatchCount = post.MatchCount,
@@ -222,8 +222,8 @@ public sealed class VoicePostService
                 Poster = new PosterPreviewDto
                 {
                     Id = post.PosterId,
-                    DisplayName = poster?.DisplayName ?? $"Ẩn danh #{post.PosterId.ToString()[..4]}",
-                    AvatarUrl = "anonymous.png"
+                    DisplayName = poster?.DisplayName ?? $"User #{post.PosterId.ToString()[..4]}",
+                    AvatarUrl = poster?.AvatarUrl ?? "default_avatar.png"
                 },
                 AudioUrl = post.AudioUrl,
                 MatchCount = post.MatchCount,

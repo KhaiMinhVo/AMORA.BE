@@ -253,8 +253,8 @@ public sealed class MatchService
                 Partner = new PartnerPreviewDto
                 {
                     Id = partnerId,
-                    DisplayName = isPending ? $"Ẩn danh #{partnerId.ToString()[..4]}" : (partner?.DisplayName ?? $"Ẩn danh #{partnerId.ToString()[..4]}"),
-                    AvatarUrl = isPending ? "default_avatar.png" : (partner?.AvatarUrl ?? "default_avatar.png"),
+                    DisplayName = partner?.DisplayName ?? $"User #{partnerId.ToString()[..4]}",
+                    AvatarUrl = partner?.AvatarUrl ?? "default_avatar.png",
                     IsOnline = onlineUsersMap.GetValueOrDefault(partnerId),
                     LastActiveAt = onlineUsersMap.GetValueOrDefault(partnerId) ? null : partner?.LastActiveAt
                 },

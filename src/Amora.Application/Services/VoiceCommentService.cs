@@ -13,6 +13,7 @@ public sealed class VoiceCommentService
     private readonly ICurrentUserService _currentUserService;
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IVoiceCommentRepository _voiceCommentRepository;
+    private readonly IUserRepository _userRepository;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
     private readonly NotificationService _notificationService;
 
@@ -20,12 +21,14 @@ public sealed class VoiceCommentService
         ICurrentUserService currentUserService,
         IVoicePostRepository voicePostRepository,
         IVoiceCommentRepository voiceCommentRepository,
+        IUserRepository userRepository,
         Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
         NotificationService notificationService)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
         _voiceCommentRepository = voiceCommentRepository;
+        _userRepository = userRepository;
         _scopeFactory = scopeFactory;
         _notificationService = notificationService;
     }
@@ -75,7 +78,7 @@ public sealed class VoiceCommentService
                 post.PosterId,
                 NotificationType.VoiceFeed,
                 "Có người vừa phản hồi bài đăng của bạn!",
-                "Một giọng nói ẩn danh vừa để lại lời nhắn cho Voice Post của bạn.",
+                "Một người dùng vừa để lại lời nhắn cho Voice Post của bạn.",
                 $"{{\"postId\": \"{post.Id}\"}}",
                 cancellationToken
             );
@@ -142,24 +145,32 @@ public sealed class VoiceCommentService
         // Đã gỡ bỏ check: Mọi người đều có thể xem danh sách comment của bài post này (giống Facebook)
 
         var (items, totalCount) = await _voiceCommentRepository.GetPagedByPostIdAsync(postId, page, pageSize, cancellationToken);
+        var resultItems = new List<VoiceCommentItemDto>();
 
-        return new VoiceCommentListResponseDto
+        foreach (var comment in items)
         {
-            TotalCount = totalCount,
-            Items = items.Select(comment => new VoiceCommentItemDto
+            var commenter = await _userRepository.GetByIdAsync(comment.CommenterId, cancellationToken);
+            
+            resultItems.Add(new VoiceCommentItemDto
             {
                 CommentId = comment.Id,
                 Commenter = new CommenterPreviewDto
                 {
                     Id = comment.CommenterId,
-                    DisplayName = $"Ẩn danh #{comment.CommenterId.ToString()[..4]}",
-                    AvatarUrl = "default_blur.png"
+                    DisplayName = commenter?.DisplayName ?? $"User #{comment.CommenterId.ToString()[..4]}",
+                    AvatarUrl = commenter?.AvatarUrl ?? "default_avatar.png"
                 },
                 AudioUrl = comment.AudioUrl,
                 Duration = comment.Duration,
                 Status = comment.Status.ToString(),
                 CreatedAt = comment.CreatedAt
-            }).ToList()
+            });
+        }
+
+        return new VoiceCommentListResponseDto
+        {
+            TotalCount = totalCount,
+            Items = resultItems
         };
     }
 
