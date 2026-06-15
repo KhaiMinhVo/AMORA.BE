@@ -61,11 +61,8 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
         comment.Status = VoiceCommentStatus.Accepted;
         post.MatchCount += 1;
 
-        var postClosed = post.MatchCount >= 3;
-        if (postClosed)
-        {
-            post.Status = VoicePostStatus.Closed;
-        }
+        // Bỏ logic tự động đóng post (post.Status = VoicePostStatus.Closed) 
+        // để bài post luôn hiển thị trên Feed cho mọi người tiếp tục comment.
 
         var matchConnection = new MatchConnection
         {
@@ -85,7 +82,7 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return (matchConnection, postClosed);
+        return (matchConnection, false);
     }
 
     public async Task<IReadOnlyList<MatchConnection>> GetActiveByUserAsync(Guid userId, CancellationToken cancellationToken = default)

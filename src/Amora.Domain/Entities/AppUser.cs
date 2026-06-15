@@ -35,6 +35,8 @@ public sealed class AppUser
 
     public Gender Gender { get; set; } = Gender.PreferNotToSay;
 
+    public TargetGender TargetGender { get; set; } = TargetGender.Both;
+
     /// <summary>Thành phố / khu vực.</summary>
     public string? City { get; set; }
 

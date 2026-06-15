@@ -7,6 +7,7 @@ public sealed class UpdateProfileRequest
     public string[]? Photos { get; set; }
     public string? DateOfBirth { get; set; }  // Format: "yyyy-MM-dd"
     public string? Gender { get; set; }       // "Male", "Female", "NonBinary", "Other", "PreferNotToSay"
+    public string? TargetGender { get; set; } // "Male", "Female", "Both"
     public string? City { get; set; }
     public string? Bio { get; set; }
     public string? VoiceIntroUrl { get; set; }
@@ -21,6 +22,7 @@ public sealed class ProfileResponseDto
     public string[] Photos { get; init; } = [];
     public string? DateOfBirth { get; init; }
     public string Gender { get; init; } = string.Empty;
+    public string TargetGender { get; init; } = string.Empty;
     public string? City { get; init; }
     public string? Bio { get; init; }
     public string? VoiceIntroUrl { get; init; }

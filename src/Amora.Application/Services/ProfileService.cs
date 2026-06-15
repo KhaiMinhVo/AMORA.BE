@@ -96,6 +96,13 @@ public sealed class ProfileService
             user.Gender = gender;
         }
 
+        if (!string.IsNullOrWhiteSpace(request.TargetGender))
+        {
+            if (!Enum.TryParse<TargetGender>(request.TargetGender, ignoreCase: true, out var targetGender))
+                throw new ValidationApiException($"Invalid target gender. Valid values: {string.Join(", ", Enum.GetNames<TargetGender>())}");
+            user.TargetGender = targetGender;
+        }
+
         if (request.City is not null)
             user.City = request.City.Trim();
 
@@ -132,6 +139,7 @@ public sealed class ProfileService
         Photos = user.Photos,
         DateOfBirth = user.DateOfBirth?.ToString("yyyy-MM-dd"),
         Gender = user.Gender.ToString(),
+        TargetGender = user.TargetGender.ToString(),
         City = user.City,
         Bio = user.Bio,
         VoiceIntroUrl = user.VoiceIntroUrl,
