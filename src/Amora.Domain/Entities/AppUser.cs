@@ -46,6 +46,9 @@ public sealed class AppUser
     /// <summary>File âm thanh giới thiệu bản thân.</summary>
     public string? VoiceIntroUrl { get; set; }
 
+    /// <summary>Thời lượng của file âm thanh giới thiệu (tính bằng giây).</summary>
+    public int? VoiceIntroDuration { get; set; }
+
     /// <summary>Danh sách sở thích, phân tách bởi dấu phẩy. Ví dụ: "Nhạc,Phim,Du lịch"</summary>
     public string? Interests { get; set; }
 

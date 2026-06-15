@@ -57,6 +57,7 @@ public sealed class ProfileService
             City = target.City,
             Bio = target.Bio,
             VoiceIntroUrl = target.VoiceIntroUrl,
+            VoiceIntroDuration = target.VoiceIntroDuration,
             Interests = ParseInterests(target.Interests)
         };
     }
@@ -117,7 +118,10 @@ public sealed class ProfileService
             user.Interests = string.Join(",", request.Interests.Select(i => i.Trim()).Where(i => i.Length > 0));
 
         if (request.VoiceIntroUrl is not null)
-            user.VoiceIntroUrl = request.VoiceIntroUrl.Trim();
+            user.VoiceIntroUrl = string.IsNullOrWhiteSpace(request.VoiceIntroUrl) ? null : request.VoiceIntroUrl.Trim();
+
+        if (request.VoiceIntroDuration.HasValue)
+            user.VoiceIntroDuration = request.VoiceIntroDuration.Value;
 
         // Kiểm tra đã đủ thông tin chưa: có avatar, có DOB, có giới tính, và có ít nhất 2 ảnh.
         user.IsProfileComplete = !string.IsNullOrWhiteSpace(user.DisplayName)
@@ -143,6 +147,7 @@ public sealed class ProfileService
         City = user.City,
         Bio = user.Bio,
         VoiceIntroUrl = user.VoiceIntroUrl,
+        VoiceIntroDuration = user.VoiceIntroDuration,
         Interests = ParseInterests(user.Interests),
         IsProfileComplete = user.IsProfileComplete,
         CreatedAt = user.CreatedAt,
