@@ -194,11 +194,11 @@ public sealed class PetCoordinator
 
         if (oldStage == GrowthStage.ResonanceSeed && pet.Stage >= GrowthStage.Sprout && pet.Type == PetType.None)
         {
-            pet.Type = await EvaluateInitiativeBalanceAsync(pet.MatchId, cancellationToken);
+            pet.Type = await EvaluateChronotypeAsync(pet.MatchId, cancellationToken);
         }
     }
 
-    private async Task<PetType> EvaluateInitiativeBalanceAsync(Guid matchId, CancellationToken cancellationToken)
+    private async Task<PetType> EvaluateChronotypeAsync(Guid matchId, CancellationToken cancellationToken)
     {
         var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
         if (match == null) return PetType.Dog;
@@ -208,42 +208,44 @@ public sealed class PetCoordinator
         
         if (messages.Count == 0) return PetType.Dog;
 
-        int countA = 0, countB = 0, lenA = 0, lenB = 0;
-        var responseTimes = new List<double>();
-        Guid? lastSender = null;
-        DateTimeOffset? lastMsgTime = null;
+        int morningCount = 0;   // 05:00 - 11:59 (Dog)
+        int daytimeCount = 0;   // 12:00 - 21:59 Weekdays (Rabbit)
+        int nightCount = 0;     // 22:00 - 04:59 (Cat)
+        int weekendCount = 0;   // Saturday, Sunday (Otter)
 
-        foreach (var msg in messages.OrderBy(m => m.CreatedAt))
+        foreach (var msg in messages)
         {
-            if (msg.SenderId == match.UserAId)
-            {
-                countA++;
-                lenA += msg.Content?.Length ?? 0;
-            }
-            else if (msg.SenderId == match.UserBId)
-            {
-                countB++;
-                lenB += msg.Content?.Length ?? 0;
-            }
+            // Convert UTC to local time (GMT+7)
+            var localTime = msg.CreatedAt.ToOffset(TimeSpan.FromHours(7));
 
-            if (lastSender != null && lastSender != msg.SenderId && lastMsgTime != null)
+            if (localTime.DayOfWeek == DayOfWeek.Saturday || localTime.DayOfWeek == DayOfWeek.Sunday)
             {
-                var delay = (msg.CreatedAt - lastMsgTime.Value).TotalSeconds;
-                if (delay >= 0) responseTimes.Add(delay);
+                weekendCount++;
             }
-
-            lastSender = msg.SenderId;
-            lastMsgTime = msg.CreatedAt;
+            else
+            {
+                if (localTime.Hour >= 5 && localTime.Hour < 12)
+                {
+                    morningCount++;
+                }
+                else if (localTime.Hour >= 12 && localTime.Hour < 22)
+                {
+                    daytimeCount++;
+                }
+                else
+                {
+                    // 22:00 to 04:59
+                    nightCount++;
+                }
+            }
         }
 
-        double avgResponseTime = responseTimes.Count > 0 ? responseTimes.Average() : 30;
-        double avgLen = messages.Count > 0 ? (double)(lenA + lenB) / messages.Count : 0;
-        double ratioA = countA + countB > 0 ? (double)countA / (countA + countB) : 0.5;
+        var maxCount = Math.Max(Math.Max(morningCount, daytimeCount), Math.Max(nightCount, weekendCount));
 
-        if (avgResponseTime <= 15) return PetType.Rabbit;
-        if (avgResponseTime > 60 && avgLen > 30) return PetType.Bear;
-        if (ratioA > 0.65 || ratioA < 0.35) return PetType.Cat;
-        return PetType.Dog;
+        if (maxCount == morningCount) return PetType.Dog;
+        if (maxCount == nightCount) return PetType.Cat;
+        if (maxCount == weekendCount) return PetType.Otter;
+        return PetType.Rabbit;
     }
 
     private async Task LogAsync(Pet pet, string eventType, object payload, CancellationToken cancellationToken)

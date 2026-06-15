@@ -26,10 +26,10 @@ public static class PetFeatureUnlocks
     public static string PetTypeName(PetType type) => type switch
     {
         PetType.None => "Chưa nở",
-        PetType.Dog => "Chó (Cân bằng)",
-        PetType.Cat => "Mèo (Kẻ đuổi - Người chạy)",
-        PetType.Rabbit => "Thỏ (Cuồng nhiệt)",
-        PetType.Bear => "Gấu (Trưởng thành)",
+        PetType.Dog => "Chó (Morning Birds)",
+        PetType.Cat => "Mèo (Night Owls)",
+        PetType.Rabbit => "Thỏ (Sprinters)",
+        PetType.Otter => "Rái cá (Weekend Warriors)",
         _ => "Unknown"
     };
 }
