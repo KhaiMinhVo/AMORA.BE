@@ -216,7 +216,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 if (!string.IsNullOrWhiteSpace(accessToken) &&
                     (context.HttpContext.Request.Path.StartsWithSegments("/hubs/chat")
                      || context.HttpContext.Request.Path.StartsWithSegments("/hubs/pet")
-                     || context.HttpContext.Request.Path.StartsWithSegments("/hubs/call")))
+                     || context.HttpContext.Request.Path.StartsWithSegments("/hubs/call")
+                     || context.HttpContext.Request.Path.StartsWithSegments("/hubs/admin")))
                 {
                     context.Token = accessToken;
                 }
