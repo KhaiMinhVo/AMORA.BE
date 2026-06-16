@@ -123,12 +123,11 @@ public sealed class ProfileService
         if (request.VoiceIntroDuration.HasValue)
             user.VoiceIntroDuration = request.VoiceIntroDuration.Value;
 
-        // Kiểm tra đã đủ thông tin chưa: có avatar, có DOB, có giới tính, và có ít nhất 2 ảnh.
+        // Kiểm tra đã đủ thông tin chưa: có avatar, có DOB, có giới tính.
         user.IsProfileComplete = !string.IsNullOrWhiteSpace(user.DisplayName)
                                   && !string.IsNullOrWhiteSpace(user.AvatarUrl)
                                   && user.DateOfBirth.HasValue
-                                  && user.Gender != Gender.PreferNotToSay
-                                  && user.Photos is not null && user.Photos.Length >= 2;
+                                  && user.Gender != Gender.PreferNotToSay;
 
         await _userRepository.UpdateAsync(user, cancellationToken);
 
