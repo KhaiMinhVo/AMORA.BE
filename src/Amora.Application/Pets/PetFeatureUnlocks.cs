@@ -32,4 +32,14 @@ public static class PetFeatureUnlocks
         PetType.Otter => "Rái cá (Weekend Warriors)",
         _ => "Unknown"
     };
+
+    public static string PetTypeDescription(PetType type) => type switch
+    {
+        PetType.None => "Mầm sống của tình cảm đang được ấp ủ.",
+        PetType.Dog => "Dành cho nhau những lời chào đầu ngày chứng tỏ đối phương luôn ở vị trí số một trong tâm trí bạn mỗi khi thức giấc. Cún Con là biểu tượng của nguồn năng lượng và sự ưu tiên.",
+        PetType.Cat => "Màn đêm là lúc những tâm hồn 'cú đêm' cởi mở nhất. Bé Mèo sẽ là người giữ lấy những lời tâm sự thầm kín và chân thật nhất của hai bạn.",
+        PetType.Rabbit => "Năng động và chớp nhoáng. Dù bận rộn với guồng quay công việc, hai bạn vẫn biết cách tranh thủ thời gian gửi cho nhau những đoạn voice quan tâm đầy đáng yêu.",
+        PetType.Otter => "Sự gắn kết bền chặt. Dù trong tuần có im ắng, cuối tuần vẫn là lúc hai bạn trò chuyện miệt mài, như loài Rái cá luôn nắm tay nhau để không bị lạc mất.",
+        _ => "Unknown"
+    };
 }

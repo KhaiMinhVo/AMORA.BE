@@ -144,6 +144,7 @@ public sealed class PetCoordinator
         StageName = PetFeatureUnlocks.StageDisplayName(pet.Stage),
         Type = pet.Type.ToString(),
         TypeName = PetFeatureUnlocks.PetTypeName(pet.Type),
+        TypeDescription = PetFeatureUnlocks.PetTypeDescription(pet.Type),
         IsFrozen = pet.IsFrozen,
         ExpiresAtHint = pet.LastInteractionAt.AddHours(6),
         UnlockedFeatures = PetFeatureUnlocks.ForStage(pet.Stage)

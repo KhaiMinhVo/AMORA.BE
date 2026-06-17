@@ -10,6 +10,7 @@ public sealed class PetStatusDto
     public string StageName { get; init; } = string.Empty;
     public string Type { get; init; } = "None";
     public string TypeName { get; init; } = string.Empty;
+    public string TypeDescription { get; init; } = string.Empty;
     public bool IsFrozen { get; init; }
     public DateTimeOffset ExpiresAtHint { get; init; }
     public IReadOnlyList<string> UnlockedFeatures { get; init; } = Array.Empty<string>();
