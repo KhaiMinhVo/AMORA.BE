@@ -204,7 +204,7 @@ public sealed class PetCoordinator
         if (match == null) return PetType.Dog;
 
         var result = await _chatMessageRepository.GetByMatchAsync(matchId, null, 500, cancellationToken);
-        var messages = result.Items.Where(x => x.MessageType == MessageType.Text).ToList();
+        var messages = result.Items.Where(x => x.MessageType == MessageType.Voice).ToList();
         
         if (messages.Count == 0) return PetType.Dog;
 
