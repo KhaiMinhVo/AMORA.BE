@@ -25,15 +25,15 @@ public sealed class SubscriptionService
     {
         if (type == SubscriptionType.Free)
         {
-            throw new ValidationApiException("Cannot purchase free subscription.");
+            throw new ValidationApiException("Không thể mua gói miễn phí.");
         }
 
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (user.Diamonds < priceDiamonds)
         {
-            throw new ValidationApiException("Not enough Diamonds.");
+            throw new ValidationApiException("Bạn không đủ Kim Cương (Diamonds).");
         }
 
         user.Diamonds -= priceDiamonds;

@@ -23,7 +23,7 @@ public sealed class PetFeatureGateService
             return;
 
         var pet = await _pets.GetByMatchIdAsync(matchId, cancellationToken)
-            ?? throw new NotFoundApiException("Pet not found for this match.");
+            ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
 
         var features = PetFeatureUnlocks.ForStage(pet.Stage).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -34,7 +34,7 @@ public sealed class PetFeatureGateService
                     throw new ForbiddenApiException("Gửi ảnh mở khóa ở giai đoạn Mầm Non (RP ≥ 200).");
                 break;
             default:
-                throw new ValidationApiException($"Message type '{type}' is not supported.");
+                throw new ValidationApiException($"Loại tin nhắn '{type}' không được hỗ trợ.");
         }
     }
 
@@ -50,10 +50,10 @@ public sealed class PetFeatureGateService
     public async Task<int> ValidateCallAsync(Guid matchId, string callType, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(callType))
-            throw new ValidationApiException("Call type is required.");
+            throw new ValidationApiException("Call type là bắt buộc.");
 
         var pet = await _pets.GetByMatchIdAsync(matchId, cancellationToken)
-            ?? throw new NotFoundApiException("Pet not found for this match.");
+            ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
 
         var features = PetFeatureUnlocks.ForStage(pet.Stage).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var normalizedType = callType.Trim().ToLowerInvariant();
@@ -66,7 +66,7 @@ public sealed class PetFeatureGateService
             "video" => features.Contains("video_call_3min")
                 ? 3 * 60
                 : throw new ForbiddenApiException("Video call mở khóa ở giai đoạn Thú Trưởng Thành."),
-            _ => throw new ValidationApiException("Unsupported call type.")
+            _ => throw new ValidationApiException("Loại cuộc gọi không được hỗ trợ.")
         };
     }
 }

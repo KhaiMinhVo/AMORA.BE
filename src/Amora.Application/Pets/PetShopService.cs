@@ -53,10 +53,10 @@ public sealed class PetShopService
     public async Task BuyAsync(Guid userId, BuyItemRequest request, CancellationToken cancellationToken)
     {
         var item = await _shopRepository.GetItemByIdAsync(request.ItemId, cancellationToken)
-            ?? throw new NotFoundApiException("Item not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy vật phẩm.");
 
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (user.Diamonds < (item.PriceDiamonds * request.Quantity))
             throw new ValidationApiException("Không đủ Diamonds.");
@@ -109,19 +109,19 @@ public sealed class PetShopService
     public async Task UseItemAsync(Guid userId, Guid matchId, Guid itemId, CancellationToken cancellationToken)
     {
         if (!await _matchRepository.IsParticipantAsync(matchId, userId, cancellationToken))
-            throw new ForbiddenApiException("Not a participant of this match.");
+            throw new ForbiddenApiException("Bạn không tham gia cuộc trò chuyện này.");
 
         var slot = await _shopRepository.GetInventorySlotAsync(userId, itemId, cancellationToken)
-            ?? throw new ValidationApiException("Item not in inventory.");
+            ?? throw new ValidationApiException("Vật phẩm không có trong túi đồ của bạn.");
 
         if (slot.Quantity <= 0)
-            throw new ValidationApiException("Out of stock.");
+            throw new ValidationApiException("Vật phẩm đã hết hàng.");
 
         var item = slot.ShopItem ?? await _shopRepository.GetItemByIdAsync(itemId, cancellationToken)
-            ?? throw new NotFoundApiException("Item not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy vật phẩm.");
 
         var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
-            ?? throw new NotFoundApiException("Pet not found for this match.");
+            ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
 
         if (item.MinStage.HasValue && item.MinStage.Value > pet.Stage)
             throw new ValidationApiException($"Bạn cần Thú cưng đạt mức {item.MinStage.Value} để sử dụng vật phẩm này.");
@@ -149,10 +149,10 @@ public sealed class PetShopService
     public async Task ClaimWaterAsync(Guid userId, Guid matchId, CancellationToken cancellationToken)
     {
         if (!await _matchRepository.IsParticipantAsync(matchId, userId, cancellationToken))
-            throw new ForbiddenApiException("Not a participant of this match.");
+            throw new ForbiddenApiException("Bạn không tham gia cuộc trò chuyện này.");
 
         var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
-            ?? throw new NotFoundApiException("Pet not found for this match.");
+            ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
 
         // Reset if new day
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -185,13 +185,13 @@ public sealed class PetShopService
     public async Task RenamePetAsync(Guid userId, Guid matchId, Guid itemId, string newName, CancellationToken cancellationToken)
     {
         if (!await _matchRepository.IsParticipantAsync(matchId, userId, cancellationToken))
-            throw new ForbiddenApiException("Not a participant of this match.");
+            throw new ForbiddenApiException("Bạn không tham gia cuộc trò chuyện này.");
 
         var slot = await _shopRepository.GetInventorySlotAsync(userId, itemId, cancellationToken)
-            ?? throw new ValidationApiException("Item not in inventory.");
+            ?? throw new ValidationApiException("Vật phẩm không có trong túi đồ của bạn.");
 
         if (slot.Quantity <= 0)
-            throw new ValidationApiException("Out of stock.");
+            throw new ValidationApiException("Vật phẩm đã hết hàng.");
 
         var item = slot.ShopItem ?? await _shopRepository.GetItemByIdAsync(itemId, cancellationToken);
         if (item == null || item.Code != "rename_card")
@@ -201,7 +201,7 @@ public sealed class PetShopService
             throw new ValidationApiException("Tên không hợp lệ (tối đa 30 ký tự).");
 
         var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
-            ?? throw new NotFoundApiException("Pet not found for this match.");
+            ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
 
         pet.Name = newName.Trim();
         
@@ -220,10 +220,10 @@ public sealed class PetShopService
     public async Task EquipCosmeticAsync(Guid userId, Guid matchId, Guid itemId, CancellationToken cancellationToken)
     {
         if (!await _matchRepository.IsParticipantAsync(matchId, userId, cancellationToken))
-            throw new ForbiddenApiException("Not a participant of this match.");
+            throw new ForbiddenApiException("Bạn không tham gia cuộc trò chuyện này.");
 
         var slot = await _shopRepository.GetInventorySlotAsync(userId, itemId, cancellationToken)
-            ?? throw new ValidationApiException("Item not in inventory.");
+            ?? throw new ValidationApiException("Vật phẩm không có trong túi đồ của bạn.");
 
         if (slot.Quantity <= 0)
             throw new ValidationApiException("Bạn không sở hữu phụ kiện này.");
@@ -233,7 +233,7 @@ public sealed class PetShopService
             throw new ValidationApiException("Vật phẩm không phải là phụ kiện.");
 
         var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
-            ?? throw new NotFoundApiException("Pet not found for this match.");
+            ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
 
         if (item.MinStage.HasValue && item.MinStage.Value > pet.Stage)
             throw new ValidationApiException($"Thú cưng cần đạt mức {item.MinStage.Value} để mặc.");

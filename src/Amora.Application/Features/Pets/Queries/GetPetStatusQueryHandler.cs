@@ -20,10 +20,10 @@ public sealed class GetPetStatusQueryHandler : IRequestHandler<GetPetStatusQuery
     public async Task<PetStatusDto> Handle(GetPetStatusQuery request, CancellationToken cancellationToken)
     {
         if (!await _matchRepository.IsParticipantAsync(request.MatchId, request.UserId, cancellationToken))
-            throw new ForbiddenApiException("Not a participant of this match.");
+            throw new ForbiddenApiException("Bạn không tham gia cuộc trò chuyện này.");
 
         var pet = await _petRepository.GetByMatchIdAsync(request.MatchId, cancellationToken)
-            ?? throw new NotFoundApiException("Pet not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy thú cưng.");
 
         return PetCoordinator.ToDto(pet);
     }

@@ -87,10 +87,10 @@ public sealed class AdminModerationService
     public async Task ResolveReportAsync(Guid reportId, ResolveReportRequest request, CancellationToken cancellationToken = default)
     {
         var report = await _reportRepository.GetByIdAsync(reportId, cancellationToken)
-            ?? throw new NotFoundApiException("Report not found.");
+            ?? throw new NotFoundApiException("Báo cáo không tồn tại.");
 
         if (report.Status != ReportStatus.Pending)
-            throw new ValidationApiException("Report is already resolved.");
+            throw new ValidationApiException("Báo cáo này đã được giải quyết.");
 
         if (request.Action.Equals("Ban", StringComparison.OrdinalIgnoreCase))
         {
@@ -113,7 +113,7 @@ public sealed class AdminModerationService
         }
         else
         {
-            throw new ValidationApiException("Invalid action. Supported: Ban, Ignore, Warning.");
+            throw new ValidationApiException("Hành động không hợp lệ. Chỉ hỗ trợ: Ban, Ignore, Warning.");
         }
 
         await _reportRepository.UpdateAsync(report, cancellationToken);
@@ -122,10 +122,10 @@ public sealed class AdminModerationService
     public async Task BanUserAsync(Guid userId, BanUserRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (user.Role == "Admin")
-            throw new ValidationApiException("Cannot ban an admin.");
+            throw new ValidationApiException("Không thể khóa tài khoản Admin.");
 
         user.IsBanned = true;
         
@@ -155,7 +155,7 @@ public sealed class AdminModerationService
     public async Task UnbanUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         user.IsBanned = false;
         await _userRepository.UpdateAsync(user, cancellationToken);
@@ -194,13 +194,13 @@ public sealed class AdminModerationService
     public async Task ResolveAppealAsync(Guid userId, ResolveAppealRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         var activeBan = await _userBanRepository.GetActiveBanByUserIdAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("Active ban not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy lệnh cấm nào.");
 
         if (activeBan.AppealStatus != AppealStatus.Pending)
-            throw new ValidationApiException("User does not have a pending appeal.");
+            throw new ValidationApiException("Người dùng không có đơn kháng cáo nào đang chờ xử lý.");
 
         if (request.Action.Equals("Approve", StringComparison.OrdinalIgnoreCase))
         {
@@ -214,7 +214,7 @@ public sealed class AdminModerationService
         }
         else
         {
-            throw new ValidationApiException("Invalid action. Supported: Approve, Reject.");
+            throw new ValidationApiException("Hành động không hợp lệ. Chỉ hỗ trợ: Approve, Reject.");
         }
 
         await _userRepository.UpdateAsync(user, cancellationToken);

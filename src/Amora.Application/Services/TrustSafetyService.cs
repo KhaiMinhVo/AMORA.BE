@@ -48,19 +48,19 @@ public sealed class TrustSafetyService
         var reporterId = _currentUserService.UserId;
 
         if (reporterId == targetUserId)
-            throw new ValidationApiException("You cannot report yourself.");
+            throw new ValidationApiException("Bạn không thể báo cáo chính mình.");
 
         // Kiểm tra target có tồn tại không
         var target = await _userRepository.GetByIdAsync(targetUserId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         // Kiểm tra đã report chưa (tránh spam)
         if (await _reportRepository.ExistsAsync(reporterId, targetUserId, cancellationToken))
-            throw new ConflictApiException("You have already reported this user.");
+            throw new ConflictApiException("Bạn đã báo cáo người dùng này rồi.");
 
         // Parse reason enum
         if (!Enum.TryParse<ReportReason>(request.Reason, ignoreCase: true, out var reason))
-            throw new ValidationApiException($"Invalid report reason. Valid values: {string.Join(", ", Enum.GetNames<ReportReason>())}");
+            throw new ValidationApiException($"Lý do báo cáo không hợp lệ. Các giá trị cho phép: {string.Join(", ", Enum.GetNames<ReportReason>())}");
 
         var report = new UserReport
         {
@@ -135,13 +135,13 @@ public sealed class TrustSafetyService
         var blockerId = _currentUserService.UserId;
 
         if (blockerId == targetUserId)
-            throw new ValidationApiException("You cannot block yourself.");
+            throw new ValidationApiException("Bạn không thể chặn chính mình.");
 
         var target = await _userRepository.GetByIdAsync(targetUserId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (await _blockRepository.IsBlockedAsync(blockerId, targetUserId, cancellationToken))
-            throw new ConflictApiException("You have already blocked this user.");
+            throw new ConflictApiException("Bạn đã chặn người dùng này rồi.");
 
         var block = new UserBlock
         {
@@ -165,7 +165,7 @@ public sealed class TrustSafetyService
         var blockerId = _currentUserService.UserId;
 
         if (!await _blockRepository.IsBlockedAsync(blockerId, targetUserId, cancellationToken))
-            throw new NotFoundApiException("This user is not in your block list.");
+            throw new NotFoundApiException("Người dùng này không nằm trong danh sách chặn của bạn.");
 
         await _blockRepository.RemoveAsync(blockerId, targetUserId, cancellationToken);
     }

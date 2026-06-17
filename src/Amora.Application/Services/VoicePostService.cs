@@ -42,13 +42,13 @@ public sealed class VoicePostService
     {
         if (string.IsNullOrWhiteSpace(request.AudioUrl))
         {
-            throw new ValidationApiException("AudioUrl is required.");
+            throw new ValidationApiException("Vui lòng cung cấp file ghi âm (AudioUrl).");
         }
 
         var userId = _currentUserService.UserId;
         var since = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         int maxMatchSlots = user.SubscriptionType switch
         {
@@ -246,11 +246,11 @@ public sealed class VoicePostService
     public async Task CloseAsync(Guid postId, CancellationToken cancellationToken = default)
     {
         var post = await _voicePostRepository.GetByIdAsync(postId, cancellationToken)
-            ?? throw new NotFoundApiException("Voice post not found.");
+            ?? throw new NotFoundApiException("Voice post không tồn tại.");
 
         if (post.PosterId != _currentUserService.UserId)
         {
-            throw new ForbiddenApiException("You are not allowed to close this post.");
+            throw new ForbiddenApiException("Bạn không có quyền đóng bài viết này.");
         }
 
         if (post.Status == VoicePostStatus.Closed)

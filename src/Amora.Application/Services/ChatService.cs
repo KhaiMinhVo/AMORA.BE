@@ -45,7 +45,7 @@ public sealed class ChatService
     {
         if (!await _matchConnectionRepository.IsParticipantAsync(matchId, _currentUserService.UserId, cancellationToken))
         {
-            throw new ForbiddenApiException("You cannot access this chat room.");
+            throw new ForbiddenApiException("Bạn không thể truy cập phòng chat này.");
         }
 
         limit = Math.Clamp(limit, 1, 50);
@@ -80,7 +80,7 @@ public sealed class ChatService
     {
         if (!await _matchConnectionRepository.IsParticipantAsync(matchId, _currentUserService.UserId, cancellationToken))
         {
-            throw new ForbiddenApiException("You cannot send messages to this room.");
+            throw new ForbiddenApiException("Bạn không thể gửi tin nhắn vào phòng chat này.");
         }
 
         // Handshake 24h: chặn gửi tin vào match đã hết hạn
@@ -92,12 +92,12 @@ public sealed class ChatService
 
         if (!Enum.TryParse<MessageType>(request.Type, ignoreCase: true, out var messageType))
         {
-            throw new ValidationApiException("Unsupported message type.");
+            throw new ValidationApiException("Loại tin nhắn không được hỗ trợ.");
         }
 
         if (messageType is MessageType.Voice or MessageType.Image && string.IsNullOrWhiteSpace(request.ContentUrl))
         {
-            throw new ValidationApiException("ContentUrl is required for voice/image messages.");
+            throw new ValidationApiException("Yêu cầu phải có link nội dung đối với tin nhắn thoại/ảnh.");
         }
 
         await _featureGate.ValidateSendAsync(matchId, messageType, cancellationToken);
@@ -106,12 +106,12 @@ public sealed class ChatService
 
         if (messageType == MessageType.Text)
         {
-            throw new ValidationApiException("Text messages are not allowed. Please use Voice messages.");
+            throw new ValidationApiException("Không hỗ trợ tin nhắn văn bản. Vui lòng gửi tin nhắn thoại.");
         }
 
         if (messageType == MessageType.System)
         {
-            throw new ValidationApiException("You cannot send System messages.");
+            throw new ValidationApiException("Bạn không thể gửi tin nhắn hệ thống.");
         }
 
         var message = new ChatMessage
@@ -165,13 +165,13 @@ public sealed class ChatService
     {
         if (!await _matchConnectionRepository.IsParticipantAsync(matchId, _currentUserService.UserId, cancellationToken))
         {
-            throw new ForbiddenApiException("You cannot access this chat room.");
+            throw new ForbiddenApiException("Bạn không thể truy cập phòng chat này.");
         }
 
         var message = await _chatMessageRepository.GetByIdAsync(request.MessageId, cancellationToken);
         if (message is null || message.MatchId != matchId)
         {
-            throw new NotFoundApiException("Message not found in this match.");
+            throw new NotFoundApiException("Không tìm thấy tin nhắn trong cuộc trò chuyện này.");
         }
 
         await _readState.UpsertReadAsync(_currentUserService.UserId, matchId, message.CreatedAt, cancellationToken);

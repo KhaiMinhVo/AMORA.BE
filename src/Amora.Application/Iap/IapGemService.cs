@@ -31,17 +31,17 @@ public sealed class IapGemService
     public async Task<int> VerifyAndCreditAsync(Guid userId, IapVerificationRequest request, CancellationToken cancellationToken)
     {
         if (!_options.Products.TryGetValue(request.ProductId, out var gems))
-            throw new ValidationApiException($"Unknown product: {request.ProductId}");
+            throw new ValidationApiException($"Không tìm thấy sản phẩm: {request.ProductId}");
 
         if (await _iapRepository.ExistsAsync(request.Platform, request.TransactionId, cancellationToken))
-            throw new ConflictApiException("Transaction already processed.");
+            throw new ConflictApiException("Giao dịch này đã được xử lý trước đó.");
 
         var verification = await _verifier.VerifyAsync(request, cancellationToken);
         if (!verification.IsValid)
             throw new ValidationApiException(verification.ErrorMessage ?? "Invalid purchase.");
 
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         user.Diamonds += gems;
         await _userRepository.UpdateAsync(user, cancellationToken);

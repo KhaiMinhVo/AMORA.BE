@@ -37,26 +37,26 @@ public sealed class VoiceCommentService
     {
         if (string.IsNullOrWhiteSpace(request.AudioUrl))
         {
-            throw new ValidationApiException("AudioUrl is required.");
+            throw new ValidationApiException("Vui lòng cung cấp file ghi âm (AudioUrl).");
         }
 
         if (request.Duration <= 0)
         {
-            throw new ValidationApiException("Duration must be greater than zero.");
+            throw new ValidationApiException("Thời lượng ghi âm phải lớn hơn 0.");
         }
 
         var post = await _voicePostRepository.GetByIdAsync(postId, cancellationToken)
-            ?? throw new NotFoundApiException("Voice post not found.");
+            ?? throw new NotFoundApiException("Voice post không tồn tại.");
 
         if (post.Status == VoicePostStatus.Closed)
         {
-            throw new ConflictApiException("This voice post is already closed.");
+            throw new ConflictApiException("Bài Voice Post này đã đóng.");
         }
 
         var userId = _currentUserService.UserId;
         if (await _voiceCommentRepository.HasUserCommentedOnPostAsync(userId, postId, cancellationToken))
         {
-            throw new ConflictApiException("You have already commented on this post.");
+            throw new ConflictApiException("Bạn đã bình luận vào bài viết này rồi.");
         }
 
         var comment = new VoiceComment
@@ -143,7 +143,7 @@ public sealed class VoiceCommentService
     public async Task<VoiceCommentListResponseDto> GetCommentsAsync(Guid postId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var post = await _voicePostRepository.GetByIdAsync(postId, cancellationToken)
-            ?? throw new NotFoundApiException("Voice post not found.");
+            ?? throw new NotFoundApiException("Voice post không tồn tại.");
 
         // Đã gỡ bỏ check: Mọi người đều có thể xem danh sách comment của bài post này (giống Facebook)
 
@@ -180,7 +180,7 @@ public sealed class VoiceCommentService
     public async Task DeleteCommentAsync(Guid commentId, CancellationToken cancellationToken = default)
     {
         var comment = await _voiceCommentRepository.GetByIdAsync(commentId, cancellationToken)
-            ?? throw new NotFoundApiException("Voice comment not found.");
+            ?? throw new NotFoundApiException("Bình luận bằng giọng nói không tồn tại.");
 
         var post = await _voicePostRepository.GetByIdAsync(comment.PostId, cancellationToken);
         
@@ -189,7 +189,7 @@ public sealed class VoiceCommentService
 
         if (!isCommenter && !isPoster)
         {
-            throw new ForbiddenApiException("You do not have permission to delete this comment.");
+            throw new ForbiddenApiException("Bạn không có quyền xóa bình luận này.");
         }
 
         await _voiceCommentRepository.DeleteAsync(comment, cancellationToken);

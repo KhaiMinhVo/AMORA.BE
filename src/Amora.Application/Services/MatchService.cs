@@ -59,11 +59,11 @@ public sealed class MatchService
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
     {
         var post = await _voicePostRepository.GetByIdAsync(request.PostId, cancellationToken)
-            ?? throw new NotFoundApiException("Voice post not found.");
+            ?? throw new NotFoundApiException("Voice post không tồn tại.");
 
         if (post.PosterId != _currentUserService.UserId)
         {
-            throw new ForbiddenApiException("You are not allowed to match on this post.");
+            throw new ForbiddenApiException("Bạn không được phép ghép đôi trên bài viết này.");
         }
 
         if (post.MatchCount >= post.MaxMatchSlots)
@@ -72,7 +72,7 @@ public sealed class MatchService
         }
 
         var comment = await _voiceCommentRepository.GetByIdAsync(request.CommentId, cancellationToken)
-            ?? throw new NotFoundApiException("Voice comment not found.");
+            ?? throw new NotFoundApiException("Bình luận bằng giọng nói không tồn tại.");
 
         if (await _matchConnectionRepository.AreMatchedAsync(post.PosterId, comment.CommenterId, cancellationToken))
         {
@@ -81,12 +81,12 @@ public sealed class MatchService
 
         if (comment.PostId != post.Id)
         {
-            throw new ValidationApiException("This comment does not belong to the selected post.");
+            throw new ValidationApiException("Bình luận này không thuộc về bài đăng đã chọn.");
         }
 
         if (comment.Status != VoiceCommentStatus.Pending)
         {
-            throw new ConflictApiException("This comment has already been processed.");
+            throw new ConflictApiException("Bình luận này đã được xử lý.");
         }
 
         var result = await _matchConnectionRepository.CreateConnectionAsync(post.Id, comment.Id, post.PosterId, cancellationToken);
@@ -113,16 +113,16 @@ public sealed class MatchService
     public async Task AcceptMatchAsync(Guid matchId, CancellationToken cancellationToken = default)
     {
         var match = await _matchConnectionRepository.GetByIdAsync(matchId, cancellationToken)
-            ?? throw new NotFoundApiException("Match request not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy yêu cầu ghép đôi.");
 
         if (match.UserBId != _currentUserService.UserId)
         {
-            throw new ForbiddenApiException("You are not allowed to accept this match request.");
+            throw new ForbiddenApiException("Bạn không có quyền chấp nhận yêu cầu ghép đôi này.");
         }
 
         if (match.Status != MatchStatus.Pending)
         {
-            throw new ConflictApiException("This match request is not pending.");
+            throw new ConflictApiException("Yêu cầu ghép đôi này không ở trạng thái chờ.");
         }
 
         try
@@ -198,16 +198,16 @@ public sealed class MatchService
     public async Task RejectMatchAsync(Guid matchId, CancellationToken cancellationToken = default)
     {
         var match = await _matchConnectionRepository.GetByIdAsync(matchId, cancellationToken)
-            ?? throw new NotFoundApiException("Match request not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy yêu cầu ghép đôi.");
 
         if (match.UserBId != _currentUserService.UserId)
         {
-            throw new ForbiddenApiException("You are not allowed to reject this match request.");
+            throw new ForbiddenApiException("Bạn không có quyền từ chối yêu cầu ghép đôi này.");
         }
 
         if (match.Status != MatchStatus.Pending)
         {
-            throw new ConflictApiException("This match request is not pending.");
+            throw new ConflictApiException("Yêu cầu ghép đôi này không ở trạng thái chờ.");
         }
 
         await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Rejected, cancellationToken);
@@ -283,7 +283,7 @@ public sealed class MatchService
         var userId = _currentUserService.UserId;
         var ok = await _matchConnectionRepository.UnmatchAsync(matchId, userId, cancellationToken);
         if (!ok)
-            throw new ValidationApiException("Cannot unmatch this conversation.");
+            throw new ValidationApiException("Không thể hủy ghép đôi (unmatch) cuộc trò chuyện này.");
 
         var systemMessage = new ChatMessage
         {

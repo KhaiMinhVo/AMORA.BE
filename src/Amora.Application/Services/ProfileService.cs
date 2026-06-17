@@ -28,7 +28,7 @@ public sealed class ProfileService
     public async Task<ProfileResponseDto> GetMyProfileAsync(CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(_currentUserService.UserId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         return MapToProfileResponse(user);
     }
@@ -40,7 +40,7 @@ public sealed class ProfileService
     public async Task<PublicProfileResponseDto> GetPublicProfileAsync(Guid targetUserId, CancellationToken cancellationToken = default)
     {
         var target = await _userRepository.GetByIdAsync(targetUserId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         var viewerId = _currentUserService.UserId;
 
@@ -66,7 +66,7 @@ public sealed class ProfileService
     public async Task<ProfileResponseDto> UpdateMyProfileAsync(UpdateProfileRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(_currentUserService.UserId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (!string.IsNullOrWhiteSpace(request.DisplayName))
             user.DisplayName = request.DisplayName.Trim();
@@ -80,12 +80,12 @@ public sealed class ProfileService
         if (!string.IsNullOrWhiteSpace(request.DateOfBirth))
         {
             if (!DateOnly.TryParse(request.DateOfBirth, out var dob))
-                throw new ValidationApiException("DateOfBirth must be in yyyy-MM-dd format.");
+                throw new ValidationApiException("Ngày sinh phải theo định dạng yyyy-MM-dd.");
 
             // Validate tuổi >= 18
             var age = DateOnly.FromDateTime(DateTime.UtcNow).Year - dob.Year;
             if (age < 18)
-                throw new ValidationApiException("You must be at least 18 years old.");
+                throw new ValidationApiException("Bạn phải đủ 18 tuổi trở lên.");
 
             user.DateOfBirth = dob;
         }
@@ -93,14 +93,14 @@ public sealed class ProfileService
         if (!string.IsNullOrWhiteSpace(request.Gender))
         {
             if (!Enum.TryParse<Gender>(request.Gender, ignoreCase: true, out var gender))
-                throw new ValidationApiException($"Invalid gender. Valid values: {string.Join(", ", Enum.GetNames<Gender>())}");
+                throw new ValidationApiException($"Giới tính không hợp lệ. Các giá trị cho phép: {string.Join(", ", Enum.GetNames<Gender>())}");
             user.Gender = gender;
         }
 
         if (!string.IsNullOrWhiteSpace(request.TargetGender))
         {
             if (!Enum.TryParse<TargetGender>(request.TargetGender, ignoreCase: true, out var targetGender))
-                throw new ValidationApiException($"Invalid target gender. Valid values: {string.Join(", ", Enum.GetNames<TargetGender>())}");
+                throw new ValidationApiException($"Giới tính đối tượng tìm kiếm không hợp lệ. Các giá trị cho phép: {string.Join(", ", Enum.GetNames<TargetGender>())}");
             user.TargetGender = targetGender;
         }
 
@@ -110,7 +110,7 @@ public sealed class ProfileService
         if (request.Bio is not null)
         {
             if (request.Bio.Length > 300)
-                throw new ValidationApiException("Bio must not exceed 300 characters.");
+                throw new ValidationApiException("Tiểu sử (Bio) không được vượt quá 300 ký tự.");
             user.Bio = request.Bio.Trim();
         }
 

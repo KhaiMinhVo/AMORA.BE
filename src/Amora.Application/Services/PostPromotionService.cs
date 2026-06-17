@@ -30,19 +30,19 @@ public sealed class PostPromotionService
     public async Task BoostPostAsync(Guid userId, Guid postId, PostBoostType boostType, int priceDiamonds, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         var post = await _postRepository.GetByIdAsync(postId, cancellationToken)
-            ?? throw new NotFoundApiException("Post not found.");
+            ?? throw new NotFoundApiException("Bài viết không tồn tại.");
 
         if (post.PosterId != userId)
         {
-            throw new ForbiddenApiException("You can only boost your own posts.");
+            throw new ForbiddenApiException("Bạn chỉ có thể đẩy (boost) bài viết của chính mình.");
         }
 
         if (user.Diamonds < priceDiamonds)
         {
-            throw new ValidationApiException("Not enough Diamonds.");
+            throw new ValidationApiException("Bạn không đủ Kim Cương (Diamonds).");
         }
 
         user.Diamonds -= priceDiamonds;
@@ -77,19 +77,19 @@ public sealed class PostPromotionService
     public async Task AddMatchSlotsAsync(Guid userId, Guid postId, int extraSlots, int priceDiamonds, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         var post = await _postRepository.GetByIdAsync(postId, cancellationToken)
-            ?? throw new NotFoundApiException("Post not found.");
+            ?? throw new NotFoundApiException("Bài viết không tồn tại.");
 
         if (post.PosterId != userId)
         {
-            throw new ForbiddenApiException("You can only add slots to your own posts.");
+            throw new ForbiddenApiException("Bạn chỉ có thể thêm slot cho bài viết của mình.");
         }
 
         if (user.Diamonds < priceDiamonds)
         {
-            throw new ValidationApiException("Not enough Diamonds.");
+            throw new ValidationApiException("Bạn không đủ Kim Cương (Diamonds).");
         }
 
         user.Diamonds -= priceDiamonds;

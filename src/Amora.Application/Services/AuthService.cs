@@ -44,17 +44,17 @@ public sealed class AuthService
     public async Task<AuthResponseDto> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            throw new ValidationApiException("Email and password are required.");
+            throw new ValidationApiException("Email và mật khẩu là bắt buộc.");
 
         var email = request.Email.Trim().ToLowerInvariant();
         var cacheKey = $"OTP_{email}";
         if (!_memoryCache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
-            throw new ValidationApiException("Invalid or expired OTP.");
+            throw new ValidationApiException("Mã OTP không đúng hoặc đã hết hạn.");
         
         _memoryCache.Remove(cacheKey);
 
         if (await _users.GetByEmailAsync(email, cancellationToken) is not null)
-            throw new ConflictApiException("Email already registered.");
+            throw new ConflictApiException("Email này đã được đăng ký.");
 
         var user = new AppUser
         {
@@ -94,10 +94,10 @@ public sealed class AuthService
     {
         var email = request.Email.Trim().ToLowerInvariant();
         var user = await _users.GetByEmailForAuthAsync(email, cancellationToken)
-            ?? throw new ValidationApiException("Invalid email or password.");
+            ?? throw new ValidationApiException("Email hoặc mật khẩu không đúng.");
 
         if (string.IsNullOrEmpty(user.PasswordHash) || !PasswordHasher.Verify(request.Password, user.PasswordHash))
-            throw new ValidationApiException("Invalid email or password.");
+            throw new ValidationApiException("Email hoặc mật khẩu không đúng.");
 
         await _petCoins.TryGrantDailyLoginBonusAsync(user, cancellationToken);
         return BuildResponse(user);
@@ -119,7 +119,7 @@ public sealed class AuthService
         }
         catch (InvalidJwtException)
         {
-            throw new ValidationApiException("Invalid Google token.");
+            throw new ValidationApiException("Token Google không hợp lệ.");
         }
 
         var user = await _users.GetByGoogleIdAsync(payload.Subject, cancellationToken);
@@ -162,7 +162,7 @@ public sealed class AuthService
     {
         var email = request.Email.Trim().ToLowerInvariant();
         if (await _users.GetByEmailAsync(email, cancellationToken) is not null)
-            throw new ConflictApiException("Email already registered.");
+            throw new ConflictApiException("Email này đã được đăng ký.");
 
         await SendOtpInternalAsync(email, "AMORA - Mã xác nhận đăng ký", cancellationToken);
     }
@@ -171,7 +171,7 @@ public sealed class AuthService
     {
         var email = request.Email.Trim().ToLowerInvariant();
         if (await _users.GetByEmailAsync(email, cancellationToken) is null)
-            throw new NotFoundApiException("Account not found.");
+            throw new NotFoundApiException("Không tìm thấy tài khoản.");
 
         await SendOtpInternalAsync(email, "AMORA - Mã xác nhận đặt lại mật khẩu", cancellationToken);
     }
@@ -183,7 +183,7 @@ public sealed class AuthService
 
         var success = await _emailService.SendEmailAsync(email, subject, body, cancellationToken);
         if (!success)
-            throw new ValidationApiException("Failed to send OTP to the provided email.");
+            throw new ValidationApiException("Không thể gửi mã OTP đến email này.");
 
         var cacheKey = $"OTP_{email}";
         _memoryCache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
@@ -194,12 +194,12 @@ public sealed class AuthService
         var email = request.Email.Trim().ToLowerInvariant();
         var cacheKey = $"OTP_{email}";
         if (!_memoryCache.TryGetValue(cacheKey, out string? cachedOtp) || cachedOtp != request.Otp)
-            throw new ValidationApiException("Invalid or expired OTP.");
+            throw new ValidationApiException("Mã OTP không đúng hoặc đã hết hạn.");
 
         _memoryCache.Remove(cacheKey);
 
         var user = await _users.GetByEmailForAuthAsync(email, cancellationToken)
-            ?? throw new NotFoundApiException("Account not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy tài khoản.");
 
         user.PasswordHash = PasswordHasher.Hash(request.NewPassword);
         user.RequiresPasswordUpdate = false;
@@ -209,7 +209,7 @@ public sealed class AuthService
     public async Task SetPasswordAsync(Guid userId, SetPasswordRequest request, CancellationToken cancellationToken)
     {
         var user = await _users.GetByIdForUpdateAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         user.PasswordHash = PasswordHasher.Hash(request.NewPassword);
         user.RequiresPasswordUpdate = false;
@@ -219,11 +219,11 @@ public sealed class AuthService
     public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken)
     {
         var user = await _users.GetByIdForUpdateAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("User not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (string.IsNullOrEmpty(user.PasswordHash) || !PasswordHasher.Verify(request.CurrentPassword, user.PasswordHash))
         {
-            throw new ValidationApiException("Current password is incorrect.");
+            throw new ValidationApiException("Mật khẩu hiện tại không đúng.");
         }
 
         user.PasswordHash = PasswordHasher.Hash(request.NewPassword);
@@ -234,27 +234,27 @@ public sealed class AuthService
     {
         var email = request.Email.Trim().ToLowerInvariant();
         var user = await _users.GetByEmailForAuthAsync(email, cancellationToken)
-            ?? throw new NotFoundApiException("Account not found.");
+            ?? throw new NotFoundApiException("Không tìm thấy tài khoản.");
 
         if (!user.IsBanned)
         {
-            throw new ValidationApiException("This account is not banned. No appeal needed.");
+            throw new ValidationApiException("Tài khoản này không bị khóa.");
         }
 
         var activeBan = await _userBanRepository.GetActiveBanByUserIdAsync(user.Id, cancellationToken);
         if (activeBan == null)
         {
-            throw new ValidationApiException("No active ban record found to appeal.");
+            throw new ValidationApiException("Bạn không có lệnh cấm nào để kháng cáo.");
         }
 
         if (activeBan.AppealStatus == Amora.Domain.Enums.AppealStatus.Pending)
         {
-            throw new ConflictApiException("You already have a pending appeal.");
+            throw new ConflictApiException("Bạn đã có một đơn kháng cáo đang chờ xử lý.");
         }
 
         if (string.IsNullOrWhiteSpace(request.AppealReason))
         {
-            throw new ValidationApiException("Appeal reason is required.");
+            throw new ValidationApiException("Vui lòng nhập lý do kháng cáo.");
         }
 
         activeBan.AppealStatus = Amora.Domain.Enums.AppealStatus.Pending;
