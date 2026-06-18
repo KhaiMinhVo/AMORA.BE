@@ -53,13 +53,15 @@ public sealed class PaymentsController : ControllerBase
         
         var result = await _paymentService.ProcessVnPayCallbackAsync(queryDictionary, cancellationToken);
         
+        var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost:5173";
+
         if (result.Success)
         {
-            return Ok("Giao dịch thành công. Vui lòng quay lại ứng dụng.");
+            return Redirect($"{frontendUrl}/payment/success");
         }
         else
         {
-            return BadRequest($"Giao dịch thất bại hoặc có lỗi xảy ra. {result.Message}");
+            return Redirect($"{frontendUrl}/payment/cancel");
         }
     }
 
