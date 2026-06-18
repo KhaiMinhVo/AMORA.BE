@@ -13,7 +13,7 @@ public sealed class PaymentTransaction : BaseEntity
 
     public long OrderCode { get; set; } // PayOS requires int64 order code
 
-    public string Provider { get; set; } = "VNPay";
+    public string Provider { get; set; } = "PayOS";
 
     public string? ProviderTransactionId { get; set; }
 

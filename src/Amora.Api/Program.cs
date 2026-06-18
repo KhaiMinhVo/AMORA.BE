@@ -100,7 +100,7 @@ builder.Services.AddScoped<IPostBoostRecordRepository, PostBoostRecordRepository
 builder.Services.AddScoped<IAdminNotificationRepository, AdminNotificationRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
-builder.Services.Configure<Amora.Application.Payment.VnPayConfig>(builder.Configuration.GetSection("VnPay"));
+
 builder.Services.Configure<Amora.Application.Payment.PayOs.PayOsConfig>(builder.Configuration.GetSection("PayOS"));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
