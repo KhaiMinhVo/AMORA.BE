@@ -10,7 +10,6 @@ namespace Amora.Api.Controllers;
 [Route("api/payments")]
 public sealed class PaymentsController : ControllerBase
 {
-    private readonly PaymentService _paymentService;
     private readonly Amora.Application.Payment.PayOs.PayOsService _payOsService;
     private readonly ICurrentUserService _currentUser;
 
