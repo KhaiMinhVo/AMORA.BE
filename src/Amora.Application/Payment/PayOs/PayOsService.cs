@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using global::PayOS;
 using global::PayOS.Models;
 using global::PayOS.Models.Webhooks;
+using Amora.Application.Abstractions;
 
 namespace Amora.Application.Payment.PayOs;
 
@@ -16,17 +17,20 @@ public sealed class PayOsService
     private readonly PayOsConfig _payOsConfig;
     private readonly ILogger<PayOsService> _logger;
     private readonly global::PayOS.PayOSClient _payOsClient;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
     public PayOsService(
         IPaymentTransactionRepository paymentRepo,
         IUserRepository userRepo,
         IOptions<PayOsConfig> payOsConfigOptions,
-        ILogger<PayOsService> logger)
+        ILogger<PayOsService> logger,
+        IRealtimeNotifier realtimeNotifier)
     {
         _paymentRepo = paymentRepo;
         _userRepo = userRepo;
         _payOsConfig = payOsConfigOptions.Value;
         _logger = logger;
+        _realtimeNotifier = realtimeNotifier;
 
         _payOsClient = new global::PayOS.PayOSClient(
             _payOsConfig.ClientId,
@@ -117,6 +121,13 @@ public sealed class PayOsService
                 {
                     user.Diamonds += transaction.DiamondsReceived;
                     await _userRepo.UpdateAsync(user, cancellationToken);
+                    
+                    await _realtimeNotifier.NotifyDiamondBalanceChangedAsync(
+                        user.Id, 
+                        user.Diamonds, 
+                        transaction.DiamondsReceived, 
+                        "Nạp kim cương qua PayOS", 
+                        cancellationToken);
                 }
 
                 await _paymentRepo.UpdateAsync(transaction, cancellationToken);
@@ -158,6 +169,13 @@ public sealed class PayOsService
                         {
                             user.Diamonds += transaction.DiamondsReceived;
                             await _userRepo.UpdateAsync(user, cancellationToken);
+
+                            await _realtimeNotifier.NotifyDiamondBalanceChangedAsync(
+                                user.Id, 
+                                user.Diamonds, 
+                                transaction.DiamondsReceived, 
+                                "Nạp kim cương qua PayOS (Auto-Reconciled)", 
+                                cancellationToken);
                         }
 
                         await _paymentRepo.UpdateAsync(transaction, cancellationToken);

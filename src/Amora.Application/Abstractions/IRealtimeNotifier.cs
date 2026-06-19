@@ -15,4 +15,6 @@ public interface IRealtimeNotifier
     Task DisconnectUserAsync(Guid userId, string reason, CancellationToken cancellationToken = default);
 
     Task NotifyUserPresenceChangedAsync(Guid userId, bool isOnline, DateTimeOffset? lastActiveAt = null, CancellationToken cancellationToken = default);
+
+    Task NotifyDiamondBalanceChangedAsync(Guid userId, int newBalance, int delta, string reason, CancellationToken cancellationToken = default);
 }

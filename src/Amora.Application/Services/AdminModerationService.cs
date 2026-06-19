@@ -139,6 +139,13 @@ public sealed class AdminModerationService
 
         user.Diamonds += amount;
         await _userRepository.UpdateAsync(user, cancellationToken);
+        
+        await _realtimeNotifier.NotifyDiamondBalanceChangedAsync(
+            user.Id, 
+            user.Diamonds, 
+            amount, 
+            $"Admin Update: {reason}", 
+            cancellationToken);
 
         var transaction = new Amora.Domain.Entities.PetTransaction
         {

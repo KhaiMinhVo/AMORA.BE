@@ -101,6 +101,21 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
             .SendAsync("ReceiveBanned", payload, cancellationToken);
     }
 
+    public async Task NotifyDiamondBalanceChangedAsync(Guid userId, int newBalance, int delta, string reason, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            userId = userId,
+            newBalance = newBalance,
+            delta = delta,
+            reason = reason,
+            timestamp = DateTimeOffset.UtcNow
+        };
+
+        await _hubContext.Clients.Group(RealtimeGroupNames.User(userId.ToString()))
+            .SendAsync("ReceiveDiamondBalanceChanged", payload, cancellationToken);
+    }
+
     public async Task NotifyUserPresenceChangedAsync(Guid userId, bool isOnline, DateTimeOffset? lastActiveAt = null, CancellationToken cancellationToken = default)
     {
         var payload = new
