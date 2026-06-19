@@ -58,6 +58,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<PostBoostRecord> PostBoostRecords => Set<PostBoostRecord>();
 
+    public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>

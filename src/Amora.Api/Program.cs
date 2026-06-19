@@ -80,6 +80,7 @@ builder.Services.AddSingleton<MongoDB.Driver.IMongoClient>(_ =>
 });
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
 builder.Services.AddScoped<IUserBanRepository, UserBanRepository>();
 builder.Services.AddScoped<IVoicePostRepository, VoicePostRepository>();
 builder.Services.AddScoped<IVoiceCommentRepository, VoiceCommentRepository>();
@@ -91,6 +92,7 @@ builder.Services.AddScoped<IPetRepository, PetRepository>();
 builder.Services.AddScoped<IShopRepository, ShopRepository>();
 builder.Services.AddScoped<IPetTransactionRepository, PetTransactionRepository>();
 builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
+builder.Services.AddScoped<SupportTicketService>();
 builder.Services.AddScoped<IIapPurchaseRepository, IapPurchaseRepository>();
 builder.Services.AddScoped<IChatReadStateRepository, ChatReadStateRepository>();
 builder.Services.AddScoped<IMatchMediaUsageRepository, MatchMediaUsageRepository>();

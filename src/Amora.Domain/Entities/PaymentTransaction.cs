@@ -1,10 +1,14 @@
 using Amora.Domain.Common;
+using System.ComponentModel.DataAnnotations;
 using Amora.Domain.Enums;
 
 namespace Amora.Domain.Entities;
 
 public sealed class PaymentTransaction : BaseEntity
 {
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = null!;
+
     public Guid UserId { get; set; }
 
     public int AmountVnd { get; set; }

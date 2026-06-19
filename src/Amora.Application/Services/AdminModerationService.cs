@@ -147,6 +147,10 @@ public sealed class AdminModerationService
             $"Admin Update: {reason}", 
             cancellationToken);
 
+        await _realtimeNotifier.NotifyAdminAsync(
+            $"Admin vừa cộng/trừ {amount} Kim Cương cho User {user.DisplayName ?? user.Id.ToString()}. Lý do: {reason}",
+            cancellationToken);
+
         var transaction = new Amora.Domain.Entities.PetTransaction
         {
             UserId = userId,

@@ -133,4 +133,17 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
                 .SendAsync("UserPresenceChanged", payload, cancellationToken);
         }
     }
+
+    public async Task NotifyAdminAsync(string message, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            message = message,
+            timestamp = DateTimeOffset.UtcNow
+        };
+
+        // Notify to the "Admins" group. We need to ensure admin users join this group.
+        await _hubContext.Clients.Group("Admins")
+            .SendAsync("ReceiveAdminNotification", payload, cancellationToken);
+    }
 }

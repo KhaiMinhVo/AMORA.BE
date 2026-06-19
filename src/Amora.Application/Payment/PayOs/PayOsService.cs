@@ -143,6 +143,19 @@ public sealed class PayOsService
         }
     }
 
+    public async Task<global::PayOS.Models.PaymentLinkInformation?> CheckPayOsStatusAsync(long orderCode)
+    {
+        try
+        {
+            return await _payOsClient.PaymentRequests.GetAsync(orderCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to fetch PayOS status for order {orderCode}");
+            return null;
+        }
+    }
+
     public async Task ReconcilePendingTransactionAsync(PaymentTransaction transaction, CancellationToken cancellationToken)
     {
         try
@@ -176,6 +189,11 @@ public sealed class PayOsService
                                 transaction.DiamondsReceived, 
                                 "Nạp kim cương qua PayOS (Auto-Reconciled)", 
                                 cancellationToken);
+                            
+                            // Send admin notification
+                            await _realtimeNotifier.NotifyAdminAsync(
+                                $"Hệ thống (Worker) vừa cộng bù {transaction.DiamondsReceived} Kim Cương cho User {user.DisplayName} (Mã đơn: {transaction.OrderCode}).", 
+                                cancellationToken);
                         }
 
                         await _paymentRepo.UpdateAsync(transaction, cancellationToken);
@@ -192,6 +210,10 @@ public sealed class PayOsService
                     }
                 }
             }
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+        {
+            _logger.LogWarning(ex, $"Concurrency conflict while reconciling PayOS transaction {transaction.OrderCode}. Another process might have resolved it.");
         }
         catch (Exception ex)
         {
