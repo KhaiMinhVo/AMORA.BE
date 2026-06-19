@@ -12,17 +12,20 @@ public sealed class AdminModerationService
     private readonly IUserRepository _userRepository;
     private readonly IUserBanRepository _userBanRepository;
     private readonly IRealtimeNotifier _realtimeNotifier;
+    private readonly IPetTransactionRepository _petTransactionRepository;
 
     public AdminModerationService(
         IUserReportRepository reportRepository,
         IUserRepository userRepository,
         IUserBanRepository userBanRepository,
-        IRealtimeNotifier realtimeNotifier)
+        IRealtimeNotifier realtimeNotifier,
+        IPetTransactionRepository petTransactionRepository)
     {
         _reportRepository = reportRepository;
         _userRepository = userRepository;
         _userBanRepository = userBanRepository;
         _realtimeNotifier = realtimeNotifier;
+        _petTransactionRepository = petTransactionRepository;
     }
 
     public async Task<PaginatedList<AdminUserDto>> GetUsersAsync(int page, int pageSize, string? keyword, CancellationToken cancellationToken = default)

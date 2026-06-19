@@ -64,13 +64,23 @@ public sealed class AdminModerationController : ControllerBase
     }
 
     /// <summary>
-    /// Unban user
+    /// Bỏ cấm người dùng
     /// </summary>
     [HttpPost("users/{userId:guid}/unban")]
     public async Task<IActionResult> UnbanUser(Guid userId, CancellationToken cancellationToken = default)
     {
         await _adminService.UnbanUserAsync(userId, cancellationToken);
-        return Ok(new { message = "User has been unbanned." });
+        return Ok(new { message = "User has been unbanned successfully." });
+    }
+
+    /// <summary>
+    /// Hoàn/Cộng kim cương cho người dùng
+    /// </summary>
+    [HttpPost("users/{userId:guid}/refund-diamonds")]
+    public async Task<IActionResult> RefundDiamonds(Guid userId, [FromBody] RefundDiamondsRequest request, CancellationToken cancellationToken = default)
+    {
+        await _adminService.RefundDiamondsAsync(userId, request.Amount, request.Reason, cancellationToken);
+        return Ok(new { message = $"Đã hoàn {request.Amount} kim cương cho người dùng thành công." });
     }
 
     /// <summary>
