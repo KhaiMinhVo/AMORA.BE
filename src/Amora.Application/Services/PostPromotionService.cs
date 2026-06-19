@@ -32,6 +32,11 @@ public sealed class PostPromotionService
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
+        if (user.TrustScore < 80)
+        {
+            throw new ForbiddenApiException("Điểm tin cậy của bạn dưới mức 80. Chức năng đẩy bài (Push Post) đã bị vô hiệu hóa.");
+        }
+
         var post = await _postRepository.GetByIdAsync(postId, cancellationToken)
             ?? throw new NotFoundApiException("Bài viết không tồn tại.");
 
