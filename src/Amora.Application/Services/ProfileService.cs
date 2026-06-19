@@ -11,17 +11,20 @@ public sealed class ProfileService
     private readonly ICurrentUserService _currentUserService;
     private readonly IUserRepository _userRepository;
     private readonly IMatchConnectionRepository _matchConnectionRepository;
+    private readonly TrustScoreService _trustScoreService;
 
     private const string DefaultAnonymousAvatar = "anonymous.png";
 
     public ProfileService(
         ICurrentUserService currentUserService,
         IUserRepository userRepository,
-        IMatchConnectionRepository matchConnectionRepository)
+        IMatchConnectionRepository matchConnectionRepository,
+        TrustScoreService trustScoreService)
     {
         _currentUserService = currentUserService;
         _userRepository = userRepository;
         _matchConnectionRepository = matchConnectionRepository;
+        _trustScoreService = trustScoreService;
     }
 
     /// <summary>Lấy profile của chính mình (đầy đủ thông tin).</summary>
@@ -130,6 +133,11 @@ public sealed class ProfileService
                                   && user.Gender != Gender.PreferNotToSay;
 
         await _userRepository.UpdateAsync(user, cancellationToken);
+
+        if (user.IsProfileComplete)
+        {
+            await _trustScoreService.AddProfileCompletionBonusAsync(user.Id, cancellationToken);
+        }
 
         return MapToProfileResponse(user);
     }

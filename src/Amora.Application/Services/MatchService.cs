@@ -25,6 +25,7 @@ public sealed class MatchService
     private readonly NotificationService _notificationService;
     private readonly Microsoft.Extensions.Logging.ILogger<MatchService> _logger;
     private readonly IUserPresenceTracker _presenceTracker;
+    private readonly TrustScoreService _trustScoreService;
 
     public MatchService(
         ICurrentUserService currentUserService,
@@ -39,7 +40,8 @@ public sealed class MatchService
         IChatReadStateRepository readState,
         NotificationService notificationService,
         Microsoft.Extensions.Logging.ILogger<MatchService> logger,
-        IUserPresenceTracker presenceTracker)
+        IUserPresenceTracker presenceTracker,
+        TrustScoreService trustScoreService)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -54,10 +56,18 @@ public sealed class MatchService
         _notificationService = notificationService;
         _logger = logger;
         _presenceTracker = presenceTracker;
+        _trustScoreService = trustScoreService;
     }
 
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
     {
+        var posterId = _currentUserService.UserId;
+        var user = await _userRepository.GetByIdAsync(posterId, cancellationToken);
+        if (user != null && user.TrustScore < 20)
+        {
+            throw new ForbiddenApiException("Điểm tin cậy của bạn dưới mức 20. Tài khoản đã bị hạn chế ghép đôi.");
+        }
+
         var post = await _voicePostRepository.GetByIdAsync(request.PostId, cancellationToken)
             ?? throw new NotFoundApiException("Voice post không tồn tại.");
 
@@ -281,6 +291,12 @@ public sealed class MatchService
     public async Task UnmatchAsync(Guid matchId, CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.UserId;
+        var match = await _matchConnectionRepository.GetByIdAsync(matchId, cancellationToken);
+        if (match != null && match.Status != MatchStatus.Unmatched && match.CreatedAt > DateTimeOffset.UtcNow.AddMinutes(-10))
+        {
+            await _trustScoreService.DeductUnmatchPenaltyAsync(userId, cancellationToken);
+        }
+
         var ok = await _matchConnectionRepository.UnmatchAsync(matchId, userId, cancellationToken);
         if (!ok)
             throw new ValidationApiException("Không thể hủy ghép đôi (unmatch) cuộc trò chuyện này.");

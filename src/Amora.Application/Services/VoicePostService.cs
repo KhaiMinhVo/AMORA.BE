@@ -19,6 +19,7 @@ public sealed class VoicePostService
     private readonly string? _storageBucketName;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
     private readonly Microsoft.Extensions.Logging.ILogger<VoicePostService> _logger;
+    private readonly TrustScoreService _trustScoreService;
 
     public VoicePostService(
         ICurrentUserService currentUserService,
@@ -27,7 +28,8 @@ public sealed class VoicePostService
         AudioProcessingService audioProcessingService,
         IConfiguration configuration,
         Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
-        Microsoft.Extensions.Logging.ILogger<VoicePostService> logger)
+        Microsoft.Extensions.Logging.ILogger<VoicePostService> logger,
+        TrustScoreService trustScoreService)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -36,6 +38,7 @@ public sealed class VoicePostService
         _storageBucketName = configuration["Storage:BucketName"] ?? configuration["AWS:BucketName"];
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _trustScoreService = trustScoreService;
     }
 
     public async Task<CreateVoicePostResponseDto> CreateAsync(CreateVoicePostRequest request, CancellationToken cancellationToken = default)
@@ -49,6 +52,11 @@ public sealed class VoicePostService
         var since = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+
+        if (user.TrustScore < 50)
+        {
+            throw new ForbiddenApiException("Điểm tin cậy (Trust Score) của bạn quá thấp để đăng bài. Vui lòng cải thiện bằng cách hoạt động tích cực hơn.");
+        }
 
         int maxMatchSlots = user.SubscriptionType switch
         {
@@ -76,6 +84,7 @@ public sealed class VoicePostService
         };
 
         await _voicePostRepository.AddAsync(post, cancellationToken);
+        await _trustScoreService.AddVoicePostBonusAsync(userId, cancellationToken);
 
         // Trích xuất S3 file key từ publicUrl (bỏ phần domain, giữ lại path)
         // Ví dụ: "https://amora-voice-bucket.s3.amazonaws.com/voices/abc.m4a" → "voices/abc.m4a"

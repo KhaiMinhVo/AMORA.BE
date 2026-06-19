@@ -54,6 +54,13 @@ public sealed class VoiceCommentService
         }
 
         var userId = _currentUserService.UserId;
+
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        if (user != null && user.TrustScore < 50)
+        {
+            throw new ForbiddenApiException("Điểm tin cậy của bạn dưới mức 50. Tài khoản đã bị hạn chế bình luận.");
+        }
+
         if (await _voiceCommentRepository.HasUserCommentedOnPostAsync(userId, postId, cancellationToken))
         {
             throw new ConflictApiException("Bạn đã bình luận vào bài viết này rồi.");

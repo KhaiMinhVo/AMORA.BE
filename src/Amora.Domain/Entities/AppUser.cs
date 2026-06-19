@@ -59,6 +59,11 @@ public sealed class AppUser
 
     public DateTimeOffset? LastActiveAt { get; set; }
 
+    // ── Trust Score ─────────────────────────────────────────────────────
+    public int TrustScore { get; set; } = 100;
+    public bool ProfileBonusClaimed { get; set; }
+    public DateOnly? LastDailyBonus { get; set; }
+
     // ── Economy (Tiền tệ duy nhất) ──────────────────────────────────────
     public int Diamonds { get; set; }
 

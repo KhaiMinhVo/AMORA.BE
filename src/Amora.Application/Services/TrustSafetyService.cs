@@ -18,6 +18,7 @@ public sealed class TrustSafetyService
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IVoiceCommentRepository _voiceCommentRepository;
     private readonly AdminNotificationService _adminNotificationService;
+    private readonly TrustScoreService _trustScoreService;
 
     public TrustSafetyService(
         ICurrentUserService currentUserService,
@@ -28,7 +29,8 @@ public sealed class TrustSafetyService
         AdminModerationService adminModerationService,
         IVoicePostRepository voicePostRepository,
         IVoiceCommentRepository voiceCommentRepository,
-        AdminNotificationService adminNotificationService)
+        AdminNotificationService adminNotificationService,
+        TrustScoreService trustScoreService)
     {
         _currentUserService = currentUserService;
         _reportRepository = reportRepository;
@@ -39,6 +41,7 @@ public sealed class TrustSafetyService
         _voicePostRepository = voicePostRepository;
         _voiceCommentRepository = voiceCommentRepository;
         _adminNotificationService = adminNotificationService;
+        _trustScoreService = trustScoreService;
     }
 
     // ── Report ──────────────────────────────────────────────────────────────
@@ -87,6 +90,8 @@ public sealed class TrustSafetyService
             targetType, 
             request.Reason, 
             cancellationToken);
+
+        await _trustScoreService.DeductReportPenaltyAsync(targetUserId, cancellationToken);
 
         // -- AI Auto Evaluation --
         string reportedContent = "";
