@@ -93,7 +93,7 @@ public sealed class PayOsService
                 if (transaction is null)
                 {
                     _logger.LogWarning($"PayOS IPN: Transaction not found {data.OrderCode}");
-                    return false;
+                    return true;
                 }
 
                 if (transaction.Status != PaymentTransactionStatus.Pending)
@@ -105,7 +105,7 @@ public sealed class PayOsService
                 if (transaction.AmountVnd != data.Amount)
                 {
                     _logger.LogWarning($"PayOS IPN: Amount mismatch. Expected {transaction.AmountVnd}, got {data.Amount}");
-                    return false;
+                    return true;
                 }
 
                 // Update Status
