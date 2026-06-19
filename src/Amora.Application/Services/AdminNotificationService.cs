@@ -18,14 +18,14 @@ public sealed class AdminNotificationService
         _adminNotifier = adminNotifier;
     }
 
-    public async Task NotifyNewReportAsync(Guid reporterId, Guid targetUserId, string targetType, string reason, CancellationToken cancellationToken = default)
+    public async Task NotifyNewReportAsync(Guid reporterId, string reporterName, Guid targetUserId, string targetName, string targetType, string reason, CancellationToken cancellationToken = default)
     {
         var notification = new AdminNotification
         {
             Id = Guid.NewGuid(),
             Type = AdminNotificationType.NewReport,
             Title = $"Báo cáo vi phạm mới ({targetType})",
-            Message = $"Người dùng {reporterId.ToString()[..8]} đã báo cáo {targetType} với lý do: {reason}.",
+            Message = $"Người dùng {reporterName} đã báo cáo {targetName} với lý do: {reason}.",
             ActionUrl = "/admin/reports",
             IsRead = false,
             CreatedAt = DateTimeOffset.UtcNow

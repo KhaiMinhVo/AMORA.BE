@@ -78,7 +78,15 @@ public sealed class TrustSafetyService
         await _reportRepository.AddAsync(report, cancellationToken);
         
         string targetType = request.TargetPostId.HasValue ? "VoicePost" : (request.TargetCommentId.HasValue ? "VoiceComment" : "User");
-        await _adminNotificationService.NotifyNewReportAsync(reporterId, targetUserId, targetType, request.Reason, cancellationToken);
+        var reporter = await _userRepository.GetByIdAsync(reporterId, cancellationToken);
+        await _adminNotificationService.NotifyNewReportAsync(
+            reporterId, 
+            reporter?.DisplayName ?? reporterId.ToString()[..8],
+            targetUserId, 
+            target.DisplayName,
+            targetType, 
+            request.Reason, 
+            cancellationToken);
 
         // -- AI Auto Evaluation --
         string reportedContent = "";
