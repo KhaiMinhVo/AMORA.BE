@@ -131,4 +131,53 @@ public sealed class PayOsService
             return false;
         }
     }
+
+    public async Task ReconcilePendingTransactionAsync(PaymentTransaction transaction, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var paymentLinkInfo = await _payOsClient.PaymentRequests.GetAsync((long)transaction.OrderCode);
+            
+            if (paymentLinkInfo != null)
+            {
+                if (paymentLinkInfo.Status.ToString().ToUpper() == "PAID" || paymentLinkInfo.Status.ToString().ToUpper() == "SUCCESS")
+                {
+                    if (transaction.Status == PaymentTransactionStatus.Pending)
+                    {
+                        transaction.Status = PaymentTransactionStatus.Success;
+                        
+                        // Extract reference if possible
+                        var reference = paymentLinkInfo.Transactions?.FirstOrDefault()?.Reference;
+                        if (!string.IsNullOrEmpty(reference))
+                        {
+                            transaction.ProviderTransactionId = reference;
+                        }
+
+                        var user = await _userRepo.GetByIdForUpdateAsync(transaction.UserId, cancellationToken);
+                        if (user is not null)
+                        {
+                            user.Diamonds += transaction.DiamondsReceived;
+                            await _userRepo.UpdateAsync(user, cancellationToken);
+                        }
+
+                        await _paymentRepo.UpdateAsync(transaction, cancellationToken);
+                        _logger.LogInformation($"PayOS Reconciliation: Successfully processed order {transaction.OrderCode}");
+                    }
+                }
+                else if (paymentLinkInfo.Status.ToString().ToUpper() == "CANCELLED")
+                {
+                    if (transaction.Status == PaymentTransactionStatus.Pending)
+                    {
+                        transaction.Status = PaymentTransactionStatus.Canceled;
+                        await _paymentRepo.UpdateAsync(transaction, cancellationToken);
+                        _logger.LogInformation($"PayOS Reconciliation: Marked order {transaction.OrderCode} as Cancelled");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"PayOS Reconciliation Error for order {transaction.OrderCode}");
+        }
+    }
 }

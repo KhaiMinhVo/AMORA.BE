@@ -187,6 +187,7 @@ builder.Services.AddSingleton<IMessagePublisher>(_ =>
 builder.Services.AddScoped<AudioProcessingService>();
 
 builder.Services.AddHostedService<Amora.Infrastructure.Messaging.VibeResultConsumerService>();
+builder.Services.AddHostedService<Amora.Infrastructure.BackgroundJobs.PayOsReconciliationService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-only-secret-key-change-me-please-use-a-longer-256-bit-key";
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));

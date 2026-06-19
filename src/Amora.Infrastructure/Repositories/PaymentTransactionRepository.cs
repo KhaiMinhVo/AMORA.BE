@@ -32,4 +32,13 @@ public sealed class PaymentTransactionRepository : IPaymentTransactionRepository
         _context.PaymentTransactions.Update(transaction);
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<PaymentTransaction>> GetPendingPayOsTransactionsAsync(DateTime olderThan, CancellationToken cancellationToken)
+    {
+        return await _context.PaymentTransactions
+            .Where(x => x.Status == Amora.Domain.Enums.PaymentTransactionStatus.Pending && 
+                        x.Provider == "PayOS" && 
+                        x.CreatedAt < olderThan)
+            .ToListAsync(cancellationToken);
+    }
 }
