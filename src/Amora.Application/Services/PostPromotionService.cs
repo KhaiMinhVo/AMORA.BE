@@ -29,7 +29,7 @@ public sealed class PostPromotionService
 
     public async Task BoostPostAsync(Guid userId, Guid postId, PostBoostType boostType, int priceDiamonds, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (user.TrustScore < 80)
@@ -81,10 +81,10 @@ public sealed class PostPromotionService
 
     public async Task AddMatchSlotsAsync(Guid userId, Guid postId, int extraSlots, int priceDiamonds, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
-        var post = await _postRepository.GetByIdAsync(postId, cancellationToken)
+        var post = await _postRepository.GetByIdForUpdateAsync(postId, cancellationToken)
             ?? throw new NotFoundApiException("Bài viết không tồn tại.");
 
         if (post.PosterId != userId)

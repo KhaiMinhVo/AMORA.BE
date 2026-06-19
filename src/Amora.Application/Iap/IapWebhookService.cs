@@ -79,7 +79,7 @@ public sealed class IapWebhookService
             return true;
         }
 
-        var user = await _userRepository.GetByIdAsync(record.UserId, cancellationToken);
+        var user = await _userRepository.GetByIdForUpdateAsync(record.UserId, cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("Refund webhook received for missing user {UserId}.", record.UserId);

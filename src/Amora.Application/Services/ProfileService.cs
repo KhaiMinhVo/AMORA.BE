@@ -68,7 +68,7 @@ public sealed class ProfileService
     /// <summary>Cập nhật profile của chính mình.</summary>
     public async Task<ProfileResponseDto> UpdateMyProfileAsync(UpdateProfileRequest request, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(_currentUserService.UserId, cancellationToken)
+        var user = await _userRepository.GetByIdForUpdateAsync(_currentUserService.UserId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (!string.IsNullOrWhiteSpace(request.DisplayName))

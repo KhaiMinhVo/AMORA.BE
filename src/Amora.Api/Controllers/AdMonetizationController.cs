@@ -39,7 +39,7 @@ public sealed class AdMonetizationController : ControllerBase
             return Unauthorized();
         }
 
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user == null)
             return Unauthorized();
 

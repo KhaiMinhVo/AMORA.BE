@@ -28,7 +28,7 @@ public sealed class SubscriptionService
             throw new ValidationApiException("Không thể mua gói miễn phí.");
         }
 
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (user.Diamonds < priceDiamonds)

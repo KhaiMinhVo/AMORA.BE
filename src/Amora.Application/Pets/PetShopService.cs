@@ -55,7 +55,7 @@ public sealed class PetShopService
         var item = await _shopRepository.GetItemByIdAsync(request.ItemId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy vật phẩm.");
 
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         if (user.Diamonds < (item.PriceDiamonds * request.Quantity))

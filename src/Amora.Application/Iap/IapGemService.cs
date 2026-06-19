@@ -40,7 +40,7 @@ public sealed class IapGemService
         if (!verification.IsValid)
             throw new ValidationApiException(verification.ErrorMessage ?? "Invalid purchase.");
 
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         user.Diamonds += gems;

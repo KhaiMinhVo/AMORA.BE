@@ -17,7 +17,7 @@ public sealed class TrustScoreService
 
     public async Task AddProfileCompletionBonusAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("User not found.");
 
         if (!user.ProfileBonusClaimed && user.IsProfileComplete)
@@ -30,7 +30,7 @@ public sealed class TrustScoreService
 
     public async Task AddDailyLoginBonusAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user == null) return;
 
         var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.Date);
@@ -44,7 +44,7 @@ public sealed class TrustScoreService
 
     public async Task AddVoicePostBonusAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user == null) return;
 
         user.TrustScore = Math.Min(150, user.TrustScore + 5);
@@ -53,7 +53,7 @@ public sealed class TrustScoreService
 
     public async Task DeductReportPenaltyAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user == null) return;
 
         user.TrustScore = Math.Max(0, user.TrustScore - 10);
@@ -63,7 +63,7 @@ public sealed class TrustScoreService
 
     public async Task DeductUnmatchPenaltyAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user == null) return;
 
         user.TrustScore = Math.Max(0, user.TrustScore - 5);
