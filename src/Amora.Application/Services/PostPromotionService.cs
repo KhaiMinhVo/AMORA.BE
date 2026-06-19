@@ -84,7 +84,7 @@ public sealed class PostPromotionService
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
-        var post = await _postRepository.GetByIdForUpdateAsync(postId, cancellationToken)
+        var post = await _postRepository.GetByIdAsync(postId, cancellationToken)
             ?? throw new NotFoundApiException("Bài viết không tồn tại.");
 
         if (post.PosterId != userId)
