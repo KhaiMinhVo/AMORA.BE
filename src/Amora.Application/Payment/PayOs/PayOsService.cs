@@ -143,7 +143,7 @@ public sealed class PayOsService
         }
     }
 
-    public async Task<global::PayOS.Models.PaymentLinkInformation?> CheckPayOsStatusAsync(long orderCode)
+    public async Task<object?> CheckPayOsStatusAsync(long orderCode)
     {
         try
         {
@@ -211,7 +211,7 @@ public sealed class PayOsService
                 }
             }
         }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+        catch (Exception ex) when (ex.GetType().Name == "DbUpdateConcurrencyException")
         {
             _logger.LogWarning(ex, $"Concurrency conflict while reconciling PayOS transaction {transaction.OrderCode}. Another process might have resolved it.");
         }
