@@ -5,7 +5,7 @@ namespace Amora.Application.Dtos.Admin;
 public sealed class RefundDiamondsRequest
 {
     [Required]
-    [Range(1, 1000000, ErrorMessage = "Số lượng kim cương phải lớn hơn 0.")]
+    [Range(-1000000, 1000000, ErrorMessage = "Số lượng kim cương phải nằm trong khoảng -1,000,000 đến 1,000,000 và khác 0.")]
     public int Amount { get; set; }
 
     [Required]

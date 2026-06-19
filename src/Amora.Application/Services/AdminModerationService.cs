@@ -122,6 +122,34 @@ public sealed class AdminModerationService
         await _reportRepository.UpdateAsync(report, cancellationToken);
     }
 
+    public async Task RefundDiamondsAsync(Guid userId, int amount, string reason, CancellationToken cancellationToken = default)
+    {
+        if (amount == 0)
+        {
+            throw new ValidationApiException("Số lượng kim cương điều chỉnh phải khác 0.");
+        }
+
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+
+        if (user.Diamonds + amount < 0)
+        {
+            throw new ValidationApiException($"Không thể trừ {Math.Abs(amount)} kim cương. Số dư hiện tại ({user.Diamonds}) không đủ.");
+        }
+
+        user.Diamonds += amount;
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        var transaction = new Amora.Domain.Entities.PetTransaction
+        {
+            UserId = userId,
+            TransactionType = $"AdminRefund: {reason}",
+            DiamondsDelta = amount,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _petTransactionRepository.AddAsync(transaction, cancellationToken);
+    }
+
     public async Task BanUserAsync(Guid userId, BanUserRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
