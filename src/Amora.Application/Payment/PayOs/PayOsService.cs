@@ -123,7 +123,7 @@ public sealed class PayOsService
                 return true;
             }
 
-            return false;
+            return true;
         }
         catch (Exception ex)
         {
