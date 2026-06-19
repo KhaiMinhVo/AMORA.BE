@@ -126,7 +126,7 @@ public sealed class PetShopService
         if (item.MinStage.HasValue && item.MinStage.Value > pet.Stage)
             throw new ValidationApiException($"Bạn cần Thú cưng đạt mức {item.MinStage.Value} để sử dụng vật phẩm này.");
 
-        ApplyItemEffect(pet, item);
+        ApplyItemEffect(pet, item, out var activityDescription);
 
         // Do not consume cosmetics or special items (handled separately or persistent)
         if (item.ItemType != ItemType.Cosmetic)
@@ -137,6 +137,18 @@ public sealed class PetShopService
 
         pet.UpdatedAt = DateTimeOffset.UtcNow;
         pet.Stage = PetEngine.EvaluateStage(pet);
+
+        await _petRepository.AddActivityAsync(new PetActivity
+        {
+            Id = Guid.NewGuid(),
+            MatchId = matchId,
+            PetId = pet.Id,
+            UserId = userId,
+            ActivityType = item.Code,
+            Description = activityDescription,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        }, cancellationToken);
 
         await _petRepository.SaveChangesAsync(cancellationToken);
         await _shopRepository.SaveChangesAsync(cancellationToken);
@@ -277,8 +289,37 @@ public sealed class PetShopService
         public string Code { get; set; } = string.Empty;
     }
 
-    private static void ApplyItemEffect(Pet pet, ShopItem item)
+    private static void ApplyItemEffect(Pet pet, ShopItem item, out string activityDescription)
     {
+        activityDescription = $"Đã sử dụng vật phẩm {item.Name}";
+
+        if (item.Code == "pet_food")
+        {
+            var oldHp = pet.Hp;
+            pet.Hp = Math.Min(pet.Hp + 30, 100);
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 30;
+            activityDescription = $"Cho thú cưng ăn {item.Name} (+{pet.Hp - oldHp} HP, +30 RP)";
+            return;
+        }
+        
+        if (item.Code == "pet_water")
+        {
+            var oldEnergy = pet.Energy;
+            pet.Energy = Math.Min(pet.Energy + 30, 100);
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 5;
+            activityDescription = $"Cho thú cưng uống {item.Name} (+{pet.Energy - oldEnergy} Năng lượng, +5 RP)";
+            return;
+        }
+
+        if (item.Code == "pet_toy")
+        {
+            var oldMood = pet.Mood;
+            pet.Mood = Math.Min(pet.Mood + 15, 100);
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 25;
+            activityDescription = $"Chơi đùa cùng thú cưng với {item.Name} (+{pet.Mood - oldMood} Tâm trạng, +25 RP)";
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(item.EffectJson) || item.EffectJson == "{}") return;
 
         using var doc = JsonDocument.Parse(item.EffectJson);
@@ -288,6 +329,7 @@ public sealed class PetShopService
         {
             pet.IsDead = false;
             pet.IsFrozen = false;
+            activityDescription = $"Hồi sinh thú cưng bằng {item.Name}";
         }
 
         if (root.TryGetProperty("hp", out var hpProp))

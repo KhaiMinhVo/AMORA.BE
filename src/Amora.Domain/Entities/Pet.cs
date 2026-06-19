@@ -10,6 +10,10 @@ public sealed class Pet : BaseEntity
 
     public int Hp { get; set; } = 80;
 
+    public int Mood { get; set; } = 50;
+
+    public int Energy { get; set; } = 50;
+
     public long Rp { get; set; }
 
     public GrowthStage Stage { get; set; } = GrowthStage.ResonanceSeed;

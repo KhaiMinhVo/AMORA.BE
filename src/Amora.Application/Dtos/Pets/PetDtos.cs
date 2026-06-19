@@ -5,7 +5,11 @@ public sealed class PetStatusDto
     public Guid PetId { get; init; }
     public Guid MatchId { get; init; }
     public int Hp { get; init; }
+    public int Mood { get; init; }
+    public int Energy { get; init; }
     public long Rp { get; init; }
+    public int VoiceExpToday { get; init; }
+    public int MaxVoiceExpPerDay { get; init; } = 100;
     public int Stage { get; init; }
     public string StageName { get; init; } = string.Empty;
     public string Type { get; init; } = "None";
@@ -14,6 +18,15 @@ public sealed class PetStatusDto
     public bool IsFrozen { get; init; }
     public DateTimeOffset ExpiresAtHint { get; init; }
     public IReadOnlyList<string> UnlockedFeatures { get; init; } = Array.Empty<string>();
+}
+
+public sealed class PetActivityDto
+{
+    public Guid Id { get; init; }
+    public string ActivityType { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; init; }
+    public string UserDisplayName { get; init; } = string.Empty;
 }
 
 public sealed class ShopItemDto

@@ -16,5 +16,9 @@ public interface IPetRepository
 
     Task AddHistoryAsync(PetStateHistory history, CancellationToken cancellationToken = default);
 
+    Task AddActivityAsync(PetActivity activity, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<PetActivity>> GetActivitiesAsync(Guid matchId, int page, int pageSize, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Pet>> GetAllForDailySnapshotAsync(CancellationToken cancellationToken = default);
 }

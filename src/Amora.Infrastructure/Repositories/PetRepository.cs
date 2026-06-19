@@ -38,4 +38,18 @@ public sealed class PetRepository : IPetRepository
 
     public async Task<IReadOnlyList<Pet>> GetAllForDailySnapshotAsync(CancellationToken cancellationToken = default)
         => await _db.Pets.Where(x => !x.IsFrozen).ToListAsync(cancellationToken);
+
+    public async Task AddActivityAsync(PetActivity activity, CancellationToken cancellationToken = default)
+        => await _db.PetActivities.AddAsync(activity, cancellationToken);
+
+    public async Task<IReadOnlyList<PetActivity>> GetActivitiesAsync(Guid matchId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        return await _db.PetActivities
+            .Include(x => x.User)
+            .Where(x => x.MatchId == matchId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
 }

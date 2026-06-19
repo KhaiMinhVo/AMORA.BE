@@ -1,9 +1,11 @@
 using Amora.Api.Infrastructure;
 using Amora.Application.Pets;
+using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Caching.Memory;
 using Amora.Application.Abstractions;
 
 namespace Amora.Api.Hubs;
@@ -15,13 +17,26 @@ public sealed class CallHub : Hub
     private readonly PetFeatureGateService _featureGate;
     private readonly IUserPresenceTracker _presenceTracker;
     private readonly ILogger<CallHub> _logger;
+    private readonly IMemoryCache _cache;
+    private readonly IPetRepository _petRepository;
+    private readonly IPetRealtimeNotifier _petNotifier;
 
-    public CallHub(IMatchConnectionRepository matches, PetFeatureGateService featureGate, IUserPresenceTracker presenceTracker, ILogger<CallHub> logger)
+    public CallHub(
+        IMatchConnectionRepository matches, 
+        PetFeatureGateService featureGate, 
+        IUserPresenceTracker presenceTracker, 
+        ILogger<CallHub> logger,
+        IMemoryCache cache,
+        IPetRepository petRepository,
+        IPetRealtimeNotifier petNotifier)
     {
         _matches = matches;
         _featureGate = featureGate;
         _presenceTracker = presenceTracker;
         _logger = logger;
+        _cache = cache;
+        _petRepository = petRepository;
+        _petNotifier = petNotifier;
     }
 
     public override async Task OnConnectedAsync()
@@ -88,6 +103,9 @@ public sealed class CallHub : Hub
         await Clients.Group(RealtimeGroupNames.Match(matchGuid.ToString()))
             .SendAsync("CallStarted", payload, Context.ConnectionAborted);
 
+        // Store call start time in cache
+        _cache.Set($"CallStart_{callId}", now, TimeSpan.FromHours(12));
+
         return new CallStartResponse
         {
             CallId = callId,
@@ -109,6 +127,50 @@ public sealed class CallHub : Hub
 
         await Clients.Group(RealtimeGroupNames.Match(matchGuid.ToString()))
             .SendAsync("CallEnded", payload, Context.ConnectionAborted);
+
+        // Compute Voice EXP
+        if (_cache.TryGetValue($"CallStart_{callId}", out DateTimeOffset startedAt))
+        {
+            _cache.Remove($"CallStart_{callId}");
+            var durationSeconds = (DateTimeOffset.UtcNow - startedAt).TotalSeconds;
+
+            if (durationSeconds >= 30) // Minimum 30s for EXP
+            {
+                var pet = await _petRepository.GetByMatchIdAsync(matchGuid, Context.ConnectionAborted);
+                if (pet != null)
+                {
+                    var gain = PetEngine.AwardVoiceRp(pet, durationSeconds);
+                    if (gain > 0)
+                    {
+                        pet.Stage = PetEngine.EvaluateStage(pet);
+                        pet.UpdatedAt = DateTimeOffset.UtcNow;
+
+                        var minutes = (int)Math.Floor(durationSeconds / 60.0);
+                        if (minutes == 0) minutes = 1; // display 1 min if >=30s but <60s
+
+                        await _petRepository.AddActivityAsync(new PetActivity
+                        {
+                            Id = Guid.NewGuid(),
+                            MatchId = matchGuid,
+                            PetId = pet.Id,
+                            UserId = Guid.Parse(GetUserId()),
+                            ActivityType = "voice_chat",
+                            Description = $"Hoàn thành cuộc gọi ({minutes} phút), nhận +{gain} RP",
+                            CreatedAt = DateTimeOffset.UtcNow,
+                            UpdatedAt = DateTimeOffset.UtcNow
+                        }, Context.ConnectionAborted);
+
+                        await _petRepository.SaveChangesAsync(Context.ConnectionAborted);
+
+                        var match = await _matches.GetByIdAsync(matchGuid, Context.ConnectionAborted);
+                        if (match != null)
+                        {
+                            await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, Context.ConnectionAborted);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public async Task SendOffer(string matchId, string callId, string sdp)

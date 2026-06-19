@@ -38,6 +38,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<PetStateHistory> PetStateHistories => Set<PetStateHistory>();
 
+    public DbSet<PetActivity> PetActivities => Set<PetActivity>();
+
     public DbSet<ShopItem> ShopItems => Set<ShopItem>();
 
     public DbSet<UserInventory> UserInventories => Set<UserInventory>();
@@ -270,7 +272,15 @@ public sealed class AmoraDbContext : DbContext
             entity.HasIndex(x => new { x.UserId, x.ShopItemId }).IsUnique();
 
             entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(x => x.ShopItem).WithMany().HasForeignKey(x => x.ShopItemId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.ShopItem).WithMany().HasForeignKey(e => e.ShopItemId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PetActivity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.Match).WithMany().HasForeignKey(e => e.MatchId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Pet).WithMany().HasForeignKey(e => e.PetId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PetTransaction>(entity =>

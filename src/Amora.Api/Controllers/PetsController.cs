@@ -40,6 +40,21 @@ public sealed class PetsController : ControllerBase
     }
 
     /// <summary>
+    /// Lấy lịch sử chăm sóc thú cưng của match.
+    /// </summary>
+    [HttpGet("{matchId:guid}/activities")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResult<PetActivityDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResult<PetActivityDto>>>> GetActivities(
+        Guid matchId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(new GetPetActivitiesQuery(matchId, _currentUser.UserId, page, pageSize), cancellationToken);
+        return Ok(ApiResponse<PagedResult<PetActivityDto>>.Ok(result));
+    }
+
+    /// <summary>
     /// Su dung item tu inventory len Pet cua match.
     /// Cap nhat trang thai Pet sau khi ap dung.
     /// </summary>

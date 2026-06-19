@@ -10,7 +10,7 @@ public static class PetEngine
     public const int MaxHp = 100;
     public const int DailyHpGainCap = 30;
     public const int DailyTextRpCap = 100; // Cập nhật theo yêu cầu
-    public const int DailyVoiceRpCap = 40;  // Cập nhật theo yêu cầu
+    public const int DailyVoiceRpCap = 100;  // Giới hạn max là 100/ngày theo yêu cầu mới
     public const int DailyOnlineRp = 5;
     public const int HighHpStreakBonusRp = 20;
 
