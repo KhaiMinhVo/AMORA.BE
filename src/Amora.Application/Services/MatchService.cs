@@ -249,9 +249,10 @@ public sealed class MatchService
 
             var pet = await _petRepository.GetByMatchIdAsync(match.Id, cancellationToken);
             var petDto = pet is null
-                ? new PetStateDto { Hp = 80, Level = 0 }
+                ? new PetStateDto { Name = string.Empty, Hp = 80, Level = 0 }
                 : new PetStateDto
                 {
+                    Name = pet.Name ?? string.Empty,
                     Hp = pet.Hp,
                     Level = (int)pet.Stage
                 };

@@ -3,6 +3,7 @@ namespace Amora.Application.Dtos.Pets;
 public sealed class PetStatusDto
 {
     public Guid PetId { get; init; }
+    public string Name { get; init; } = string.Empty;
     public Guid MatchId { get; init; }
     public int Hp { get; init; }
     public int Mood { get; init; }

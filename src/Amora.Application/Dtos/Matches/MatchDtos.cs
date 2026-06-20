@@ -47,6 +47,7 @@ public sealed class LastMessagePreviewDto
 
 public sealed class PetStateDto
 {
+    public string Name { get; init; } = string.Empty;
     public int Hp { get; init; }
 
     public int Level { get; init; }

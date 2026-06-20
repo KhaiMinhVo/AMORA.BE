@@ -137,6 +137,7 @@ public sealed class PetCoordinator
     public static PetStatusDto ToDto(Pet pet) => new()
     {
         PetId = pet.Id,
+        Name = pet.Name ?? string.Empty,
         MatchId = pet.MatchId,
         Hp = pet.Hp,
         Mood = pet.Mood,
