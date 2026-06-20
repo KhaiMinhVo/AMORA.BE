@@ -75,6 +75,25 @@ public sealed class PetCoordinator
         await SaveAndNotifyAsync(pet, cancellationToken);
     }
 
+    public async Task ProcessVoiceMessageAsync(Guid matchId, Guid senderId, double durationSeconds, CancellationToken cancellationToken)
+    {
+        var pet = await RequirePetAsync(matchId, cancellationToken);
+        if (pet.IsFrozen) return;
+
+        var gain = PetEngine.AwardVoiceRp(pet, durationSeconds);
+        
+        var replyDelay = ComputeReplyDelayMinutes(pet, senderId);
+        await EvaluateStageAndTypeAsync(pet, cancellationToken);
+        pet.UpdatedAt = DateTimeOffset.UtcNow;
+        pet.LastPartnerMessageAt = DateTimeOffset.UtcNow;
+
+        if (gain > 0)
+        {
+            await LogAsync(pet, "VoiceInteraction", new { senderId, durationSeconds, gain }, cancellationToken);
+            await SaveAndNotifyAsync(pet, cancellationToken);
+        }
+    }
+
     public async Task PublishVoiceForVibeAsync(
         Guid matchId,
         Guid userId,
@@ -103,7 +122,6 @@ public sealed class PetCoordinator
         var voiceMinutes = result.DurationSeconds / 60.0;
         var rawHp = PetEngine.ComputeHpFromInteraction(1, voiceMinutes, result.VibeScore);
         PetEngine.ApplyHpGain(pet, rawHp);
-        PetEngine.AwardVoiceRp(pet, result.DurationSeconds);
 
         var replyDelay = ComputeReplyDelayMinutes(pet, result.UserId);
         await EvaluateStageAndTypeAsync(pet, cancellationToken);

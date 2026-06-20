@@ -134,7 +134,7 @@ public sealed class CallHub : Hub
             _cache.Remove($"CallStart_{callId}");
             var durationSeconds = (DateTimeOffset.UtcNow - startedAt).TotalSeconds;
 
-            if (durationSeconds >= 30) // Minimum 30s for EXP
+            if (durationSeconds > 0) // Any call duration
             {
                 var pet = await _petRepository.GetByMatchIdAsync(matchGuid, Context.ConnectionAborted);
                 if (pet != null)
@@ -146,7 +146,7 @@ public sealed class CallHub : Hub
                         pet.UpdatedAt = DateTimeOffset.UtcNow;
 
                         var minutes = (int)Math.Floor(durationSeconds / 60.0);
-                        if (minutes == 0) minutes = 1; // display 1 min if >=30s but <60s
+                        if (minutes == 0) minutes = 1; // display 1 min if <60s
 
                         await _petRepository.AddActivityAsync(new PetActivity
                         {

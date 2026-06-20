@@ -131,6 +131,8 @@ public sealed class ChatService
         // Pet System — chỉ metadata / loại tin, không đọc nội dung
         if (messageType == MessageType.Voice)
         {
+            await _mediator.Send(new ProcessVoiceMessagePetCommand(matchId, _currentUserService.UserId, request.Duration ?? 0), cancellationToken);
+            
             await _mediator.Send(new PublishVoiceForVibeCommand(
                 matchId,
                 _currentUserService.UserId,
