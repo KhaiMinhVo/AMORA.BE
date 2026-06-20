@@ -156,7 +156,7 @@ public sealed class PetCoordinator
             Energy = pet.Energy,
             Rp = pet.Rp,
             VoiceExpToday = pet.RpFromVoiceToday,
-            MaxVoiceExpPerDay = 100,
+            MaxVoiceExpPerDay = 50,
             Stage = (int)pet.Stage,
             StageName = PetFeatureUnlocks.StageDisplayName(pet.Stage),
             Type = pet.Type.ToString(),

@@ -183,7 +183,7 @@ public sealed class PetShopService
 
         pet.WaterClaimsToday++;
         pet.LastWaterClaimAt = DateTimeOffset.UtcNow;
-        if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 5; // Water gives 5 EXP
+        if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 10; // Water gives 10 EXP
 
         pet.Stage = PetEngine.EvaluateStage(pet);
         pet.UpdatedAt = DateTimeOffset.UtcNow;
@@ -314,8 +314,8 @@ public sealed class PetShopService
         {
             var oldHp = pet.Hp;
             pet.Hp = Math.Min(pet.Hp + 30, 100);
-            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 30;
-            activityDescription = $"Cho thú cưng ăn {item.Name} (+{pet.Hp - oldHp} HP, +30 RP)";
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 10;
+            activityDescription = $"Cho thú cưng ăn {item.Name} (+{pet.Hp - oldHp} HP, +10 RP)";
             return;
         }
         
@@ -323,17 +323,17 @@ public sealed class PetShopService
         {
             var oldEnergy = pet.Energy;
             pet.Energy = Math.Min(pet.Energy + 30, 100);
-            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 5;
-            activityDescription = $"Cho thú cưng uống {item.Name} (+{pet.Energy - oldEnergy} Năng lượng, +5 RP)";
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 10;
+            activityDescription = $"Cho thú cưng uống {item.Name} (+{pet.Energy - oldEnergy} Năng lượng, +10 RP)";
             return;
         }
 
         if (item.ItemType == ItemType.Toy)
         {
             var oldMood = pet.Mood;
-            pet.Mood = Math.Min(pet.Mood + 15, 100);
-            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 25;
-            activityDescription = $"Chơi đùa cùng thú cưng với {item.Name} (+{pet.Mood - oldMood} Tâm trạng, +25 RP)";
+            pet.Mood = Math.Min(pet.Mood + 20, 100);
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 20;
+            activityDescription = $"Chơi đùa cùng thú cưng với {item.Name} (+{pet.Mood - oldMood} Tâm trạng, +20 RP)";
             return;
         }
 

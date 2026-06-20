@@ -78,7 +78,7 @@ public sealed class PetsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new ClaimWaterCommand(_currentUser.UserId, matchId), cancellationToken);
-        return Ok(ApiResponse<WaterClaimResultDto>.Ok(result, "Nhận nước thành công. Pet nhận thêm 5 EXP."));
+        return Ok(ApiResponse<WaterClaimResultDto>.Ok(result, "Nhận nước thành công. Pet nhận thêm 10 EXP."));
     }
 
     /// <summary>

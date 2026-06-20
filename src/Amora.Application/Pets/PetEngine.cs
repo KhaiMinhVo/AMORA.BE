@@ -10,7 +10,7 @@ public static class PetEngine
     public const int MaxHp = 100;
     public const int DailyHpGainCap = 30;
     public const int DailyTextRpCap = 100; // Cập nhật theo yêu cầu
-    public const int DailyVoiceRpCap = 100;  // Giới hạn max là 100/ngày theo yêu cầu mới
+    public const int DailyVoiceRpCap = 50;  // Giới hạn max là 50/ngày theo yêu cầu mới
     public const int DailyOnlineRp = 5;
     public const int HighHpStreakBonusRp = 20;
 
@@ -107,30 +107,18 @@ public static class PetEngine
     {
         if (pet.IsFrozen) return 0;
         ResetDailyStatsIfNeeded(pet);
-
-        var blocks = (int)(durationSeconds / 30);
-        if (blocks <= 0) return 0;
+        if (pet.RpFromVoiceToday >= DailyVoiceRpCap) return 0;
 
         var multiplier = HasActiveBuff(pet, PetBuffType.DoubleVoiceRp) ? 2 : 1;
-        var gain = 0;
+        var gain = 2 * multiplier;
 
-        for (var i = 0; i < blocks; i++)
+        if (pet.RpFromVoiceToday + gain > DailyVoiceRpCap)
         {
-            if (pet.RpFromVoiceToday >= DailyVoiceRpCap) break;
-            
-            // Cập nhật: 4 RP mỗi 30s
-            var blockGain = 4 * multiplier;
-            
-            if (pet.RpFromVoiceToday + blockGain > DailyVoiceRpCap)
-            {
-                blockGain = DailyVoiceRpCap - pet.RpFromVoiceToday;
-            }
-
-            pet.Rp += blockGain;
-            pet.RpFromVoiceToday += blockGain;
-            gain += blockGain;
+            gain = DailyVoiceRpCap - pet.RpFromVoiceToday;
         }
 
+        pet.Rp += gain;
+        pet.RpFromVoiceToday += gain;
         return gain;
     }
 

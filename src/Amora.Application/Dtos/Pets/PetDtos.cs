@@ -10,7 +10,7 @@ public sealed class PetStatusDto
     public int Energy { get; init; }
     public long Rp { get; init; }
     public int VoiceExpToday { get; init; }
-    public int MaxVoiceExpPerDay { get; init; } = 100;
+    public int MaxVoiceExpPerDay { get; init; } = 50;
     public int Stage { get; init; }
     public string StageName { get; init; } = string.Empty;
     public string Type { get; init; } = "None";
