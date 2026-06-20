@@ -311,7 +311,7 @@ public sealed class PetShopService
             return;
         }
 
-        if (item.Code == "pet_toy")
+        if (item.ItemType == ItemType.Toy)
         {
             var oldMood = pet.Mood;
             pet.Mood = Math.Min(pet.Mood + 15, 100);
