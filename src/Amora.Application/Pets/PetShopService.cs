@@ -46,6 +46,7 @@ public sealed class PetShopService
             ShopItemId = s.ShopItemId,
             Code = s.ShopItem?.Code ?? string.Empty,
             Name = s.ShopItem?.Name ?? string.Empty,
+            ItemType = s.ShopItem != null ? MapFrontendItemType(s.ShopItem) : string.Empty,
             Quantity = s.Quantity
         }).ToList();
     }
@@ -375,13 +376,26 @@ public sealed class PetShopService
         }
     }
 
+    private static string MapFrontendItemType(ShopItem item)
+    {
+        if (item.ItemType == ItemType.Consumable)
+        {
+            if (item.Code == "pet_food") return "pet_food";
+            return "consumable";
+        }
+        if (item.ItemType == ItemType.Toy) return "pet_toy";
+        if (item.ItemType == ItemType.Cosmetic) return "pet_clothes";
+        
+        return "consumable";
+    }
+
     private static ShopItemDto MapItem(ShopItem item) => new()
     {
         Id = item.Id,
         Code = item.Code,
         Name = item.Name,
         Description = item.Description,
-        ItemType = item.ItemType.ToString(),
+        ItemType = MapFrontendItemType(item),
         PriceDiamonds = item.PriceDiamonds,
         IsActive = item.IsActive
     };
