@@ -134,26 +134,42 @@ public sealed class PetCoordinator
         return count;
     }
 
-    public static PetStatusDto ToDto(Pet pet) => new()
+    public static PetStatusDto ToDto(Pet pet)
     {
-        PetId = pet.Id,
-        Name = pet.Name ?? string.Empty,
-        MatchId = pet.MatchId,
-        Hp = pet.Hp,
-        Mood = pet.Mood,
-        Energy = pet.Energy,
-        Rp = pet.Rp,
-        VoiceExpToday = pet.RpFromVoiceToday,
-        MaxVoiceExpPerDay = 100,
-        Stage = (int)pet.Stage,
-        StageName = PetFeatureUnlocks.StageDisplayName(pet.Stage),
-        Type = pet.Type.ToString(),
-        TypeName = PetFeatureUnlocks.PetTypeName(pet.Type),
-        TypeDescription = PetFeatureUnlocks.PetTypeDescription(pet.Type),
-        IsFrozen = pet.IsFrozen,
-        ExpiresAtHint = pet.LastInteractionAt.AddHours(6),
-        UnlockedFeatures = PetFeatureUnlocks.ForStage(pet.Stage)
-    };
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var claimsToday = pet.WaterClaimDate == today ? pet.WaterClaimsToday : 0;
+        DateTimeOffset? nextWaterClaim = null;
+        if (claimsToday < 3 && pet.LastWaterClaimAt.HasValue)
+        {
+            var next = pet.LastWaterClaimAt.Value.AddHours(1);
+            if (next > DateTimeOffset.UtcNow)
+                nextWaterClaim = next;
+        }
+
+        return new PetStatusDto
+        {
+            PetId = pet.Id,
+            Name = pet.Name ?? string.Empty,
+            MatchId = pet.MatchId,
+            Hp = pet.Hp,
+            Mood = pet.Mood,
+            Energy = pet.Energy,
+            Rp = pet.Rp,
+            VoiceExpToday = pet.RpFromVoiceToday,
+            MaxVoiceExpPerDay = 100,
+            Stage = (int)pet.Stage,
+            StageName = PetFeatureUnlocks.StageDisplayName(pet.Stage),
+            Type = pet.Type.ToString(),
+            TypeName = PetFeatureUnlocks.PetTypeName(pet.Type),
+            TypeDescription = PetFeatureUnlocks.PetTypeDescription(pet.Type),
+            IsFrozen = pet.IsFrozen,
+            ExpiresAtHint = pet.LastInteractionAt.AddHours(6),
+            UnlockedFeatures = PetFeatureUnlocks.ForStage(pet.Stage),
+            WaterClaimCountToday = claimsToday,
+            MaxWaterClaimsPerDay = 3,
+            NextWaterClaimAvailableAt = nextWaterClaim
+        };
+    }
 
     private async Task<Pet> RequirePetAsync(Guid matchId, CancellationToken cancellationToken)
     {

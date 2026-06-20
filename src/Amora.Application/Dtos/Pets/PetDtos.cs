@@ -19,6 +19,17 @@ public sealed class PetStatusDto
     public bool IsFrozen { get; init; }
     public DateTimeOffset ExpiresAtHint { get; init; }
     public IReadOnlyList<string> UnlockedFeatures { get; init; } = Array.Empty<string>();
+    public int WaterClaimCountToday { get; init; }
+    public int MaxWaterClaimsPerDay { get; init; } = 3;
+    public DateTimeOffset? NextWaterClaimAvailableAt { get; init; }
+}
+
+public sealed class WaterClaimResultDto
+{
+    public int WaterClaimCountToday { get; init; }
+    public int MaxWaterClaimsPerDay { get; init; } = 3;
+    public DateTimeOffset? NextWaterClaimAvailableAt { get; init; }
+    public long Rp { get; init; }
 }
 
 public sealed class PetActivityDto

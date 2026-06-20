@@ -72,13 +72,13 @@ public sealed class PetsController : ControllerBase
     /// Nhận nước miễn phí (Tối đa 3 lần/ngày, cách nhau 1 giờ).
     /// </summary>
     [HttpPost("{matchId:guid}/claim-water")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> ClaimWater(
+    [ProducesResponseType(typeof(ApiResponse<WaterClaimResultDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<WaterClaimResultDto>>> ClaimWater(
         Guid matchId,
         CancellationToken cancellationToken)
     {
-        await _mediator.Send(new ClaimWaterCommand(_currentUser.UserId, matchId), cancellationToken);
-        return Ok(ApiResponse<object>.Ok(null, "Nhận nước thành công. Pet nhận thêm 5 EXP."));
+        var result = await _mediator.Send(new ClaimWaterCommand(_currentUser.UserId, matchId), cancellationToken);
+        return Ok(ApiResponse<WaterClaimResultDto>.Ok(result, "Nhận nước thành công. Pet nhận thêm 5 EXP."));
     }
 
     /// <summary>

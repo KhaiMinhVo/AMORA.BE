@@ -159,7 +159,7 @@ public sealed class PetShopService
             await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, cancellationToken);
     }
 
-    public async Task ClaimWaterAsync(Guid userId, Guid matchId, CancellationToken cancellationToken)
+    public async Task<WaterClaimResultDto> ClaimWaterAsync(Guid userId, Guid matchId, CancellationToken cancellationToken)
     {
         if (!await _matchRepository.IsParticipantAsync(matchId, userId, cancellationToken))
             throw new ForbiddenApiException("Bạn không tham gia cuộc trò chuyện này.");
@@ -193,6 +193,22 @@ public sealed class PetShopService
         var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
         if (match is not null)
             await _petNotifier.NotifyPetStatusUpdatedAsync(pet, match, cancellationToken);
+
+        DateTimeOffset? nextWaterClaim = null;
+        if (pet.WaterClaimsToday < 3 && pet.LastWaterClaimAt.HasValue)
+        {
+            var next = pet.LastWaterClaimAt.Value.AddHours(1);
+            if (next > DateTimeOffset.UtcNow)
+                nextWaterClaim = next;
+        }
+
+        return new WaterClaimResultDto
+        {
+            WaterClaimCountToday = pet.WaterClaimsToday,
+            MaxWaterClaimsPerDay = 3,
+            NextWaterClaimAvailableAt = nextWaterClaim,
+            Rp = pet.Rp
+        };
     }
 
     public async Task RenamePetAsync(Guid userId, Guid matchId, Guid itemId, string newName, CancellationToken cancellationToken)
