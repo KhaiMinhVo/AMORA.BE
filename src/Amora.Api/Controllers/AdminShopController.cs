@@ -76,10 +76,14 @@ public sealed class AdminShopController : ControllerBase
         if (!string.IsNullOrWhiteSpace(request.Description)) item.Description = request.Description.Trim();
         if (!string.IsNullOrWhiteSpace(request.ItemType)) item.ItemType = Enum.Parse<ItemType>(request.ItemType, ignoreCase: true);
         if (request.PriceDiamonds.HasValue) item.PriceDiamonds = request.PriceDiamonds.Value;
-        if (!string.IsNullOrWhiteSpace(request.EffectJson)) item.EffectJson = request.EffectJson;
-        if (request.ImageUrl is not null) item.ImageUrl = request.ImageUrl;
+        
+        if (request.EffectJson is not null)
+        {
+            item.EffectJson = string.IsNullOrWhiteSpace(request.EffectJson) ? "{}" : request.EffectJson;
+        }
+
+        if (request.ImageUrl is not null) item.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
         if (request.IsActive.HasValue) item.IsActive = request.IsActive.Value;
-        if (request.DailyPurchaseLimit.HasValue) item.DailyPurchaseLimit = request.DailyPurchaseLimit.Value;
 
         await _shopRepository.SaveChangesAsync(cancellationToken);
         return Ok(new { success = true, data = new { item.Id, item.Code, item.Name } });
@@ -157,7 +161,6 @@ public sealed class UpdateShopItemRequest
     public string? EffectJson { get; set; }
     public string? ImageUrl { get; set; }
     public bool? IsActive { get; set; }
-    public int? DailyPurchaseLimit { get; set; }
 }
 
 public sealed class CreateShopItemRequest
