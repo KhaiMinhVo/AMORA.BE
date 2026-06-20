@@ -129,8 +129,8 @@ public sealed class PetShopService
 
         ApplyItemEffect(pet, item, out var activityDescription);
 
-        // Do not consume cosmetics or special items (handled separately or persistent)
-        if (item.ItemType != ItemType.Cosmetic)
+        // Do not consume clothes or special items (handled separately or persistent)
+        if (item.ItemType != ItemType.Clothes)
         {
             slot.Quantity--;
             slot.UpdatedAt = DateTimeOffset.UtcNow;
@@ -242,8 +242,8 @@ public sealed class PetShopService
             throw new ValidationApiException("Bạn không sở hữu phụ kiện này.");
 
         var item = slot.ShopItem ?? await _shopRepository.GetItemByIdAsync(itemId, cancellationToken);
-        if (item == null || item.ItemType != ItemType.Cosmetic)
-            throw new ValidationApiException("Vật phẩm không phải là phụ kiện.");
+        if (item == null || item.ItemType != ItemType.Clothes)
+            throw new ValidationApiException("Vật phẩm không phải là trang phục.");
 
         var pet = await _petRepository.GetByMatchIdAsync(matchId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
@@ -378,13 +378,12 @@ public sealed class PetShopService
 
     private static string MapFrontendItemType(ShopItem item)
     {
-        if (item.ItemType == ItemType.Consumable)
-        {
-            if (item.Code == "pet_food") return "pet_food";
-            return "consumable";
-        }
+        if (item.ItemType == ItemType.Food) return "pet_food";
+        if (item.ItemType == ItemType.Water) return "pet_water";
         if (item.ItemType == ItemType.Toy) return "pet_toy";
-        if (item.ItemType == ItemType.Cosmetic) return "pet_clothes";
+        if (item.ItemType == ItemType.Clothes) return "pet_clothes";
+        if (item.ItemType == ItemType.Consumable) return "consumable";
+
         
         return "consumable";
     }

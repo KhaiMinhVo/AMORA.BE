@@ -124,12 +124,12 @@ public sealed class AdminShopController : ControllerBase
         var items = new List<ShopItem>
         {
             // THÚ NON
-            CreateItem("bang_do_no", "Băng đô nơ", ItemType.Cosmetic, 10, "{\"slot\":\"hat\"}", null, null),
-            CreateItem("non_ca_tim", "Nón cà tím", ItemType.Cosmetic, 15, "{\"slot\":\"hat\"}", null, null),
-            CreateItem("kinh_mat_tron", "Kính mắt tròn", ItemType.Cosmetic, 10, "{\"slot\":\"glasses\"}", null, null),
-            CreateItem("bim_bong_mem", "Bỉm bông mềm", ItemType.Cosmetic, 20, "{\"slot\":\"outfit\"}", null, null),
-            CreateItem("pet_food", "Thức ăn", ItemType.Consumable, 5, "{\"hp\":10}", null, null),
-            CreateItem("water", "Nước", ItemType.Consumable, 0, "{\"hp\":5}", null, 3), // Limit 3 per day
+            CreateItem("bang_do_no", "Băng đô nơ", ItemType.Clothes, 10, "{\"slot\":\"hat\"}", null, null),
+            CreateItem("non_ca_tim", "Nón cà tím", ItemType.Clothes, 15, "{\"slot\":\"hat\"}", null, null),
+            CreateItem("kinh_mat_tron", "Kính mắt tròn", ItemType.Clothes, 10, "{\"slot\":\"glasses\"}", null, null),
+            CreateItem("bim_bong_mem", "Bỉm bông mềm", ItemType.Clothes, 20, "{\"slot\":\"outfit\"}", null, null),
+            CreateItem("pet_food", "Thức ăn", ItemType.Food, 5, "{\"hp\":10}", null, null),
+            CreateItem("water", "Nước", ItemType.Water, 0, "{\"hp\":5}", null, 3), // Limit 3 per day
             CreateItem("qua_bong", "Quả bóng", ItemType.Toy, 8, "{\"rp\":15}", null, 2),
             CreateItem("can_cau_meo", "Cần câu mèo", ItemType.Toy, 10, "{\"rp\":20}", null, 2),
             CreateItem("revival_potion", "Thuốc hồi sinh", ItemType.Revival, 50, "{\"revive\":true,\"hp\":50}", null, null),
@@ -137,16 +137,16 @@ public sealed class AdminShopController : ControllerBase
             CreateItem("rename_card", "Thẻ đổi tên", ItemType.Special, 30, "{\"rename\":true}", null, null),
 
             // THIẾU NIÊN
-            CreateItem("mu_xo_bong", "Mũ xô bông", ItemType.Cosmetic, 50, "{\"slot\":\"hat\"}", GrowthStage.Young, null),
-            CreateItem("bo_yem", "Bộ yếm", ItemType.Cosmetic, 80, "{\"slot\":\"outfit\"}", GrowthStage.Young, null),
-            CreateItem("bo_khung_long", "Bộ khủng long", ItemType.Cosmetic, 100, "{\"slot\":\"outfit\"}", GrowthStage.Young, null),
+            CreateItem("mu_xo_bong", "Mũ xô bông", ItemType.Clothes, 50, "{\"slot\":\"hat\"}", GrowthStage.Young, null),
+            CreateItem("bo_yem", "Bộ yếm", ItemType.Clothes, 80, "{\"slot\":\"outfit\"}", GrowthStage.Young, null),
+            CreateItem("bo_khung_long", "Bộ khủng long", ItemType.Clothes, 100, "{\"slot\":\"outfit\"}", GrowthStage.Young, null),
 
             // TRƯỞNG THÀNH
-            CreateItem("mu_bong_chay", "Mũ bóng chày", ItemType.Cosmetic, 60, "{\"slot\":\"hat\"}", GrowthStage.Adult, null),
-            CreateItem("ao_lien_quan", "Bộ áo liền quần", ItemType.Cosmetic, 120, "{\"slot\":\"outfit\"}", GrowthStage.Adult, null),
-            CreateItem("kinh_mat", "Kính mát", ItemType.Cosmetic, 30, "{\"slot\":\"glasses\"}", GrowthStage.Adult, null),
-            CreateItem("non_hong", "Nón hồng", ItemType.Cosmetic, 50, "{\"slot\":\"hat\"}", GrowthStage.Adult, null),
-            CreateItem("suit_the_thao", "Suit thể thao", ItemType.Cosmetic, 100, "{\"slot\":\"outfit\"}", GrowthStage.Adult, null)
+            CreateItem("mu_bong_chay", "Mũ bóng chày", ItemType.Clothes, 60, "{\"slot\":\"hat\"}", GrowthStage.Adult, null),
+            CreateItem("ao_lien_quan", "Bộ áo liền quần", ItemType.Clothes, 120, "{\"slot\":\"outfit\"}", GrowthStage.Adult, null),
+            CreateItem("kinh_mat", "Kính mát", ItemType.Clothes, 30, "{\"slot\":\"glasses\"}", GrowthStage.Adult, null),
+            CreateItem("non_hong", "Nón hồng", ItemType.Clothes, 50, "{\"slot\":\"hat\"}", GrowthStage.Adult, null),
+            CreateItem("suit_the_thao", "Suit thể thao", ItemType.Clothes, 100, "{\"slot\":\"outfit\"}", GrowthStage.Adult, null)
         };
 
         foreach (var item in items)
@@ -182,9 +182,11 @@ public sealed class AdminShopController : ControllerBase
     private static bool TryParseItemType(string rawType, out ItemType itemType)
     {
         rawType = rawType.ToLowerInvariant();
-        if (rawType == "pet_food" || rawType == "pet_water" || rawType == "consumable") { itemType = ItemType.Consumable; return true; }
+        if (rawType == "pet_food" || rawType == "food") { itemType = ItemType.Food; return true; }
+        if (rawType == "pet_water" || rawType == "water") { itemType = ItemType.Water; return true; }
         if (rawType == "pet_toy" || rawType == "toy") { itemType = ItemType.Toy; return true; }
-        if (rawType == "pet_clothes" || rawType == "cosmetic") { itemType = ItemType.Cosmetic; return true; }
+        if (rawType == "pet_clothes" || rawType == "clothes" || rawType == "cosmetic") { itemType = ItemType.Clothes; return true; }
+        if (rawType == "consumable") { itemType = ItemType.Consumable; return true; }
         if (rawType == "revival") { itemType = ItemType.Revival; return true; }
         if (rawType == "buff") { itemType = ItemType.Buff; return true; }
         if (rawType == "special") { itemType = ItemType.Special; return true; }
