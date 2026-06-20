@@ -66,7 +66,8 @@ public sealed class ProfileService
             Bio = target.Bio,
             VoiceIntroUrl = canHearVoice ? target.VoiceIntroUrl : null,
             VoiceIntroDuration = canHearVoice ? target.VoiceIntroDuration : null,
-            Interests = ParseInterests(target.Interests)
+            Interests = ParseInterests(target.Interests),
+            TrustScore = target.TrustScore
         };
     }
 
@@ -173,7 +174,8 @@ public sealed class ProfileService
         CreatedAt = user.CreatedAt,
         Diamonds = user.Diamonds,
         SubscriptionType = user.SubscriptionType.ToString(),
-        SubscriptionEndDate = user.SubscriptionEndDate
+        SubscriptionEndDate = user.SubscriptionEndDate,
+        TrustScore = user.TrustScore
     };
 
     private static string[] ParseInterests(string? interests)

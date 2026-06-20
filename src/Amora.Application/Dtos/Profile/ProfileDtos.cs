@@ -36,6 +36,7 @@ public sealed class ProfileResponseDto
     public int Diamonds { get; init; }
     public string SubscriptionType { get; init; } = "Free";
     public DateTimeOffset? SubscriptionEndDate { get; init; }
+    public int TrustScore { get; init; }
 }
 
 /// <summary>
@@ -54,4 +55,5 @@ public sealed class PublicProfileResponseDto
     public string? VoiceIntroUrl { get; init; }
     public int? VoiceIntroDuration { get; init; }
     public string[] Interests { get; init; } = [];
+    public int TrustScore { get; init; }
 }
