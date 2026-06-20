@@ -44,49 +44,77 @@ public sealed class AdminShopController : ControllerBase
     [HttpPost("items")]
     public async Task<IActionResult> AddItem([FromBody] CreateShopItemRequest request, CancellationToken cancellationToken)
     {
-        var item = new ShopItem
+        try
         {
-            Id = Guid.NewGuid(),
-            Code = request.Code.Trim().ToLowerInvariant(),
-            Name = request.Name.Trim(),
-            Description = request.Description?.Trim() ?? string.Empty,
-            ItemType = Enum.Parse<ItemType>(request.ItemType, ignoreCase: true),
-            PriceDiamonds = request.PriceDiamonds,
-            EffectJson = request.EffectJson ?? "{}",
-            ImageUrl = request.ImageUrl,
-            MinStage = string.IsNullOrWhiteSpace(request.MinStage) ? null : Enum.Parse<GrowthStage>(request.MinStage, ignoreCase: true),
-            DailyPurchaseLimit = request.DailyPurchaseLimit,
-            IsActive = true,
-            CreatedAt = DateTimeOffset.UtcNow
-        };
+            if (!TryParseItemType(request.ItemType, out var parsedType))
+            {
+                return BadRequest(new { success = false, message = $"Invalid itemType: '{request.ItemType}'. Allowed values: pet_food, pet_water, pet_toy, pet_clothes, consumable." });
+            }
+
+            var item = new ShopItem
+            {
+                Id = Guid.NewGuid(),
+                Code = request.Code.Trim().ToLowerInvariant(),
+                Name = request.Name.Trim(),
+                Description = request.Description?.Trim() ?? string.Empty,
+                ItemType = parsedType,
+                PriceDiamonds = request.PriceDiamonds,
+                EffectJson = request.EffectJson ?? "{}",
+                ImageUrl = request.ImageUrl,
+                MinStage = string.IsNullOrWhiteSpace(request.MinStage) ? null : Enum.Parse<GrowthStage>(request.MinStage, ignoreCase: true),
+                DailyPurchaseLimit = request.DailyPurchaseLimit,
+                IsActive = true,
+                CreatedAt = DateTimeOffset.UtcNow
+            };
         await _shopRepository.AddItemAsync(item, cancellationToken);
         await _shopRepository.SaveChangesAsync(cancellationToken);
 
         return Ok(new { success = true, data = new { item.Id, item.Code, item.Name } });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = "Internal Server Error", error = ex.Message, stackTrace = ex.StackTrace });
+        }
     }
 
     /// <summary>Cập nhật vật phẩm.</summary>
     [HttpPut("items/{itemId:guid}")]
     public async Task<IActionResult> UpdateItem(Guid itemId, [FromBody] UpdateShopItemRequest request, CancellationToken cancellationToken)
     {
-        var item = await _shopRepository.GetItemByIdAsync(itemId, cancellationToken);
-        if (item is null) return NotFound(new { success = false, message = "Item not found." });
-
-        if (!string.IsNullOrWhiteSpace(request.Name)) item.Name = request.Name.Trim();
-        if (!string.IsNullOrWhiteSpace(request.Description)) item.Description = request.Description.Trim();
-        if (!string.IsNullOrWhiteSpace(request.ItemType)) item.ItemType = Enum.Parse<ItemType>(request.ItemType, ignoreCase: true);
-        if (request.PriceDiamonds.HasValue) item.PriceDiamonds = request.PriceDiamonds.Value;
-        
-        if (request.EffectJson is not null)
+        try
         {
-            item.EffectJson = string.IsNullOrWhiteSpace(request.EffectJson) ? "{}" : request.EffectJson;
+            var item = await _shopRepository.GetItemByIdAsync(itemId, cancellationToken);
+            if (item is null) return NotFound(new { success = false, message = "Item not found." });
+
+            if (!string.IsNullOrWhiteSpace(request.Name)) item.Name = request.Name.Trim();
+            if (!string.IsNullOrWhiteSpace(request.Description)) item.Description = request.Description.Trim();
+            
+            if (!string.IsNullOrWhiteSpace(request.ItemType))
+            {
+                if (!TryParseItemType(request.ItemType, out var parsedType))
+                {
+                    return BadRequest(new { success = false, message = $"Invalid itemType: '{request.ItemType}'. Allowed values: pet_food, pet_water, pet_toy, pet_clothes, consumable." });
+                }
+                item.ItemType = parsedType;
+            }
+
+            if (request.PriceDiamonds.HasValue) item.PriceDiamonds = request.PriceDiamonds.Value;
+            
+            if (request.EffectJson is not null)
+            {
+                item.EffectJson = string.IsNullOrWhiteSpace(request.EffectJson) ? "{}" : request.EffectJson;
+            }
+
+            if (request.ImageUrl is not null) item.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
+            if (request.IsActive.HasValue) item.IsActive = request.IsActive.Value;
+
+            await _shopRepository.SaveChangesAsync(cancellationToken);
+            return Ok(new { success = true, data = new { item.Id, item.Code, item.Name } });
         }
-
-        if (request.ImageUrl is not null) item.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
-        if (request.IsActive.HasValue) item.IsActive = request.IsActive.Value;
-
-        await _shopRepository.SaveChangesAsync(cancellationToken);
-        return Ok(new { success = true, data = new { item.Id, item.Code, item.Name } });
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = "Internal Server Error", error = ex.Message, stackTrace = ex.StackTrace });
+        }
     }
 
     /// <summary>Khởi tạo toàn bộ dữ liệu Shop.</summary>
@@ -149,6 +177,18 @@ public sealed class AdminShopController : ControllerBase
             IsActive = true,
             CreatedAt = DateTimeOffset.UtcNow
         };
+    }
+
+    private static bool TryParseItemType(string rawType, out ItemType itemType)
+    {
+        rawType = rawType.ToLowerInvariant();
+        if (rawType == "pet_food" || rawType == "pet_water" || rawType == "consumable") { itemType = ItemType.Consumable; return true; }
+        if (rawType == "pet_toy" || rawType == "toy") { itemType = ItemType.Toy; return true; }
+        if (rawType == "pet_clothes" || rawType == "cosmetic") { itemType = ItemType.Cosmetic; return true; }
+        if (rawType == "revival") { itemType = ItemType.Revival; return true; }
+        if (rawType == "buff") { itemType = ItemType.Buff; return true; }
+        if (rawType == "special") { itemType = ItemType.Special; return true; }
+        return Enum.TryParse(rawType, true, out itemType);
     }
 }
 
