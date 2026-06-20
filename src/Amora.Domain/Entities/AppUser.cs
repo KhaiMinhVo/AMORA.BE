@@ -49,6 +49,9 @@ public sealed class AppUser
     /// <summary>Thời lượng của file âm thanh giới thiệu (tính bằng giây).</summary>
     public int? VoiceIntroDuration { get; set; }
 
+    /// <summary>Quyền riêng tư cho Voice (Profile & Posts).</summary>
+    public PrivacyLevel VoicePrivacy { get; set; } = PrivacyLevel.Everyone;
+
     /// <summary>Danh sách sở thích, phân tách bởi dấu phẩy. Ví dụ: "Nhạc,Phim,Du lịch"</summary>
     public string? Interests { get; set; }
 

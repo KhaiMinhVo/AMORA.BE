@@ -38,13 +38,20 @@ public sealed class VoicePostRepository : IVoicePostRepository
             .Where(b => b.BlockerId == viewerId)
             .Select(b => b.BlockedUserId);
 
+        // Lấy danh sách user đã match để phục vụ filter quyền riêng tư
+        var matchedUserIds = _dbContext.MatchConnections
+            .Where(m => (m.UserAId == viewerId || m.UserBId == viewerId) && m.Status == Amora.Domain.Enums.MatchStatus.Active)
+            .Select(m => m.UserAId == viewerId ? m.UserBId : m.UserAId);
+
         var now = DateTimeOffset.UtcNow;
         var query = _dbContext.VoicePosts
             .AsNoTracking()
             .Join(_dbContext.Users, p => p.PosterId, u => u.Id, (p, u) => new { Post = p, Poster = u })
             .Where(x => x.Post.Status == Amora.Domain.Enums.VoicePostStatus.Open
                          && x.Post.PosterId != viewerId
-                         && !blockedUserIds.Contains(x.Post.PosterId)) // Ẩn post từ user bị block
+                         && !blockedUserIds.Contains(x.Post.PosterId) // Ẩn post từ user bị block
+                         && (x.Poster.VoicePrivacy == Amora.Domain.Enums.PrivacyLevel.Everyone 
+                             || (x.Poster.VoicePrivacy == Amora.Domain.Enums.PrivacyLevel.MatchedOnly && matchedUserIds.Contains(x.Post.PosterId))))
             .Where(x => 
                  // Viewer's TargetGender matches Poster's Gender
                  (viewer.TargetGender == Amora.Domain.Enums.TargetGender.Both || 

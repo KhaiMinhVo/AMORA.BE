@@ -12,6 +12,7 @@ public sealed class UpdateProfileRequest
     public string? Bio { get; set; }
     public string? VoiceIntroUrl { get; set; }
     public int? VoiceIntroDuration { get; set; }
+    public string? VoicePrivacy { get; set; }
     public string[]? Interests { get; set; }
 }
 
@@ -28,6 +29,7 @@ public sealed class ProfileResponseDto
     public string? Bio { get; init; }
     public string? VoiceIntroUrl { get; init; }
     public int? VoiceIntroDuration { get; init; }
+    public string VoicePrivacy { get; init; } = "Everyone";
     public string[] Interests { get; init; } = [];
     public bool IsProfileComplete { get; init; }
     public DateTimeOffset CreatedAt { get; init; }

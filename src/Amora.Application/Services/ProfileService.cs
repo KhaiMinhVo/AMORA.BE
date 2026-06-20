@@ -50,6 +50,11 @@ public sealed class ProfileService
         // Kiểm tra đã match chưa để quyết định hiển thị Avatar và Photos
         var isMatched = await _matchConnectionRepository.AreMatchedAsync(viewerId, targetUserId, cancellationToken);
 
+        // Kiểm tra quyền riêng tư Voice
+        var canHearVoice = true;
+        if (target.VoicePrivacy == PrivacyLevel.Private) canHearVoice = false;
+        if (target.VoicePrivacy == PrivacyLevel.MatchedOnly && !isMatched) canHearVoice = false;
+
         return new PublicProfileResponseDto
         {
             UserId = target.Id,
@@ -59,8 +64,8 @@ public sealed class ProfileService
             Gender = target.Gender.ToString(),
             City = target.City,
             Bio = target.Bio,
-            VoiceIntroUrl = target.VoiceIntroUrl,
-            VoiceIntroDuration = target.VoiceIntroDuration,
+            VoiceIntroUrl = canHearVoice ? target.VoiceIntroUrl : null,
+            VoiceIntroDuration = canHearVoice ? target.VoiceIntroDuration : null,
             Interests = ParseInterests(target.Interests)
         };
     }
@@ -126,6 +131,13 @@ public sealed class ProfileService
         if (request.VoiceIntroDuration.HasValue)
             user.VoiceIntroDuration = request.VoiceIntroDuration.Value;
 
+        if (!string.IsNullOrWhiteSpace(request.VoicePrivacy))
+        {
+            if (!Enum.TryParse<PrivacyLevel>(request.VoicePrivacy, ignoreCase: true, out var privacy))
+                throw new ValidationApiException($"Quyền riêng tư không hợp lệ. Các giá trị cho phép: {string.Join(", ", Enum.GetNames<PrivacyLevel>())}");
+            user.VoicePrivacy = privacy;
+        }
+
         // Kiểm tra đã đủ thông tin chưa: có avatar, có DOB, có giới tính.
         user.IsProfileComplete = !string.IsNullOrWhiteSpace(user.DisplayName)
                                   && !string.IsNullOrWhiteSpace(user.AvatarUrl)
@@ -155,6 +167,7 @@ public sealed class ProfileService
         Bio = user.Bio,
         VoiceIntroUrl = user.VoiceIntroUrl,
         VoiceIntroDuration = user.VoiceIntroDuration,
+        VoicePrivacy = user.VoicePrivacy.ToString(),
         Interests = ParseInterests(user.Interests),
         IsProfileComplete = user.IsProfileComplete,
         CreatedAt = user.CreatedAt,
