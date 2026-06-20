@@ -13,19 +13,22 @@ public sealed class AdminModerationService
     private readonly IUserBanRepository _userBanRepository;
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly IPetTransactionRepository _petTransactionRepository;
+    private readonly IVoicePostRepository _voicePostRepository;
 
     public AdminModerationService(
         IUserReportRepository reportRepository,
         IUserRepository userRepository,
         IUserBanRepository userBanRepository,
         IRealtimeNotifier realtimeNotifier,
-        IPetTransactionRepository petTransactionRepository)
+        IPetTransactionRepository petTransactionRepository,
+        IVoicePostRepository voicePostRepository)
     {
         _reportRepository = reportRepository;
         _userRepository = userRepository;
         _userBanRepository = userBanRepository;
         _realtimeNotifier = realtimeNotifier;
         _petTransactionRepository = petTransactionRepository;
+        _voicePostRepository = voicePostRepository;
     }
 
     public async Task<PaginatedList<AdminUserDto>> GetUsersAsync(int page, int pageSize, string? keyword, CancellationToken cancellationToken = default)
@@ -47,6 +50,28 @@ public sealed class AdminModerationService
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize
+        };
+    }
+
+    public async Task<AdminUserDetailDto> GetUserDetailsAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+
+        var totalVoicePosts = await _voicePostRepository.CountByPosterSinceAsync(userId, DateTimeOffset.MinValue, cancellationToken);
+        var totalReports = await _reportRepository.CountReportsAgainstUserAsync(userId, cancellationToken);
+
+        return new AdminUserDetailDto
+        {
+            Id = user.Id,
+            Email = user.Email ?? "",
+            DisplayName = user.DisplayName,
+            SubscriptionType = user.SubscriptionType.ToString(),
+            Status = user.IsBanned ? "Banned" : "Active",
+            LastActiveAt = user.LastActiveAt,
+            TotalVoicePosts = totalVoicePosts,
+            TotalReportsAgainstUser = totalReports,
+            Diamonds = user.Diamonds
         };
     }
 

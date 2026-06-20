@@ -65,3 +65,16 @@ public sealed class AdminUserDto
     public bool IsBanned { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }
+
+public sealed class AdminUserDetailDto
+{
+    public Guid Id { get; init; }
+    public string Email { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
+    public string SubscriptionType { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty; // "Active" | "Banned"
+    public DateTimeOffset? LastActiveAt { get; init; }
+    public int TotalVoicePosts { get; init; }
+    public int TotalReportsAgainstUser { get; init; }
+    public int Diamonds { get; init; }
+}

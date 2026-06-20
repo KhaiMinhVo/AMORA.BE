@@ -27,6 +27,11 @@ public sealed class UserReportRepository : IUserReportRepository
             cancellationToken);
     }
 
+    public Task<int> CountReportsAgainstUserAsync(Guid targetUserId, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.UserReports.CountAsync(x => x.TargetUserId == targetUserId, cancellationToken);
+    }
+
     public Task<UserReport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return _dbContext.UserReports.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

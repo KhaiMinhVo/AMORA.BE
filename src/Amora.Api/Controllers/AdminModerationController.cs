@@ -31,6 +31,16 @@ public sealed class AdminModerationController : ControllerBase
     }
 
     /// <summary>
+    /// Lấy thông tin chi tiết của một user (dùng cho trang chi tiết người dùng)
+    /// </summary>
+    [HttpGet("users/{userId:guid}")]
+    public async Task<IActionResult> GetUser(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var result = await _adminService.GetUserDetailsAsync(userId, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Lấy danh sách các báo cáo vi phạm
     /// </summary>
     [HttpGet("reports")]
