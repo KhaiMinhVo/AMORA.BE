@@ -35,14 +35,14 @@ public sealed class AdminNotificationService
         await _adminNotifier.NotifyNewAdminAlertAsync(notification, cancellationToken);
     }
 
-    public async Task NotifyNewAppealAsync(Guid userId, string reason, CancellationToken cancellationToken = default)
+    public async Task NotifyNewAppealAsync(Guid userId, string userName, string reason, CancellationToken cancellationToken = default)
     {
         var notification = new AdminNotification
         {
             Id = Guid.NewGuid(),
             Type = AdminNotificationType.NewAppeal,
             Title = "Đơn khiếu nại mới",
-            Message = $"Người dùng {userId.ToString()[..8]} đã gửi đơn khiếu nại xin mở khóa tài khoản. Lý do: {reason}",
+            Message = $"Người dùng {userName} đã gửi đơn khiếu nại xin mở khóa tài khoản. Lý do: {reason}",
             ActionUrl = "/admin/appeals",
             IsRead = false,
             CreatedAt = DateTimeOffset.UtcNow

@@ -260,8 +260,7 @@ public sealed class AuthService
         activeBan.AppealStatus = Amora.Domain.Enums.AppealStatus.Pending;
         activeBan.AppealReason = request.AppealReason.Trim();
         await _userBanRepository.UpdateAsync(activeBan, cancellationToken);
-        
-        await _adminNotificationService.NotifyNewAppealAsync(user.Id, activeBan.AppealReason, cancellationToken);
+        await _adminNotificationService.NotifyNewAppealAsync(user.Id, user.DisplayName, activeBan.AppealReason, cancellationToken);
     }
 
     private AuthResponseDto BuildResponse(AppUser user)
