@@ -19,6 +19,8 @@ public interface IMatchConnectionRepository
     /// <summary>Kiểm tra 2 user có match Active với nhau không (dùng cho avatar blur).</summary>
     Task<bool> AreMatchedAsync(Guid userAId, Guid userBId, CancellationToken cancellationToken = default);
 
+    Task<int> CountMatchesCreatedTodayAsync(Guid userId, CancellationToken cancellationToken = default);
+
     /// <summary>Handshake 24h: lấy danh sách match đã quá hạn mà chưa có ai nhắn.</summary>
     Task<IReadOnlyList<MatchConnection>> GetExpiredMatchesAsync(int batchSize, CancellationToken cancellationToken = default);
 

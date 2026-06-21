@@ -62,8 +62,10 @@ public sealed class MatchService
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
     {
         var posterId = _currentUserService.UserId;
-        var user = await _userRepository.GetByIdAsync(posterId, cancellationToken);
-        if (user != null && user.TrustScore < 20)
+        var user = await _userRepository.GetByIdAsync(posterId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+            
+        if (user.TrustScore < 20)
         {
             throw new ForbiddenApiException("Điểm tin cậy của bạn dưới mức 20. Tài khoản đã bị hạn chế ghép đôi.");
         }
@@ -76,9 +78,17 @@ public sealed class MatchService
             throw new ForbiddenApiException("Bạn không được phép ghép đôi trên bài viết này.");
         }
 
-        if (post.MatchCount >= post.MaxMatchSlots)
+        int dailyLimit = user.SubscriptionType switch
         {
-            throw new ConflictApiException($"Bài Post này đã đạt giới hạn Match ({post.MaxMatchSlots} người). Hãy nâng cấp gói cước hoặc mua thêm Slot để Match tiếp!");
+            Domain.Enums.SubscriptionType.Gold => 8,
+            Domain.Enums.SubscriptionType.Premium => 5,
+            _ => 3
+        };
+
+        var todayMatches = await _matchConnectionRepository.CountMatchesCreatedTodayAsync(posterId, cancellationToken);
+        if (todayMatches >= dailyLimit)
+        {
+            throw new ConflictApiException($"Bạn đã đạt giới hạn Match trong ngày ({dailyLimit} người). Hãy nâng cấp gói cước để Match tiếp!");
         }
 
         var comment = await _voiceCommentRepository.GetByIdAsync(request.CommentId, cancellationToken)

@@ -113,6 +113,14 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
             cancellationToken);
     }
 
+    public Task<int> CountMatchesCreatedTodayAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var today = DateTimeOffset.UtcNow.Date;
+        return _dbContext.MatchConnections
+            .Where(x => x.UserAId == userId && x.CreatedAt >= today)
+            .CountAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<MatchConnection>> GetExpiredMatchesAsync(int batchSize, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
