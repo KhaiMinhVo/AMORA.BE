@@ -341,4 +341,23 @@ app.MapHub<PetHub>("/hubs/pet");
 app.MapHub<CallHub>("/hubs/call");
 app.MapHub<AdminHub>("/hubs/admin");
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AmoraDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        if (dbContext.Database.GetPendingMigrations().Any())
+        {
+            logger.LogInformation("Applying database migrations...");
+            dbContext.Database.Migrate();
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
+
 app.Run();
