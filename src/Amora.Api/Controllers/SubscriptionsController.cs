@@ -43,7 +43,8 @@ public sealed class SubscriptionsController : ControllerBase
             userId, 
             request.Type, 
             request.DurationDays, 
-            request.PriceDiamonds, 
+            request.PriceDiamonds,
+            request.EnableAutoRenew,
             cancellationToken);
 
         return Ok(ApiResponse<object>.Ok(null, $"Successfully purchased {request.Type} for {request.DurationDays} days."));
@@ -68,6 +69,29 @@ public sealed class SubscriptionsController : ControllerBase
 
         return Ok(ApiResponse<object>.Ok(null, "Đã hủy gói đăng ký thành công. Bạn đã trở về gói Free."));
     }
+
+    /// <summary>
+    /// Bật/Tắt tự động gia hạn gói
+    /// </summary>
+    [HttpPost("toggle-auto-renew")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<object>>> ToggleAutoRenew(
+        [FromBody] ToggleAutoRenewRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("id")?.Value;
+
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await _subscriptionService.ToggleAutoRenewAsync(userId, request.Enable, cancellationToken);
+
+        var status = result ? "bật" : "tắt";
+        return Ok(ApiResponse<object>.Ok(null, $"Đã {status} tính năng tự động gia hạn."));
+    }
 }
 
 public sealed class BuySubscriptionRequest
@@ -75,4 +99,10 @@ public sealed class BuySubscriptionRequest
     public SubscriptionType Type { get; set; }
     public int DurationDays { get; set; }
     public int PriceDiamonds { get; set; }
+    public bool EnableAutoRenew { get; set; }
+}
+
+public sealed class ToggleAutoRenewRequest
+{
+    public bool Enable { get; set; }
 }

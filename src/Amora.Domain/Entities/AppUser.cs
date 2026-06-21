@@ -79,6 +79,10 @@ public sealed class AppUser
     
     public DateTimeOffset? SubscriptionEndDate { get; set; }
 
+    public bool IsAutoRenewEnabled { get; set; }
+    public int AutoRenewDurationDays { get; set; }
+    public int AutoRenewPriceDiamonds { get; set; }
+
     public bool HasActiveSubscription(SubscriptionType type)
     {
         return SubscriptionType == type && SubscriptionEndDate.HasValue && SubscriptionEndDate.Value > DateTimeOffset.UtcNow;

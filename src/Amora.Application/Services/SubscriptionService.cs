@@ -21,7 +21,7 @@ public sealed class SubscriptionService
         _transactionRepository = transactionRepository;
     }
 
-    public async Task PurchaseSubscriptionAsync(Guid userId, SubscriptionType type, int durationDays, int priceDiamonds, CancellationToken cancellationToken)
+    public async Task PurchaseSubscriptionAsync(Guid userId, SubscriptionType type, int durationDays, int priceDiamonds, bool enableAutoRenew, CancellationToken cancellationToken)
     {
         if (type == SubscriptionType.Free)
         {
@@ -56,6 +56,17 @@ public sealed class SubscriptionService
             user.SubscriptionEndDate = DateTimeOffset.UtcNow.AddDays(durationDays);
         }
 
+        if (enableAutoRenew)
+        {
+            user.IsAutoRenewEnabled = true;
+            user.AutoRenewDurationDays = durationDays;
+            user.AutoRenewPriceDiamonds = priceDiamonds;
+        }
+        else
+        {
+            user.IsAutoRenewEnabled = false;
+        }
+
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         await _transactionRepository.AddAsync(new PetTransaction
@@ -85,6 +96,7 @@ public sealed class SubscriptionService
         var oldType = user.SubscriptionType;
         user.SubscriptionType = SubscriptionType.Free;
         user.SubscriptionEndDate = null;
+        user.IsAutoRenewEnabled = false;
 
         await _userRepository.UpdateAsync(user, cancellationToken);
 
@@ -100,5 +112,21 @@ public sealed class SubscriptionService
         }, cancellationToken);
 
         await _transactionRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> ToggleAutoRenewAsync(Guid userId, bool enable, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+
+        if (user.SubscriptionType == SubscriptionType.Free && enable)
+        {
+            throw new ValidationApiException("Bạn phải có gói Premium hoặc Gold để bật tự gia hạn.");
+        }
+
+        user.IsAutoRenewEnabled = enable;
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        return enable;
     }
 }
