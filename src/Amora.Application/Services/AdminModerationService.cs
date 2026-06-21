@@ -40,6 +40,7 @@ public sealed class AdminModerationService
             Email = u.Email ?? "",
             DisplayName = u.DisplayName,
             Role = u.Role,
+            SubscriptionType = u.SubscriptionType.ToString(),
             IsBanned = u.IsBanned,
             CreatedAt = u.CreatedAt
         });

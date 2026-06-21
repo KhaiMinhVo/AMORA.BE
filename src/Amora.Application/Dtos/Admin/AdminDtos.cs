@@ -62,6 +62,7 @@ public sealed class AdminUserDto
     public string Email { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public string Role { get; init; } = string.Empty;
+    public string SubscriptionType { get; init; } = string.Empty;
     public bool IsBanned { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }

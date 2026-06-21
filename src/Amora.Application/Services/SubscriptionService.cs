@@ -71,4 +71,34 @@ public sealed class SubscriptionService
 
         await _transactionRepository.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task CancelSubscriptionAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+
+        if (user.SubscriptionType == SubscriptionType.Free)
+        {
+            throw new ValidationApiException("Bạn hiện không có gói đăng ký nào để hủy.");
+        }
+
+        var oldType = user.SubscriptionType;
+        user.SubscriptionType = SubscriptionType.Free;
+        user.SubscriptionEndDate = null;
+
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        await _transactionRepository.AddAsync(new PetTransaction
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ShopItemId = null,
+            TransactionType = $"Cancel {oldType}",
+            DiamondsDelta = 0,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        }, cancellationToken);
+
+        await _transactionRepository.SaveChangesAsync(cancellationToken);
+    }
 }

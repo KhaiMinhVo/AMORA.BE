@@ -48,6 +48,26 @@ public sealed class SubscriptionsController : ControllerBase
 
         return Ok(ApiResponse<object>.Ok(null, $"Successfully purchased {request.Type} for {request.DurationDays} days."));
     }
+
+    /// <summary>
+    /// Hủy gói Premium / Gold hiện tại (quay về Free)
+    /// </summary>
+    [HttpPost("cancel")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<object>>> CancelSubscription(CancellationToken cancellationToken)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("id")?.Value;
+
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        await _subscriptionService.CancelSubscriptionAsync(userId, cancellationToken);
+
+        return Ok(ApiResponse<object>.Ok(null, "Đã hủy gói đăng ký thành công. Bạn đã trở về gói Free."));
+    }
 }
 
 public sealed class BuySubscriptionRequest
