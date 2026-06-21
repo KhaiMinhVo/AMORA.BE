@@ -37,6 +37,7 @@ public sealed class ProfileResponseDto
     public string SubscriptionType { get; init; } = "Free";
     public DateTimeOffset? SubscriptionEndDate { get; init; }
     public int TrustScore { get; init; }
+    public bool AutoRenewEnabled { get; init; }
 }
 
 /// <summary>

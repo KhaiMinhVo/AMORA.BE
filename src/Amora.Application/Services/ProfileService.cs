@@ -175,7 +175,8 @@ public sealed class ProfileService
         Diamonds = user.Diamonds,
         SubscriptionType = user.SubscriptionType.ToString(),
         SubscriptionEndDate = user.SubscriptionEndDate,
-        TrustScore = user.TrustScore
+        TrustScore = user.TrustScore,
+        AutoRenewEnabled = user.IsAutoRenewEnabled
     };
 
     private static string[] ParseInterests(string? interests)
