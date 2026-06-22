@@ -99,6 +99,37 @@ public sealed class AuthService
         if (string.IsNullOrEmpty(user.PasswordHash) || !PasswordHasher.Verify(request.Password, user.PasswordHash))
             throw new ValidationApiException("Email hoặc mật khẩu không đúng.");
 
+        if (user.IsBanned)
+        {
+            var activeBan = await _userBanRepository.GetActiveBanByUserIdAsync(user.Id, cancellationToken);
+            if (activeBan != null)
+            {
+                if (activeBan.BannedUntil.HasValue && DateTimeOffset.UtcNow > activeBan.BannedUntil.Value)
+                {
+                    user.IsBanned = false;
+                    await _users.UpdateAsync(user, cancellationToken);
+                    
+                    activeBan.IsActive = false;
+                    await _userBanRepository.UpdateAsync(activeBan, cancellationToken);
+                }
+                else
+                {
+                    var reason = activeBan.BanReason ?? "Tài khoản của bạn đã bị khóa.";
+                    if (activeBan.BannedUntil.HasValue)
+                    {
+                        reason += $" Lệnh cấm có hiệu lực đến {activeBan.BannedUntil.Value.ToLocalTime():yyyy-MM-dd HH:mm}.";
+                    }
+                    throw new ForbiddenApiException(reason, "account_banned");
+                }
+            }
+            else
+            {
+                user.IsBanned = false;
+                await _users.UpdateAsync(user, cancellationToken);
+            }
+        }
+
+
         await _petCoins.TryGrantDailyLoginBonusAsync(user, cancellationToken);
         return BuildResponse(user);
     }
@@ -150,6 +181,36 @@ public sealed class AuthService
             if (string.IsNullOrWhiteSpace(user.GoogleId))
             {
                 user.GoogleId = payload.Subject;
+                await _users.UpdateAsync(user, cancellationToken);
+            }
+        }
+
+        if (user.IsBanned)
+        {
+            var activeBan = await _userBanRepository.GetActiveBanByUserIdAsync(user.Id, cancellationToken);
+            if (activeBan != null)
+            {
+                if (activeBan.BannedUntil.HasValue && DateTimeOffset.UtcNow > activeBan.BannedUntil.Value)
+                {
+                    user.IsBanned = false;
+                    await _users.UpdateAsync(user, cancellationToken);
+                    
+                    activeBan.IsActive = false;
+                    await _userBanRepository.UpdateAsync(activeBan, cancellationToken);
+                }
+                else
+                {
+                    var reason = activeBan.BanReason ?? "Tài khoản của bạn đã bị khóa.";
+                    if (activeBan.BannedUntil.HasValue)
+                    {
+                        reason += $" Lệnh cấm có hiệu lực đến {activeBan.BannedUntil.Value.ToLocalTime():yyyy-MM-dd HH:mm}.";
+                    }
+                    throw new ForbiddenApiException(reason, "account_banned");
+                }
+            }
+            else
+            {
+                user.IsBanned = false;
                 await _users.UpdateAsync(user, cancellationToken);
             }
         }
