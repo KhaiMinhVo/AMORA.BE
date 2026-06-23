@@ -58,3 +58,11 @@ public sealed class PublicProfileResponseDto
     public string[] Interests { get; init; } = [];
     public int TrustScore { get; init; }
 }
+
+public sealed class AttendanceResponseDto
+{
+    public int DiamondsEarned { get; init; }
+    public int TrustScoreEarned { get; init; }
+    public int CurrentDiamonds { get; init; }
+    public int CurrentTrustScore { get; init; }
+}

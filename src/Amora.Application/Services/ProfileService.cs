@@ -3,6 +3,7 @@ using Amora.Application.Dtos.Profile;
 using Amora.Application.Exceptions;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
+using Amora.Application.Iap;
 
 namespace Amora.Application.Services;
 
@@ -12,6 +13,7 @@ public sealed class ProfileService
     private readonly IUserRepository _userRepository;
     private readonly IMatchConnectionRepository _matchConnectionRepository;
     private readonly TrustScoreService _trustScoreService;
+    private readonly DiamondRewardService _diamondRewardService;
 
     private const string DefaultAnonymousAvatar = "anonymous.png";
 
@@ -19,12 +21,14 @@ public sealed class ProfileService
         ICurrentUserService currentUserService,
         IUserRepository userRepository,
         IMatchConnectionRepository matchConnectionRepository,
-        TrustScoreService trustScoreService)
+        TrustScoreService trustScoreService,
+        DiamondRewardService diamondRewardService)
     {
         _currentUserService = currentUserService;
         _userRepository = userRepository;
         _matchConnectionRepository = matchConnectionRepository;
         _trustScoreService = trustScoreService;
+        _diamondRewardService = diamondRewardService;
     }
 
     /// <summary>Lấy profile của chính mình (đầy đủ thông tin).</summary>
@@ -183,5 +187,29 @@ public sealed class ProfileService
     {
         if (string.IsNullOrWhiteSpace(interests)) return [];
         return interests.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    public async Task<AttendanceResponseDto> ClaimAttendanceAsync(CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.UserId;
+        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+
+        int diamondEarned = await _diamondRewardService.TryGrantDailyLoginBonusAsync(user, cancellationToken);
+        int trustScoreEarned = await _trustScoreService.AddDailyLoginBonusAsync(userId, cancellationToken);
+
+        if (diamondEarned == 0 && trustScoreEarned == 0)
+        {
+            throw new ConflictApiException("Bạn đã điểm danh hôm nay rồi.");
+        }
+
+        // Fetch user again to get updated values if needed, but since they are updated by reference:
+        return new AttendanceResponseDto
+        {
+            DiamondsEarned = diamondEarned,
+            TrustScoreEarned = trustScoreEarned,
+            CurrentDiamonds = user.Diamonds,
+            CurrentTrustScore = user.TrustScore
+        };
     }
 }

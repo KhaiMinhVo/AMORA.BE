@@ -46,8 +46,6 @@ public sealed class InMemoryUserPresenceTracker : IUserPresenceTracker
             var realtimeNotifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
             await realtimeNotifier.NotifyUserPresenceChangedAsync(userId, isOnline: true, lastActiveAt: null);
 
-            var trustScoreService = scope.ServiceProvider.GetRequiredService<Amora.Application.Services.TrustScoreService>();
-            await trustScoreService.AddDailyLoginBonusAsync(userId);
         }
     }
 

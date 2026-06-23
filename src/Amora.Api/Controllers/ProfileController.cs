@@ -49,4 +49,14 @@ public sealed class ProfileController : ControllerBase
         var result = await _profileService.GetPublicProfileAsync(userId, cancellationToken);
         return Ok(new { success = true, data = result });
     }
+
+    /// <summary>
+    /// Diem danh hang ngay de nhan Kim Cuong va Trust Score.
+    /// </summary>
+    [HttpPost("attendance")]
+    public async Task<IActionResult> ClaimAttendance(CancellationToken cancellationToken)
+    {
+        var result = await _profileService.ClaimAttendanceAsync(cancellationToken);
+        return Ok(new { success = true, data = result, message = "Điểm danh thành công!" });
+    }
 }

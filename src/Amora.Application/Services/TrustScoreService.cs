@@ -28,18 +28,22 @@ public sealed class TrustScoreService
         }
     }
 
-    public async Task AddDailyLoginBonusAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<int> AddDailyLoginBonusAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
-        if (user == null) return;
+        if (user == null) return 0;
 
         var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.Date);
         if (user.LastDailyBonus == null || user.LastDailyBonus < today)
         {
+            var oldScore = user.TrustScore;
             user.TrustScore = Math.Min(150, user.TrustScore + 2);
             user.LastDailyBonus = today;
             await _userRepository.UpdateAsync(user, cancellationToken);
+            return user.TrustScore - oldScore;
         }
+        
+        return 0;
     }
 
     public async Task AddVoicePostBonusAsync(Guid userId, CancellationToken cancellationToken = default)

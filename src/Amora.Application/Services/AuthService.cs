@@ -129,8 +129,6 @@ public sealed class AuthService
             }
         }
 
-
-        await _petCoins.TryGrantDailyLoginBonusAsync(user, cancellationToken);
         return BuildResponse(user);
     }
 
@@ -214,8 +212,6 @@ public sealed class AuthService
                 await _users.UpdateAsync(user, cancellationToken);
             }
         }
-
-        await _petCoins.TryGrantDailyLoginBonusAsync(user, cancellationToken);
         return BuildResponse(user);
     }
 
