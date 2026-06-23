@@ -56,7 +56,7 @@ public sealed class TrustScoreService
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user == null) return;
 
-        user.TrustScore = Math.Max(0, user.TrustScore - 10);
+        user.TrustScore = Math.Max(0, user.TrustScore - 30);
         await _userRepository.UpdateAsync(user, cancellationToken);
         await CheckAndApplyBanAsync(user, cancellationToken);
     }
@@ -66,7 +66,7 @@ public sealed class TrustScoreService
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user == null) return;
 
-        user.TrustScore = Math.Max(0, user.TrustScore - 5);
+        user.TrustScore = Math.Max(0, user.TrustScore - 20);
         await _userRepository.UpdateAsync(user, cancellationToken);
         await CheckAndApplyBanAsync(user, cancellationToken);
     }

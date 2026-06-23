@@ -63,7 +63,7 @@ public sealed class AppUser
     public DateTimeOffset? LastActiveAt { get; set; }
 
     // ── Trust Score ─────────────────────────────────────────────────────
-    public int TrustScore { get; set; } = 100;
+    public int TrustScore { get; set; } = 80;
     public bool ProfileBonusClaimed { get; set; }
     public DateOnly? LastDailyBonus { get; set; }
 
