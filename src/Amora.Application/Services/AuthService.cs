@@ -64,7 +64,8 @@ public sealed class AuthService
             DisplayName = string.IsNullOrWhiteSpace(request.DisplayName) ? "Amora User" : request.DisplayName.Trim(),
             AvatarUrl = "default_avatar.png",
             Diamonds = 0,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
+            Role = email == "amora.exe201@gmail.com" ? "Admin" : "User"
         };
 
         await _users.AddAsync(user, cancellationToken);
@@ -98,6 +99,12 @@ public sealed class AuthService
 
         if (string.IsNullOrEmpty(user.PasswordHash) || !PasswordHasher.Verify(request.Password, user.PasswordHash))
             throw new ValidationApiException("Email hoặc mật khẩu không đúng.");
+
+        if (user.Email?.ToLowerInvariant() == "amora.exe201@gmail.com" && user.Role != "Admin")
+        {
+            user.Role = "Admin";
+            await _users.UpdateAsync(user, cancellationToken);
+        }
 
         if (user.IsBanned)
         {
@@ -169,16 +176,27 @@ public sealed class AuthService
                 AvatarUrl = string.IsNullOrWhiteSpace(payload.Picture) ? "default_avatar.png" : payload.Picture,
                 Diamonds = 0,
                 CreatedAt = DateTimeOffset.UtcNow,
-                RequiresPasswordUpdate = true
+                RequiresPasswordUpdate = true,
+                Role = payload.Email?.ToLowerInvariant() == "amora.exe201@gmail.com" ? "Admin" : "User"
             };
             await _users.AddAsync(user, cancellationToken);
         }
         else
         {
+            bool needUpdate = false;
             // Update GoogleId if it was not linked
             if (string.IsNullOrWhiteSpace(user.GoogleId))
             {
                 user.GoogleId = payload.Subject;
+                needUpdate = true;
+            }
+            if (user.Email?.ToLowerInvariant() == "amora.exe201@gmail.com" && user.Role != "Admin")
+            {
+                user.Role = "Admin";
+                needUpdate = true;
+            }
+            if (needUpdate)
+            {
                 await _users.UpdateAsync(user, cancellationToken);
             }
         }
