@@ -38,6 +38,7 @@ public sealed class ProfileResponseDto
     public DateTimeOffset? SubscriptionEndDate { get; init; }
     public int TrustScore { get; init; }
     public bool AutoRenewEnabled { get; init; }
+    public bool IsAttendedToday { get; init; }
 }
 
 /// <summary>

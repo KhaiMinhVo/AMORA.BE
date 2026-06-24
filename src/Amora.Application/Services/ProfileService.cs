@@ -180,7 +180,8 @@ public sealed class ProfileService
         SubscriptionType = user.SubscriptionType.ToString(),
         SubscriptionEndDate = user.SubscriptionEndDate,
         TrustScore = user.TrustScore,
-        AutoRenewEnabled = user.IsAutoRenewEnabled
+        AutoRenewEnabled = user.IsAutoRenewEnabled,
+        IsAttendedToday = user.LastDailyBonus.HasValue && user.LastDailyBonus.Value == DateOnly.FromDateTime(DateTimeOffset.UtcNow.Date)
     };
 
     private static string[] ParseInterests(string? interests)
