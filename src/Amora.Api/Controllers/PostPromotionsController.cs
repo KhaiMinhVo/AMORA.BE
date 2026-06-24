@@ -40,7 +40,7 @@ public sealed class PostPromotionsController : ControllerBase
             return Unauthorized();
         }
 
-        await _promotionService.BoostPostAsync(userId, postId, request.BoostType, request.PriceDiamonds, cancellationToken);
+        await _promotionService.BoostPostAsync(userId, postId, request.BoostType, cancellationToken);
 
         return Ok(ApiResponse<object>.Ok(null, $"Successfully applied {request.BoostType} to post."));
     }
@@ -63,7 +63,7 @@ public sealed class PostPromotionsController : ControllerBase
             return Unauthorized();
         }
 
-        await _promotionService.AddMatchSlotsAsync(userId, postId, request.ExtraSlots, request.PriceDiamonds, cancellationToken);
+        await _promotionService.AddMatchSlotsAsync(userId, postId, request.ExtraSlots, cancellationToken);
 
         return Ok(ApiResponse<object>.Ok(null, $"Successfully added {request.ExtraSlots} slots to post."));
     }
@@ -72,11 +72,9 @@ public sealed class PostPromotionsController : ControllerBase
 public sealed class BoostPostRequest
 {
     public PostBoostType BoostType { get; set; }
-    public int PriceDiamonds { get; set; }
 }
 
 public sealed class AddSlotsRequest
 {
     public int ExtraSlots { get; set; }
-    public int PriceDiamonds { get; set; }
 }

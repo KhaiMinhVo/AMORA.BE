@@ -27,7 +27,7 @@ public sealed class PostPromotionService
         _transactionRepository = transactionRepository;
     }
 
-    public async Task BoostPostAsync(Guid userId, Guid postId, PostBoostType boostType, int priceDiamonds, CancellationToken cancellationToken)
+    public async Task BoostPostAsync(Guid userId, Guid postId, PostBoostType boostType, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
@@ -44,6 +44,14 @@ public sealed class PostPromotionService
         {
             throw new ForbiddenApiException("Bạn chỉ có thể đẩy (boost) bài viết của chính mình.");
         }
+
+        int priceDiamonds = boostType switch
+        {
+            PostBoostType.Boost => 30,
+            PostBoostType.Pin => 25,
+            PostBoostType.Combo => 50,
+            _ => throw new ValidationApiException("Loại đẩy bài không hợp lệ.")
+        };
 
         if (user.Diamonds < priceDiamonds)
         {
@@ -79,7 +87,7 @@ public sealed class PostPromotionService
         await _transactionRepository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task AddMatchSlotsAsync(Guid userId, Guid postId, int extraSlots, int priceDiamonds, CancellationToken cancellationToken)
+    public async Task AddMatchSlotsAsync(Guid userId, Guid postId, int extraSlots, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
@@ -91,6 +99,13 @@ public sealed class PostPromotionService
         {
             throw new ForbiddenApiException("Bạn chỉ có thể thêm slot cho bài viết của mình.");
         }
+
+        if (extraSlots <= 0 || extraSlots % 2 != 0)
+        {
+            throw new ValidationApiException("Số slot mua thêm phải là số chẵn (ví dụ: 2, 4, 6...).");
+        }
+
+        int priceDiamonds = (extraSlots / 2) * 30; // 30 diamonds per 2 slots
 
         if (user.Diamonds < priceDiamonds)
         {
