@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<SubscriptionService>();
         services.AddScoped<PostPromotionService>();
         services.AddScoped<TrustScoreService>();
+        services.AddScoped<AdminDashboardService>();
 
         services.AddHttpClient<AiModerationService>();
         return services;

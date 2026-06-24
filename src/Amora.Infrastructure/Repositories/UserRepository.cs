@@ -65,4 +65,22 @@ public sealed class UserRepository : IUserRepository
 
         return (items, total);
     }
+
+    public Task<int> CountUsersAsync(CancellationToken cancellationToken = default)
+    {
+        return _dbContext.Users.CountAsync(cancellationToken);
+    }
+
+    public Task<int> CountUsersCreatedBetweenAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.Users.CountAsync(u => u.CreatedAt >= start && u.CreatedAt <= end, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AppUser>> GetLatestUsersAsync(int count, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Users
+            .OrderByDescending(u => u.CreatedAt)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+    }
 }

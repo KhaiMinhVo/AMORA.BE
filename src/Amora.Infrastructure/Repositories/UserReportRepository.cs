@@ -62,4 +62,9 @@ public sealed class UserReportRepository : IUserReportRepository
         _dbContext.UserReports.Update(report);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<int> CountPendingReportsAsync(CancellationToken cancellationToken = default)
+    {
+        return _dbContext.UserReports.CountAsync(r => r.Status == Amora.Domain.Enums.ReportStatus.Pending, cancellationToken);
+    }
 }

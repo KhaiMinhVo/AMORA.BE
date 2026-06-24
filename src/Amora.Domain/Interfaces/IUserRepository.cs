@@ -21,4 +21,10 @@ public interface IUserRepository
     Task UpdateAsync(AppUser user, CancellationToken cancellationToken = default);
 
     Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetAllUsersAsync(int page, int pageSize, string? keyword = null, CancellationToken cancellationToken = default);
+
+    Task<int> CountUsersAsync(CancellationToken cancellationToken = default);
+
+    Task<int> CountUsersCreatedBetweenAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AppUser>> GetLatestUsersAsync(int count, CancellationToken cancellationToken = default);
 }

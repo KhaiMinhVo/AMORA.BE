@@ -15,4 +15,6 @@ public interface IUserReportRepository
     Task<(IEnumerable<UserReport> Reports, int TotalCount)> GetReportsAsync(int page, int pageSize, Amora.Domain.Enums.ReportStatus? status = null, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(UserReport report, CancellationToken cancellationToken = default);
+
+    Task<int> CountPendingReportsAsync(CancellationToken cancellationToken = default);
 }

@@ -190,4 +190,9 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
             throw;
         }
     }
+
+    public Task<int> CountTotalMatchesAsync(CancellationToken cancellationToken = default)
+    {
+        return _dbContext.MatchConnections.CountAsync(cancellationToken);
+    }
 }
