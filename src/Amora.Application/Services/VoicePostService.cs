@@ -205,7 +205,8 @@ public sealed class VoicePostService
                 MatchCount = post.MatchCount,
                 Status = post.Status.ToString(),
                 CreatedAt = post.CreatedAt,
-                IsBoosted = post.IsBoosted
+                IsBoosted = post.IsBoosted,
+                MaxMatchSlots = post.MaxMatchSlots
             });
         }
 
@@ -241,7 +242,8 @@ public sealed class VoicePostService
                 MatchCount = post.MatchCount,
                 Status = post.Status.ToString(),
                 CreatedAt = post.CreatedAt,
-                IsBoosted = post.IsBoosted
+                IsBoosted = post.IsBoosted,
+                MaxMatchSlots = post.MaxMatchSlots
             });
         }
 

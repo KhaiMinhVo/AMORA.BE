@@ -24,6 +24,8 @@ public sealed class FeedPostItemDto
     public DateTimeOffset CreatedAt { get; init; }
 
     public bool IsBoosted { get; init; }
+
+    public int MaxMatchSlots { get; init; }
 }
 
 public sealed class FeedResponseDto
