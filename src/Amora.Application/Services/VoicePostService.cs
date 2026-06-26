@@ -17,6 +17,7 @@ public sealed class VoicePostService
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IUserRepository _userRepository;
     private readonly IPostReactionRepository _postReactionRepository;
+    private readonly NotificationService _notificationService;
     private readonly AudioProcessingService _audioProcessingService;
     private readonly string? _storageBucketName;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
@@ -28,6 +29,7 @@ public sealed class VoicePostService
         IVoicePostRepository voicePostRepository,
         IUserRepository userRepository,
         IPostReactionRepository postReactionRepository,
+        NotificationService notificationService,
         AudioProcessingService audioProcessingService,
         IConfiguration configuration,
         Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
@@ -38,6 +40,7 @@ public sealed class VoicePostService
         _voicePostRepository = voicePostRepository;
         _userRepository = userRepository;
         _postReactionRepository = postReactionRepository;
+        _notificationService = notificationService;
         _audioProcessingService = audioProcessingService;
         _storageBucketName = configuration["Storage:BucketName"] ?? configuration["AWS:BucketName"];
         _scopeFactory = scopeFactory;
@@ -330,6 +333,20 @@ public sealed class VoicePostService
             
             post.ReactionCount++;
             await _voicePostRepository.UpdateAsync(post, cancellationToken);
+            
+            if (post.PosterId != userId)
+            {
+                var reactor = await _userRepository.GetByIdAsync(userId, cancellationToken);
+                var reactorName = reactor?.DisplayName ?? "Một người dùng";
+                await _notificationService.SendNotificationAsync(
+                    post.PosterId,
+                    NotificationType.VoiceFeed,
+                    $"{reactorName} đã thả cảm xúc về bài đăng của bạn!",
+                    $"{reactorName} vừa thả {request.ReactionType} vào bài đăng Voice của bạn.",
+                    $"{{\"postId\": \"{post.Id}\"}}",
+                    cancellationToken
+                );
+            }
             
             return new ReactToPostResponse { NewReactionCount = post.ReactionCount, CurrentReactionType = request.ReactionType.ToString() };
         }
