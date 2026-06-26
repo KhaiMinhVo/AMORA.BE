@@ -33,7 +33,7 @@ public sealed class TrustScoreService
         var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user == null) return 0;
 
-        var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.Date);
+        var today = Amora.Application.Common.TimeHelper.GetVietnamToday();
         if (user.LastDailyBonus == null || user.LastDailyBonus < today)
         {
             var oldScore = user.TrustScore;

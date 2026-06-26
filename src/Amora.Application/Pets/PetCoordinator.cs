@@ -154,7 +154,7 @@ public sealed class PetCoordinator
 
     public static PetStatusDto ToDto(Pet pet)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = Amora.Application.Common.TimeHelper.GetVietnamToday();
         var claimsToday = pet.WaterClaimDate == today ? pet.WaterClaimsToday : 0;
         DateTimeOffset? nextWaterClaim = null;
         if (claimsToday < 3 && pet.LastWaterClaimAt.HasValue)

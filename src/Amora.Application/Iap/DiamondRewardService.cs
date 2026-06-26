@@ -16,7 +16,7 @@ public sealed class DiamondRewardService
     /// <summary>+1 Diamond mỗi ngày khi đăng nhập.</summary>
     public async Task<int> TryGrantDailyLoginBonusAsync(AppUser user, CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = Amora.Application.Common.TimeHelper.GetVietnamToday();
         if (user.LastDiamondRewardDate == today) return 0;
 
         user.LastDiamondRewardDate = today;
@@ -31,7 +31,7 @@ public sealed class DiamondRewardService
         var user = await _users.GetByIdForUpdateAsync(userId, cancellationToken);
         if (user is null) return 0;
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = Amora.Application.Common.TimeHelper.GetVietnamToday();
         if (user.LastCoPresenceCoinDate == today) return 0;
 
         user.LastCoPresenceCoinDate = today;

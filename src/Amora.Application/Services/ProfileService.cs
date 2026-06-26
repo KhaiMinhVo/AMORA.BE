@@ -181,7 +181,7 @@ public sealed class ProfileService
         SubscriptionEndDate = user.SubscriptionEndDate,
         TrustScore = user.TrustScore,
         AutoRenewEnabled = user.IsAutoRenewEnabled,
-        IsAttendedToday = user.LastDailyBonus.HasValue && user.LastDailyBonus.Value == DateOnly.FromDateTime(DateTimeOffset.UtcNow.Date)
+        IsAttendedToday = user.LastDailyBonus.HasValue && user.LastDailyBonus.Value == Amora.Application.Common.TimeHelper.GetVietnamToday()
     };
 
     private static string[] ParseInterests(string? interests)

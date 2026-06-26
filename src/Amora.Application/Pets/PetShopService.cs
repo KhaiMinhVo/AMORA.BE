@@ -168,7 +168,7 @@ public sealed class PetShopService
             ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
 
         // Reset if new day
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = Amora.Application.Common.TimeHelper.GetVietnamToday();
         if (pet.WaterClaimDate < today)
         {
             pet.WaterClaimsToday = 0;

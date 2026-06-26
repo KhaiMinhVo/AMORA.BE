@@ -16,7 +16,7 @@ public static class PetEngine
 
     public static void ResetDailyStatsIfNeeded(Pet pet)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = Amora.Application.Common.TimeHelper.GetVietnamToday();
         if (pet.RpStatsDate == today) return;
 
         pet.RpStatsDate = today;
@@ -135,7 +135,7 @@ public static class PetEngine
 
     public static void RecordDailyHpSnapshot(Pet pet)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = Amora.Application.Common.TimeHelper.GetVietnamToday();
         if (pet.LastHpSnapshotDate == today) return;
 
         if (pet.LastHpSnapshotDate.HasValue && pet.HpSnapshotCount > 0)
