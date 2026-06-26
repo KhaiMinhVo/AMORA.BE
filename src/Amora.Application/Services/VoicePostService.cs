@@ -4,6 +4,7 @@ using Amora.Application.Exceptions;
 using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
+using Amora.Application.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ public sealed class VoicePostService
     private readonly ICurrentUserService _currentUserService;
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IPostReactionRepository _postReactionRepository;
     private readonly AudioProcessingService _audioProcessingService;
     private readonly string? _storageBucketName;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
@@ -25,6 +27,7 @@ public sealed class VoicePostService
         ICurrentUserService currentUserService,
         IVoicePostRepository voicePostRepository,
         IUserRepository userRepository,
+        IPostReactionRepository postReactionRepository,
         AudioProcessingService audioProcessingService,
         IConfiguration configuration,
         Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
@@ -34,6 +37,7 @@ public sealed class VoicePostService
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
         _userRepository = userRepository;
+        _postReactionRepository = postReactionRepository;
         _audioProcessingService = audioProcessingService;
         _storageBucketName = configuration["Storage:BucketName"] ?? configuration["AWS:BucketName"];
         _scopeFactory = scopeFactory;
@@ -186,6 +190,9 @@ public sealed class VoicePostService
         pageSize = Math.Clamp(pageSize, 1, 50);
 
         var (items, totalCount) = await _voicePostRepository.GetFeedPageAsync(_currentUserService.UserId, page, pageSize, cancellationToken);
+        var postIds = items.Select(x => x.Id).ToList();
+        var userReactions = await _postReactionRepository.GetUserReactionsAsync(_currentUserService.UserId, postIds, cancellationToken);
+        
         var feedItems = new List<FeedPostItemDto>();
 
         foreach (var post in items)
@@ -206,7 +213,9 @@ public sealed class VoicePostService
                 Status = post.Status.ToString(),
                 CreatedAt = post.CreatedAt,
                 IsBoosted = post.IsBoosted,
-                MaxMatchSlots = post.MaxMatchSlots
+                MaxMatchSlots = post.MaxMatchSlots,
+                ReactionCount = post.ReactionCount,
+                UserReactionType = userReactions.TryGetValue(post.Id, out var type) ? type.ToString() : null
             });
         }
 
@@ -223,6 +232,9 @@ public sealed class VoicePostService
         pageSize = Math.Clamp(pageSize, 1, 50);
 
         var (items, totalCount) = await _voicePostRepository.GetMyPostsPageAsync(_currentUserService.UserId, page, pageSize, cancellationToken);
+        var postIds = items.Select(x => x.Id).ToList();
+        var userReactions = await _postReactionRepository.GetUserReactionsAsync(_currentUserService.UserId, postIds, cancellationToken);
+        
         var feedItems = new List<FeedPostItemDto>();
 
         foreach (var post in items)
@@ -243,7 +255,9 @@ public sealed class VoicePostService
                 Status = post.Status.ToString(),
                 CreatedAt = post.CreatedAt,
                 IsBoosted = post.IsBoosted,
-                MaxMatchSlots = post.MaxMatchSlots
+                MaxMatchSlots = post.MaxMatchSlots,
+                ReactionCount = post.ReactionCount,
+                UserReactionType = userReactions.TryGetValue(post.Id, out var type) ? type.ToString() : null
             });
         }
 
@@ -271,5 +285,53 @@ public sealed class VoicePostService
 
         post.Status = VoicePostStatus.Closed;
         await _voicePostRepository.UpdateAsync(post, cancellationToken);
+    }
+
+    public async Task<ReactToPostResponse> ReactToPostAsync(Guid postId, ReactToPostRequest request, CancellationToken cancellationToken = default)
+    {
+        var post = await _voicePostRepository.GetByIdAsync(postId, cancellationToken)
+            ?? throw new NotFoundApiException("Voice post không tồn tại.");
+
+        var userId = _currentUserService.UserId;
+        var existingReaction = await _postReactionRepository.GetReactionAsync(postId, userId, cancellationToken);
+
+        if (existingReaction != null)
+        {
+            if (existingReaction.Type == request.ReactionType)
+            {
+                // Unlike if same reaction
+                await _postReactionRepository.DeleteAsync(existingReaction, cancellationToken);
+                post.ReactionCount--;
+                await _voicePostRepository.UpdateAsync(post, cancellationToken);
+                
+                return new ReactToPostResponse { NewReactionCount = post.ReactionCount, CurrentReactionType = null };
+            }
+            else
+            {
+                // Change reaction
+                existingReaction.Type = request.ReactionType;
+                await _postReactionRepository.UpdateAsync(existingReaction, cancellationToken);
+                
+                return new ReactToPostResponse { NewReactionCount = post.ReactionCount, CurrentReactionType = request.ReactionType.ToString() };
+            }
+        }
+        else
+        {
+            // New reaction
+            var newReaction = new PostReaction
+            {
+                Id = Guid.NewGuid(),
+                PostId = postId,
+                UserId = userId,
+                Type = request.ReactionType,
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+            await _postReactionRepository.AddAsync(newReaction, cancellationToken);
+            
+            post.ReactionCount++;
+            await _voicePostRepository.UpdateAsync(post, cancellationToken);
+            
+            return new ReactToPostResponse { NewReactionCount = post.ReactionCount, CurrentReactionType = request.ReactionType.ToString() };
+        }
     }
 }

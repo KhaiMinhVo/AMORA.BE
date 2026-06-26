@@ -4,6 +4,7 @@ using Amora.Api.Infrastructure;
 using Amora.Api.Middleware;
 using Amora.Application;
 using Amora.Application.Abstractions;
+using Amora.Application.Repositories;
 using Amora.Application.Services;
 using Amora.Api.Hubs;
 using Amora.Domain.Interfaces;
@@ -100,6 +101,7 @@ builder.Services.AddScoped<IIapWebhookEventRepository, IapWebhookEventRepository
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IPostBoostRecordRepository, PostBoostRecordRepository>();
 builder.Services.AddScoped<IAdminNotificationRepository, AdminNotificationRepository>();
+builder.Services.AddScoped<IPostReactionRepository, PostReactionRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 

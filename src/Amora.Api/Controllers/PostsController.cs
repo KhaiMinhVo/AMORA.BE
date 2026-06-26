@@ -65,4 +65,17 @@ public sealed class PostsController : ControllerBase
         await _voicePostService.CloseAsync(postId, cancellationToken);
         return Ok(ApiResponse<object>.Ok(null, "Voice post closed successfully."));
     }
+
+    /// <summary>
+    /// Tha cam xuc vao voice post (Like, Love, Haha, Wow, Sad, Angry).
+    /// </summary>
+    [HttpPost("{postId:guid}/react")]
+    public async Task<ActionResult<ApiResponse<ReactToPostResponse>>> ReactToPost(
+        Guid postId,
+        [FromBody] ReactToPostRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _voicePostService.ReactToPostAsync(postId, request, cancellationToken);
+        return Ok(ApiResponse<ReactToPostResponse>.Ok(result, "Reaction updated."));
+    }
 }

@@ -26,6 +26,10 @@ public sealed class FeedPostItemDto
     public bool IsBoosted { get; init; }
 
     public int MaxMatchSlots { get; init; }
+
+    public int ReactionCount { get; init; }
+
+    public string? UserReactionType { get; init; }
 }
 
 public sealed class FeedResponseDto

@@ -24,6 +24,10 @@ public sealed class VoicePost
 
     public int MaxMatchSlots { get; set; } = 3;
 
+    public int ReactionCount { get; set; }
+
+    public ICollection<PostReaction> Reactions { get; set; } = new List<PostReaction>();
+
     [NotMapped]
     public bool IsBoosted { get; set; }
 }

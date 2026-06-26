@@ -62,6 +62,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
 
+    public DbSet<PostReaction> PostReactions => Set<PostReaction>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -144,6 +146,8 @@ public sealed class AmoraDbContext : DbContext
                     MaxMatchSlots = 3,
                     CreatedAt = new DateTimeOffset(2026, 5, 15, 9, 0, 0, TimeSpan.Zero)
                 });
+            
+            entity.HasMany(x => x.Reactions).WithOne(x => x.Post).HasForeignKey(x => x.PostId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<PostBoostRecord>(entity =>
@@ -153,6 +157,14 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.BoostType).HasConversion<string>().HasMaxLength(30);
             entity.HasIndex(x => new { x.PostId, x.ExpiresAt });
             entity.HasIndex(x => new { x.UserId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<PostReaction>(entity =>
+        {
+            entity.ToTable("PostReactions");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.PostId, x.UserId }).IsUnique();
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<VoiceComment>(entity =>
