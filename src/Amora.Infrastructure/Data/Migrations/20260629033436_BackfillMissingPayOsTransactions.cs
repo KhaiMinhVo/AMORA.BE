@@ -21,7 +21,7 @@ namespace Amora.Infrastructure.Data.Migrations
                     CURRENT_TIMESTAMP,
                     CURRENT_TIMESTAMP
                 FROM ""PaymentTransactions"" pt
-                WHERE pt.""Status"" = 1 
+                WHERE pt.""Status"" = 'Success'
                   AND pt.""Provider"" = 'PayOS'
                   AND NOT EXISTS (
                       SELECT 1 FROM ""PetTransactions"" ptx 
