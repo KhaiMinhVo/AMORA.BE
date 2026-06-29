@@ -70,6 +70,8 @@ public sealed class AppUser
     // ── Economy (Tiền tệ duy nhất) ──────────────────────────────────────
     public int Diamonds { get; set; }
 
+    public int ExtraMatchSlots { get; set; }
+
     public DateOnly? LastDiamondRewardDate { get; set; }
 
     public DateOnly? LastCoPresenceCoinDate { get; set; }

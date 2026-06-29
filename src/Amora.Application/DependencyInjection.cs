@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<AuthService>();
         services.AddScoped<SubscriptionService>();
         services.AddScoped<PostPromotionService>();
+        services.AddScoped<UserPromotionService>();
         services.AddScoped<TrustScoreService>();
         services.AddScoped<AdminDashboardService>();
 

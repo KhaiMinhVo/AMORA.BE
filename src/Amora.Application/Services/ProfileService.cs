@@ -179,6 +179,7 @@ public sealed class ProfileService
         Diamonds = user.Diamonds,
         SubscriptionType = user.SubscriptionType.ToString(),
         SubscriptionEndDate = user.SubscriptionEndDate,
+        ExtraMatchSlots = user.ExtraMatchSlots,
         TrustScore = user.TrustScore,
         AutoRenewEnabled = user.IsAutoRenewEnabled,
         IsAttendedToday = user.LastDailyBonus.HasValue && user.LastDailyBonus.Value == Amora.Application.Common.TimeHelper.GetVietnamToday()

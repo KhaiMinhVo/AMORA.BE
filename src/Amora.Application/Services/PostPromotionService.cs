@@ -86,49 +86,4 @@ public sealed class PostPromotionService
 
         await _transactionRepository.SaveChangesAsync(cancellationToken);
     }
-
-    public async Task AddMatchSlotsAsync(Guid userId, Guid postId, int extraSlots, CancellationToken cancellationToken)
-    {
-        var user = await _userRepository.GetByIdForUpdateAsync(userId, cancellationToken)
-            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
-
-        var post = await _postRepository.GetByIdAsync(postId, cancellationToken)
-            ?? throw new NotFoundApiException("Bài viết không tồn tại.");
-
-        if (post.PosterId != userId)
-        {
-            throw new ForbiddenApiException("Bạn chỉ có thể thêm slot cho bài viết của mình.");
-        }
-
-        if (extraSlots <= 0 || extraSlots % 2 != 0)
-        {
-            throw new ValidationApiException("Số slot mua thêm phải là số chẵn (ví dụ: 2, 4, 6...).");
-        }
-
-        int priceDiamonds = (extraSlots / 2) * 30; // 30 diamonds per 2 slots
-
-        if (user.Diamonds < priceDiamonds)
-        {
-            throw new ValidationApiException("Bạn không đủ Kim Cương (Diamonds).");
-        }
-
-        user.Diamonds -= priceDiamonds;
-        post.MaxMatchSlots += extraSlots;
-
-        await _postRepository.UpdateAsync(post, cancellationToken);
-        await _userRepository.UpdateAsync(user, cancellationToken);
-
-        await _transactionRepository.AddAsync(new PetTransaction
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            ShopItemId = null,
-            TransactionType = $"Add {extraSlots} Slots to Post",
-            DiamondsDelta = -priceDiamonds,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
-        }, cancellationToken);
-
-        await _transactionRepository.SaveChangesAsync(cancellationToken);
-    }
 }

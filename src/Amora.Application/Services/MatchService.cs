@@ -85,10 +85,19 @@ public sealed class MatchService
             _ => 3
         };
 
+        int totalLimit = dailyLimit + user.ExtraMatchSlots;
+
         var todayMatches = await _matchConnectionRepository.CountMatchesCreatedTodayAsync(posterId, cancellationToken);
-        if (todayMatches >= dailyLimit)
+        if (todayMatches >= totalLimit)
         {
-            throw new ConflictApiException($"Bạn đã đạt giới hạn Match trong ngày ({dailyLimit} người). Hãy nâng cấp gói cước để Match tiếp!");
+            throw new ConflictApiException($"Bạn đã đạt giới hạn Match trong ngày ({dailyLimit} cơ bản + {user.ExtraMatchSlots} mua thêm). Hãy nâng cấp gói cước hoặc mua thêm lượt để Match tiếp!");
+        }
+
+        // Deduct extra match slots if daily free limit is exceeded
+        if (todayMatches >= dailyLimit && user.ExtraMatchSlots > 0)
+        {
+            user.ExtraMatchSlots--;
+            await _userRepository.UpdateAsync(user, cancellationToken);
         }
 
         var comment = await _voiceCommentRepository.GetByIdAsync(request.CommentId, cancellationToken)

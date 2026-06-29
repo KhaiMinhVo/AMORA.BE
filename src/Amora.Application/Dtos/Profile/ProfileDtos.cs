@@ -36,6 +36,7 @@ public sealed class ProfileResponseDto
     public int Diamonds { get; init; }
     public string SubscriptionType { get; init; } = "Free";
     public DateTimeOffset? SubscriptionEndDate { get; init; }
+    public int ExtraMatchSlots { get; init; }
     public int TrustScore { get; init; }
     public bool AutoRenewEnabled { get; init; }
     public bool IsAttendedToday { get; init; }

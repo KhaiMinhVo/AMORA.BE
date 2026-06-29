@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amora.Application.Common;
 using Amora.Application.Services;
-using Amora.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,24 +11,23 @@ namespace Amora.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/posts/{postId}/promotions")]
-public sealed class PostPromotionsController : ControllerBase
+[Route("api/users/promotions")]
+public sealed class UserPromotionsController : ControllerBase
 {
-    private readonly PostPromotionService _promotionService;
+    private readonly UserPromotionService _promotionService;
 
-    public PostPromotionsController(PostPromotionService promotionService)
+    public UserPromotionsController(UserPromotionService promotionService)
     {
         _promotionService = promotionService;
     }
 
     /// <summary>
-    /// Boost hoac Pin bai post (24h)
+    /// Mua them slot Match cho tai khoan
     /// </summary>
-    [HttpPost("boost")]
+    [HttpPost("slots")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> BoostPost(
-        Guid postId,
-        [FromBody] BoostPostRequest request,
+    public async Task<ActionResult<ApiResponse<object>>> AddMatchSlots(
+        [FromBody] AddUserSlotsRequest request,
         CancellationToken cancellationToken)
     {
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
@@ -40,13 +38,13 @@ public sealed class PostPromotionsController : ControllerBase
             return Unauthorized();
         }
 
-        await _promotionService.BoostPostAsync(userId, postId, request.BoostType, cancellationToken);
+        await _promotionService.AddMatchSlotsAsync(userId, request.ExtraSlots, cancellationToken);
 
-        return Ok(ApiResponse<object>.Ok(null, $"Successfully applied {request.BoostType} to post."));
+        return Ok(ApiResponse<object>.Ok(null, $"Successfully added {request.ExtraSlots} match slots."));
     }
 }
 
-public sealed class BoostPostRequest
+public sealed class AddUserSlotsRequest
 {
-    public PostBoostType BoostType { get; set; }
+    public int ExtraSlots { get; set; }
 }
