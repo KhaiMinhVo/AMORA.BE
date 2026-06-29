@@ -20,7 +20,18 @@ public sealed class GetTransactionsQueryHandler : IRequestHandler<GetTransaction
             TransactionType = t.TransactionType,
             DiamondsDelta = t.DiamondsDelta,
             CreatedAt = t.CreatedAt,
-            ItemName = t.ShopItem?.Name
+            ItemName = t.ShopItem?.Name ?? GetDefaultItemName(t.TransactionType)
         }).ToList();
+    }
+
+    private static string GetDefaultItemName(string transactionType)
+    {
+        return transactionType switch
+        {
+            "IapGemPurchase" => "Nạp Kim Cương",
+            "IapRefund" => "Hoàn Tiền Kim Cương",
+            "Ad Reward" => "Xem Quảng Cáo",
+            _ => transactionType
+        };
     }
 }
