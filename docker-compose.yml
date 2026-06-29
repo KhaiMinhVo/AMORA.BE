@@ -99,6 +99,7 @@ services:
       EmailSettings__Password: ${SMTP_PASSWORD}
       EmailSettings__FromEmail: ${SMTP_FROM}
       Webhooks__Secret: ${WEBHOOK_SECRET}
+      Gemini__ApiKey: ${GEMINI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy

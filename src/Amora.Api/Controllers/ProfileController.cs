@@ -9,10 +9,12 @@ namespace Amora.Api.Controllers;
 public sealed class ProfileController : ControllerBase
 {
     private readonly ProfileService _profileService;
+    private readonly AiScriptSuggestionService _aiSuggestionService;
 
-    public ProfileController(ProfileService profileService)
+    public ProfileController(ProfileService profileService, AiScriptSuggestionService aiSuggestionService)
     {
         _profileService = profileService;
+        _aiSuggestionService = aiSuggestionService;
     }
 
     /// <summary>
@@ -58,5 +60,23 @@ public sealed class ProfileController : ControllerBase
     {
         var result = await _profileService.ClaimAttendanceAsync(cancellationToken);
         return Ok(new { success = true, data = result, message = "Điểm danh thành công!" });
+    }
+
+    /// <summary>
+    /// AI gợi ý kịch bản ghi âm voice intro.
+    /// </summary>
+    [HttpGet("voice-intro-suggestions")]
+    public async Task<IActionResult> GetVoiceIntroSuggestions(CancellationToken cancellationToken)
+    {
+        var profile = await _profileService.GetMyProfileAsync(cancellationToken);
+        string interests = profile.Interests != null ? string.Join(", ", profile.Interests) : string.Empty;
+        
+        var suggestions = await _aiSuggestionService.GenerateVoiceIntroSuggestionsAsync(
+            profile.DisplayName, 
+            profile.Bio, 
+            interests, 
+            cancellationToken);
+
+        return Ok(new { success = true, data = suggestions });
     }
 }

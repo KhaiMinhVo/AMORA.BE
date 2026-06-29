@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<UserPromotionService>();
         services.AddScoped<TrustScoreService>();
         services.AddScoped<AdminDashboardService>();
+        services.AddHttpClient<AiScriptSuggestionService>();
 
         services.AddHttpClient<AiModerationService>();
         return services;
