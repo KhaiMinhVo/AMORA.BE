@@ -61,7 +61,8 @@ public sealed class AdminDashboardService
             DisplayName = u.DisplayName,
             Email = u.Email ?? string.Empty,
             AvatarUrl = u.AvatarUrl,
-            CreatedAt = u.CreatedAt
+            CreatedAt = u.CreatedAt,
+            IsBanned = u.IsBanned
         }).ToList();
 
         return new DashboardStatsResponseDto

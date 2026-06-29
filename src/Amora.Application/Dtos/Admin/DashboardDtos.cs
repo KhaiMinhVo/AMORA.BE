@@ -7,6 +7,7 @@ public sealed class UserSummaryDto
     public string Email { get; init; } = string.Empty;
     public string AvatarUrl { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
+    public bool IsBanned { get; init; }
 }
 
 public sealed class DashboardStatsResponseDto
