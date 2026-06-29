@@ -18,19 +18,22 @@ public sealed class PayOsService
     private readonly ILogger<PayOsService> _logger;
     private readonly global::PayOS.PayOSClient _payOsClient;
     private readonly IRealtimeNotifier _realtimeNotifier;
+    private readonly IPetTransactionRepository _petTransactionRepo;
 
     public PayOsService(
         IPaymentTransactionRepository paymentRepo,
         IUserRepository userRepo,
         IOptions<PayOsConfig> payOsConfigOptions,
         ILogger<PayOsService> logger,
-        IRealtimeNotifier realtimeNotifier)
+        IRealtimeNotifier realtimeNotifier,
+        IPetTransactionRepository petTransactionRepo)
     {
         _paymentRepo = paymentRepo;
         _userRepo = userRepo;
         _payOsConfig = payOsConfigOptions.Value;
         _logger = logger;
         _realtimeNotifier = realtimeNotifier;
+        _petTransactionRepo = petTransactionRepo;
 
         _payOsClient = new global::PayOS.PayOSClient(
             _payOsConfig.ClientId,
@@ -122,6 +125,17 @@ public sealed class PayOsService
                     user.Diamonds += transaction.DiamondsReceived;
                     await _userRepo.UpdateAsync(user, cancellationToken);
                     
+                    await _petTransactionRepo.AddAsync(new PetTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = user.Id,
+                        TransactionType = "PayOsPurchase",
+                        DiamondsDelta = transaction.DiamondsReceived,
+                        MetadataJson = $"{{\"orderCode\":\"{data.OrderCode}\",\"amount\":\"{data.Amount}\"}}",
+                        CreatedAt = DateTimeOffset.UtcNow,
+                        UpdatedAt = DateTimeOffset.UtcNow
+                    }, cancellationToken);
+
                     await _realtimeNotifier.NotifyDiamondBalanceChangedAsync(
                         user.Id, 
                         user.Diamonds, 
@@ -182,6 +196,17 @@ public sealed class PayOsService
                         {
                             user.Diamonds += transaction.DiamondsReceived;
                             await _userRepo.UpdateAsync(user, cancellationToken);
+
+                            await _petTransactionRepo.AddAsync(new PetTransaction
+                            {
+                                Id = Guid.NewGuid(),
+                                UserId = user.Id,
+                                TransactionType = "PayOsPurchase",
+                                DiamondsDelta = transaction.DiamondsReceived,
+                                MetadataJson = $"{{\"orderCode\":\"{transaction.OrderCode}\",\"amount\":\"{transaction.AmountVnd}\",\"reconciled\":true}}",
+                                CreatedAt = DateTimeOffset.UtcNow,
+                                UpdatedAt = DateTimeOffset.UtcNow
+                            }, cancellationToken);
 
                             await _realtimeNotifier.NotifyDiamondBalanceChangedAsync(
                                 user.Id, 

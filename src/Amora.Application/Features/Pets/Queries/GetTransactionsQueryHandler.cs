@@ -28,7 +28,8 @@ public sealed class GetTransactionsQueryHandler : IRequestHandler<GetTransaction
     {
         return transactionType switch
         {
-            "IapGemPurchase" => "Nạp Kim Cương",
+            "IapGemPurchase" => "Nạp Kim Cương (App Store/Google Play)",
+            "PayOsPurchase" => "Nạp Kim Cương (Chuyển khoản)",
             "IapRefund" => "Hoàn Tiền Kim Cương",
             "Ad Reward" => "Xem Quảng Cáo",
             _ => transactionType
