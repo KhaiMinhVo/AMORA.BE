@@ -183,7 +183,34 @@ public sealed class PetShopService
 
         pet.WaterClaimsToday++;
         pet.LastWaterClaimAt = DateTimeOffset.UtcNow;
-        if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 10; // Water gives 10 EXP
+
+        var waterItem = await _shopRepository.GetItemByTypeAsync(ItemType.Water, cancellationToken);
+        if (waterItem != null)
+        {
+            var slot = await _shopRepository.GetInventorySlotAsync(userId, waterItem.Id, cancellationToken);
+            if (slot == null)
+            {
+                await _shopRepository.AddInventoryAsync(new UserInventory
+                {
+                    UserId = userId,
+                    ShopItemId = waterItem.Id,
+                    Quantity = 1,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    UpdatedAt = DateTimeOffset.UtcNow
+                }, cancellationToken);
+            }
+            else
+            {
+                slot.Quantity++;
+                slot.UpdatedAt = DateTimeOffset.UtcNow;
+            }
+            await _shopRepository.SaveChangesAsync(cancellationToken);
+        }
+        else
+        {
+            // Fallback if no water item is seeded in DB
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 10;
+        }
 
         pet.Stage = PetEngine.EvaluateStage(pet);
         pet.UpdatedAt = DateTimeOffset.UtcNow;

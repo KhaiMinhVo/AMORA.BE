@@ -1,4 +1,5 @@
 using Amora.Domain.Entities;
+using Amora.Domain.Enums;
 
 namespace Amora.Domain.Interfaces;
 
@@ -11,6 +12,8 @@ public interface IShopRepository
     Task<ShopItem?> GetItemByIdAsync(Guid itemId, CancellationToken cancellationToken = default);
 
     Task<ShopItem?> GetItemByCodeAsync(string code, CancellationToken cancellationToken = default);
+
+    Task<ShopItem?> GetItemByTypeAsync(ItemType type, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<UserInventory>> GetInventoryAsync(Guid userId, CancellationToken cancellationToken = default);
 

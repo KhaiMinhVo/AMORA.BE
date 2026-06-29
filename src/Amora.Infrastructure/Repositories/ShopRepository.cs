@@ -1,5 +1,6 @@
 using Amora.Domain.Entities;
 using Amora.Domain.Interfaces;
+using Amora.Domain.Enums;
 using Amora.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +23,9 @@ public sealed class ShopRepository : IShopRepository
 
     public Task<ShopItem?> GetItemByCodeAsync(string code, CancellationToken cancellationToken = default)
         => _db.ShopItems.FirstOrDefaultAsync(x => x.Code == code, cancellationToken);
+
+    public Task<ShopItem?> GetItemByTypeAsync(ItemType type, CancellationToken cancellationToken = default)
+        => _db.ShopItems.FirstOrDefaultAsync(x => x.ItemType == type, cancellationToken);
 
     public async Task<IReadOnlyList<UserInventory>> GetInventoryAsync(Guid userId, CancellationToken cancellationToken = default)
         => await _db.UserInventories
