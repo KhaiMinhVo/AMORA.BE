@@ -67,9 +67,9 @@ public sealed class AiScriptSuggestionService
             generationConfig = new
             {
                 temperature = 0.7,
-                top_p = 0.9,
-                top_k = 40,
-                max_output_tokens = 500
+                topP = 0.9,
+                topK = 40,
+                maxOutputTokens = 1024
             }
         };
 
