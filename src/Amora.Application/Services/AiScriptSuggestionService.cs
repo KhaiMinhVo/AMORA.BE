@@ -46,7 +46,9 @@ public sealed class AiScriptSuggestionService
         }
         
         prompt += "\nYêu cầu:\n" +
-                  "- Giọng điệu tự nhiên, vui vẻ, có chút thả thính nhẹ nhàng.\n" +
+                  "- Giọng điệu tự nhiên, vui vẻ, LỊCH SỰ và TRƯỞNG THÀNH. Có thể thả thính nhưng phải tinh tế.\n" +
+                  "- Tuyệt đối KHÔNG dùng từ lóng, KHÔNG thô tục, KHÔNG suồng sã hay sến súa.\n" +
+                  "- Nội dung phải là một câu hoàn chỉnh, trôi chảy, văn minh và tôn trọng người nghe.\n" +
                   "- Mỗi kịch bản là một dòng riêng biệt, bắt đầu bằng dấu gạch ngang (-).\n" +
                   "- Tuyệt đối không viết lan man, không thêm text giải thích.";
 
@@ -64,7 +66,7 @@ public sealed class AiScriptSuggestionService
             },
             generationConfig = new
             {
-                temperature = 0.9,
+                temperature = 0.7,
                 top_p = 0.9,
                 top_k = 40,
                 max_output_tokens = 500
