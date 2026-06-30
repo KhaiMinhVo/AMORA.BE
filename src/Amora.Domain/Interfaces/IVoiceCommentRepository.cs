@@ -19,4 +19,6 @@ public interface IVoiceCommentRepository
     Task UpdateAsync(VoiceComment comment, CancellationToken cancellationToken = default);
 
     Task DeleteAsync(VoiceComment comment, CancellationToken cancellationToken = default);
+
+    Task<Dictionary<DateOnly, int>> GetDailyCountsAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken cancellationToken = default);
 }

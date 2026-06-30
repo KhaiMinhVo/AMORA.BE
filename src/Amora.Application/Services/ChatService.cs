@@ -3,10 +3,12 @@ using Amora.Application.Dtos.Messages;
 using Amora.Application.Exceptions;
 using Amora.Application.Features.Pets.Commands;
 using Amora.Application.Pets;
+using Amora.Application.Pets.Commands;
 using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Amora.Application.Services;
 
@@ -20,6 +22,7 @@ public sealed class ChatService
     private readonly PetFeatureGateService _featureGate;
     private readonly IChatReadStateRepository _readState;
     private readonly AiModerationService _aiModerationService;
+    private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
 
     public ChatService(
         ICurrentUserService currentUserService,
@@ -29,7 +32,8 @@ public sealed class ChatService
         IMediator mediator,
         PetFeatureGateService featureGate,
         IChatReadStateRepository readState,
-        AiModerationService aiModerationService)
+        AiModerationService aiModerationService,
+        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
     {
         _currentUserService = currentUserService;
         _matchConnectionRepository = matchConnectionRepository;
@@ -39,6 +43,7 @@ public sealed class ChatService
         _featureGate = featureGate;
         _readState = readState;
         _aiModerationService = aiModerationService;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task<MessageHistoryResponseDto> GetHistoryAsync(Guid matchId, string? cursor, int limit, CancellationToken cancellationToken = default)
@@ -143,6 +148,21 @@ public sealed class ChatService
         {
             await _mediator.Send(new ProcessTextMessagePetCommand(matchId, _currentUserService.UserId), cancellationToken);
         }
+
+        // Trigger AI Emotion Analysis for Voice and Image (if we ever support text, it will be caught here)
+        _ = Task.Run(async () => 
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var scopedMediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                await scopedMediator.Send(new AnalyzeConversationEmotionCommand(matchId));
+            }
+            catch (Exception)
+            {
+                // Mute background exceptions
+            }
+        });
 
         // Handshake 24h: Gỡ bỏ thời hạn khi có tin nhắn đầu tiên, giúp Match trở thành vĩnh viễn.
         await _matchConnectionRepository.CompleteHandshakeAsync(matchId, cancellationToken);

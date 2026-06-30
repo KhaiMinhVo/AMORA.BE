@@ -49,8 +49,11 @@ public sealed class PetStateDto
 {
     public string Name { get; init; } = string.Empty;
     public int Hp { get; init; }
-
     public int Level { get; init; }
+    public string Type { get; init; } = string.Empty;
+    public string CurrentEmotion { get; init; } = "Neutral";
+    public bool IsDead { get; init; }
+    public bool IsFrozen { get; init; }
 }
 
 public sealed class InboxItemDto

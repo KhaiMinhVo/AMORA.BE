@@ -23,6 +23,11 @@ public sealed class Pet : BaseEntity
     /// <summary>HP = 0 → đóng băng, không nhận RP.</summary>
     public bool IsFrozen { get; set; }
 
+    public PetEmotion CurrentEmotion { get; set; } = PetEmotion.Neutral;
+
+    /// <summary>Số lượng tin nhắn mới chưa được phân tích cảm xúc.</summary>
+    public int UnanalyzedMessageCount { get; set; }
+
     public DateTimeOffset LastInteractionAt { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset? LastPartnerMessageAt { get; set; }

@@ -78,4 +78,16 @@ public sealed class PostsController : ControllerBase
         var result = await _voicePostService.ReactToPostAsync(postId, request, cancellationToken);
         return Ok(ApiResponse<ReactToPostResponse>.Ok(result, "Reaction updated."));
     }
+
+    /// <summary>
+    /// Ghi nhận 1 lượt nghe audio của post.
+    /// </summary>
+    [HttpPost("{postId:guid}/play")]
+    public async Task<ActionResult<ApiResponse<object>>> LogPlay(
+        Guid postId,
+        CancellationToken cancellationToken)
+    {
+        await _voicePostService.LogPlayAsync(postId, cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Play logged."));
+    }
 }

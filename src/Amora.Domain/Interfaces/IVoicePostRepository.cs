@@ -23,4 +23,5 @@ public interface IVoicePostRepository
     Task AddAsync(VoicePost post, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(VoicePost post, CancellationToken cancellationToken = default);
+    Task<Dictionary<DateOnly, int>> GetDailyCountsAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken cancellationToken = default);
 }

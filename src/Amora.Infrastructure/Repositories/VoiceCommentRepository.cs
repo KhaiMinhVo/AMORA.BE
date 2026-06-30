@@ -53,4 +53,15 @@ public sealed class VoiceCommentRepository : IVoiceCommentRepository
         _dbContext.VoiceComments.Remove(comment);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<Dictionary<DateOnly, int>> GetDailyCountsAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken cancellationToken = default)
+    {
+        var logs = await _dbContext.VoiceComments
+            .Where(x => x.CreatedAt >= start && x.CreatedAt <= end)
+            .GroupBy(x => x.CreatedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return logs.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Count);
+    }
 }

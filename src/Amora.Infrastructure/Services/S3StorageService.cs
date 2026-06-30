@@ -64,4 +64,41 @@ public class S3StorageService : IStorageService
 
         return $"{_publicBaseUrl}/{fileName}";
     }
+
+    public async Task<long> GetTotalStorageSizeAsync(CancellationToken cancellationToken = default)
+    {
+        long totalBytes = 0;
+        var listObjectsRequest = new ListObjectsV2Request
+        {
+            BucketName = _bucketName
+        };
+        
+        do
+        {
+            var listObjectsResponse = await _s3Client.ListObjectsV2Async(listObjectsRequest, cancellationToken);
+            totalBytes += listObjectsResponse.S3Objects.Sum(o => o.Size);
+            listObjectsRequest.ContinuationToken = listObjectsResponse.NextContinuationToken;
+        } while (!string.IsNullOrEmpty(listObjectsRequest.ContinuationToken));
+
+        return totalBytes;
+    }
+
+    public async Task<(long Size, DateTimeOffset? LastModified)> GetLatestBackupInfoAsync(CancellationToken cancellationToken = default)
+    {
+        var backupRequest = new ListObjectsV2Request
+        {
+            BucketName = _bucketName,
+            Prefix = "backups/"
+        };
+        
+        var backupsResponse = await _s3Client.ListObjectsV2Async(backupRequest, cancellationToken);
+        var latestBackup = backupsResponse.S3Objects.OrderByDescending(o => o.LastModified).FirstOrDefault();
+        
+        if (latestBackup != null)
+        {
+            return (latestBackup.Size, latestBackup.LastModified);
+        }
+
+        return (0, null);
+    }
 }

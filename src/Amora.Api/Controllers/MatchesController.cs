@@ -65,6 +65,16 @@ public sealed class MatchesController : ControllerBase
     }
 
     /// <summary>
+    /// Làm lại yêu cầu kết nối đã từ chối (Chỉ dành cho Premium/Gold).
+    /// </summary>
+    [HttpPost("{matchId:guid}/rematch")]
+    public async Task<ActionResult<ApiResponse<object>>> RematchMatch(Guid matchId, CancellationToken cancellationToken)
+    {
+        await _matchService.RematchAsync(matchId, cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Match rematch accepted successfully."));
+    }
+
+    /// <summary>
     /// Lay inbox match theo trang thai (neu co).
     /// </summary>
     [HttpGet]

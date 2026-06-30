@@ -10,4 +10,7 @@ public interface IStorageService
     Task<(string UploadUrl, string PublicUrl)> GeneratePreSignedUploadUrlAsync(string fileExtension, string? folder);
 
     Task<string> UploadFileAsync(Stream fileStream, string fileExtension, string? folder, string? contentType = null);
+
+    Task<long> GetTotalStorageSizeAsync(CancellationToken cancellationToken = default);
+    Task<(long Size, DateTimeOffset? LastModified)> GetLatestBackupInfoAsync(CancellationToken cancellationToken = default);
 }

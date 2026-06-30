@@ -154,6 +154,10 @@ namespace Amora.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
+                    b.Property<int[]>("PreferredVoiceTones")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.Property<bool>("ProfileBonusClaimed")
                         .HasColumnType("boolean");
 
@@ -216,6 +220,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             IsBanned = false,
                             IsProfileComplete = false,
                             Photos = new string[0],
+                            PreferredVoiceTones = new int[0],
                             ProfileBonusClaimed = false,
                             RequiresPasswordUpdate = false,
                             Role = "User",
@@ -239,6 +244,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             IsBanned = false,
                             IsProfileComplete = false,
                             Photos = new string[0],
+                            PreferredVoiceTones = new int[0],
                             ProfileBonusClaimed = false,
                             RequiresPasswordUpdate = false,
                             Role = "User",
@@ -262,6 +268,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             IsBanned = false,
                             IsProfileComplete = false,
                             Photos = new string[0],
+                            PreferredVoiceTones = new int[0],
                             ProfileBonusClaimed = false,
                             RequiresPasswordUpdate = false,
                             Role = "User",
@@ -287,6 +294,7 @@ namespace Amora.Infrastructure.Data.Migrations
                             IsProfileComplete = false,
                             PasswordHash = "iofIl2qd9dzVVSm7ut0vWA==.RDDiARZIjoB+UTXq/fUhGdOrsjUfZkGWoiP1wGacbno=",
                             Photos = new string[0],
+                            PreferredVoiceTones = new int[0],
                             ProfileBonusClaimed = false,
                             RequiresPasswordUpdate = false,
                             Role = "Admin",
@@ -295,6 +303,33 @@ namespace Amora.Infrastructure.Data.Migrations
                             TrustScore = 80,
                             VoicePrivacy = 0
                         });
+                });
+
+            modelBuilder.Entity("Amora.Domain.Entities.AudioPlayLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("PlayedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AudioPlayLogs", (string)null);
                 });
 
             modelBuilder.Entity("Amora.Domain.Entities.ChatReadState", b =>
@@ -606,6 +641,9 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("CurrentEmotion")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset?>("DeathTime")
                         .HasColumnType("timestamp with time zone");
 
@@ -678,6 +716,9 @@ namespace Amora.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UnanalyzedMessageCount")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
@@ -1333,6 +1374,9 @@ namespace Amora.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("Tone")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

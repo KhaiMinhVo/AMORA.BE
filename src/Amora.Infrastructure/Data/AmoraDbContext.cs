@@ -38,6 +38,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<PetStateHistory> PetStateHistories => Set<PetStateHistory>();
 
+    public DbSet<AudioPlayLog> AudioPlayLogs => Set<AudioPlayLog>();
+
     public DbSet<PetActivity> PetActivities => Set<PetActivity>();
 
     public DbSet<ShopItem> ShopItems => Set<ShopItem>();
@@ -388,6 +390,14 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.DataJson).HasColumnType("jsonb");
 
             entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AudioPlayLog>(entity =>
+        {
+            entity.ToTable("AudioPlayLogs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.PlayedAt);
+            entity.HasIndex(x => x.UserId);
         });
 
         base.OnModelCreating(modelBuilder);

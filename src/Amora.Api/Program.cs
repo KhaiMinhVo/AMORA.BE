@@ -98,6 +98,7 @@ builder.Services.AddScoped<IIapPurchaseRepository, IapPurchaseRepository>();
 builder.Services.AddScoped<IChatReadStateRepository, ChatReadStateRepository>();
 builder.Services.AddScoped<IMatchMediaUsageRepository, MatchMediaUsageRepository>();
 builder.Services.AddScoped<IIapWebhookEventRepository, IapWebhookEventRepository>();
+builder.Services.AddScoped<IAudioPlayLogRepository, AudioPlayLogRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IPostBoostRecordRepository, PostBoostRecordRepository>();
 builder.Services.AddScoped<IAdminNotificationRepository, AdminNotificationRepository>();

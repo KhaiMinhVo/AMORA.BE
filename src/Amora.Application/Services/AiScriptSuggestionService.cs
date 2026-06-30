@@ -29,8 +29,8 @@ public sealed class AiScriptSuggestionService
     {
         if (string.IsNullOrWhiteSpace(_apiKey))
         {
-            _logger.LogWarning("Gemini API Key is missing. Returning fallback suggestions.");
-            return GetFallbackSuggestions();
+            _logger.LogError("Gemini API Key is missing.");
+            throw new InvalidOperationException("Chưa cấu hình Gemini API Key. Vui lòng thiết lập biến môi trường GEMINI_API_KEY hoặc cấu hình trong appsettings.json.");
         }
 
         string prompt = $"Bạn là một chuyên gia tư vấn hẹn hò. Hãy viết 3 đoạn kịch bản giới thiệu bản thân ngắn gọn (khoảng 30-50 từ, đọc mất 10-30 giây) để dùng làm audio intro trên ứng dụng hẹn hò.\n" +
@@ -61,13 +61,22 @@ public sealed class AiScriptSuggestionService
                         new { text = prompt }
                     }
                 }
+            },
+            generationConfig = new
+            {
+                temperature = 0.9,
+                top_p = 0.9,
+                top_k = 40,
+                max_output_tokens = 500
             }
         };
 
+        var json = System.Text.Json.JsonSerializer.Serialize(requestBody);
+        var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
         try
         {
-            var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}", jsonContent, cancellationToken);
+            var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={_apiKey}", content, cancellationToken);
             
             if (response.IsSuccessStatusCode)
             {
@@ -103,23 +112,16 @@ public sealed class AiScriptSuggestionService
             {
                 var error = await response.Content.ReadAsStringAsync(cancellationToken);
                 _logger.LogError("Gemini API failed with status code {StatusCode}. Error: {Error}", response.StatusCode, error);
+                throw new InvalidOperationException($"Lỗi khi gọi Gemini API: {response.StatusCode}");
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception while calling Gemini API.");
+            throw;
         }
 
-        return GetFallbackSuggestions();
+        throw new InvalidOperationException("AI không tạo ra kịch bản hợp lệ.");
     }
 
-    private List<string> GetFallbackSuggestions()
-    {
-        return new List<string>
-        {
-            "Chào cậu, tớ là một người thích sự đơn giản và chân thành. Nếu cậu cũng đang tìm kiếm một cuộc trò chuyện thú vị sau giờ làm, thì thả tim cho tớ nhé!",
-            "Người ta nói giọng nói có thể phản ánh tâm hồn. Cậu nghe giọng tớ xong thấy tâm hồn tớ có hợp với cậu không? Quẹt phải để tớ kể thêm nhé!",
-            "Tớ không giỏi thả thính, chỉ biết dùng sự chân thành này để nói rằng tớ rất mong được làm quen với cậu. Match với tớ để mình cùng tìm hiểu nha!"
-        };
-    }
 }

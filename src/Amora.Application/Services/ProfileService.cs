@@ -143,6 +143,19 @@ public sealed class ProfileService
             user.VoicePrivacy = privacy;
         }
 
+        if (request.PreferredVoiceTones is not null)
+        {
+            var validTones = new List<Amora.Domain.Enums.VoiceTone>();
+            foreach (var t in request.PreferredVoiceTones)
+            {
+                if (Enum.TryParse<Amora.Domain.Enums.VoiceTone>(t, true, out var tone))
+                {
+                    validTones.Add(tone);
+                }
+            }
+            user.PreferredVoiceTones = validTones.ToArray();
+        }
+
         // Kiểm tra đã đủ thông tin chưa: có avatar, có DOB, có giới tính.
         user.IsProfileComplete = !string.IsNullOrWhiteSpace(user.DisplayName)
                                   && !string.IsNullOrWhiteSpace(user.AvatarUrl)
@@ -174,6 +187,7 @@ public sealed class ProfileService
         VoiceIntroDuration = user.VoiceIntroDuration,
         VoicePrivacy = user.VoicePrivacy.ToString(),
         Interests = ParseInterests(user.Interests),
+        PreferredVoiceTones = user.PreferredVoiceTones.Select(t => t.ToString()).ToArray(),
         IsProfileComplete = user.IsProfileComplete,
         CreatedAt = user.CreatedAt,
         Diamonds = user.Diamonds,

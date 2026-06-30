@@ -22,6 +22,9 @@ public sealed class VoicePost
     /// <summary>Dữ liệu Pet được Python Worker ghi vào sau khi xử lý xong.</summary>
     public PetVibeData? PetVibeData { get; set; }
 
+    /// <summary>Gu giọng nói của bài post, do AI phân tích.</summary>
+    public VoiceTone? Tone { get; set; }
+
     public int MaxMatchSlots { get; set; } = 3;
 
     public int ReactionCount { get; set; }

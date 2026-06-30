@@ -55,6 +55,9 @@ public sealed class AppUser
     /// <summary>Danh sách sở thích, phân tách bởi dấu phẩy. Ví dụ: "Nhạc,Phim,Du lịch"</summary>
     public string? Interests { get; set; }
 
+    /// <summary>Gu giọng nói mà user thích (Deep, Cute...).</summary>
+    public VoiceTone[] PreferredVoiceTones { get; set; } = [];
+
     /// <summary>True nếu user đã điền đầy đủ thông tin Onboarding.</summary>
     public bool IsProfileComplete { get; set; }
 

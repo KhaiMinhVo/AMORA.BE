@@ -59,4 +59,17 @@ public sealed class PostsCommentsController : ControllerBase
         await _voiceCommentService.DeleteCommentAsync(commentId, cancellationToken);
         return Ok(ApiResponse<object>.Ok(null, "Voice comment deleted successfully."));
     }
+
+    /// <summary>
+    /// Ghi nhận 1 lượt nghe audio của comment.
+    /// </summary>
+    [HttpPost("{commentId:guid}/play")]
+    public async Task<ActionResult<ApiResponse<object>>> LogPlay(
+        Guid postId,
+        Guid commentId,
+        CancellationToken cancellationToken)
+    {
+        await _voiceCommentService.LogPlayAsync(commentId, cancellationToken);
+        return Ok(ApiResponse<object>.Ok(null, "Play logged."));
+    }
 }

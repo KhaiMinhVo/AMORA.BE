@@ -14,6 +14,7 @@ public sealed class UpdateProfileRequest
     public int? VoiceIntroDuration { get; set; }
     public string? VoicePrivacy { get; set; }
     public string[]? Interests { get; set; }
+    public string[]? PreferredVoiceTones { get; set; }
 }
 
 public sealed class ProfileResponseDto
@@ -31,6 +32,7 @@ public sealed class ProfileResponseDto
     public int? VoiceIntroDuration { get; init; }
     public string VoicePrivacy { get; init; } = "Everyone";
     public string[] Interests { get; init; } = [];
+    public string[] PreferredVoiceTones { get; init; } = [];
     public bool IsProfileComplete { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public int Diamonds { get; init; }

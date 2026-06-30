@@ -242,6 +242,90 @@ public sealed class MatchService
         await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Rejected, cancellationToken);
     }
 
+    public async Task RematchAsync(Guid matchId, CancellationToken cancellationToken = default)
+    {
+        var match = await _matchConnectionRepository.GetByIdAsync(matchId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy yêu cầu ghép đôi.");
+
+        if (match.UserBId != _currentUserService.UserId)
+        {
+            throw new ForbiddenApiException("Bạn không có quyền thực hiện thao tác này.");
+        }
+
+        if (match.Status != MatchStatus.Rejected)
+        {
+            throw new ConflictApiException("Yêu cầu ghép đôi này không ở trạng thái từ chối.");
+        }
+
+        var user = await _userRepository.GetByIdAsync(_currentUserService.UserId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+
+        if (user.SubscriptionType != SubscriptionType.Premium && user.SubscriptionType != SubscriptionType.Gold)
+        {
+            throw new ForbiddenApiException("Chức năng Rematch (Làm lại) chỉ dành cho người dùng gói Premium hoặc Gold. Vui lòng nâng cấp gói để sử dụng tính năng này!");
+        }
+
+        try
+        {
+            await _matchConnectionRepository.ExecuteInTransactionAsync(async () =>
+            {
+                await _matchConnectionRepository.UpdateStatusAsync(matchId, MatchStatus.Active, cancellationToken);
+                match.Status = MatchStatus.Active;
+
+                var systemMessage = new ChatMessage
+                {
+                    Id = Guid.NewGuid().ToString("N")[..24],
+                    MatchId = match.Id,
+                    SenderId = null,
+                    MessageType = MessageType.System,
+                    Content = "Hai bạn đã kết nối thành công qua chức năng Rematch.",
+                    CreatedAt = DateTimeOffset.UtcNow
+                };
+
+                await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
+                await _mediator.Send(new CreatePetCommand(match.Id), cancellationToken);
+
+                try
+                {
+                    await _realtimeNotifier.NotifyMatchCreatedAsync(match, cancellationToken);
+                    await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send SignalR notification for match {MatchId}.", match.Id);
+                }
+            }, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Rematch DB error. MatchId={MatchId}, Inner={Inner}", matchId, ex.InnerException?.Message);
+            throw;
+        }
+
+        var payload = $"{{\"matchId\": \"{match.Id}\"}}";
+        
+        await _notificationService.SendNotificationAsync(
+            match.UserAId, 
+            NotificationType.Matching, 
+            "Kết nối thành công (Rematch)!", 
+            "Người ấy đã đổi ý và chấp nhận kết nối của bạn.", 
+            payload, cancellationToken);
+
+        await _notificationService.SendNotificationAsync(
+            match.UserAId, 
+            NotificationType.Pet, 
+            "Trứng Pet đã xuất hiện!", 
+            "Pet của hai bạn đã được tạo, hãy vào chăm sóc nhé.", 
+            payload, cancellationToken);
+
+        await _notificationService.SendNotificationAsync(
+            match.UserBId, 
+            NotificationType.Pet, 
+            "Trứng Pet đã xuất hiện!", 
+            "Pet của hai bạn đã được tạo, hãy vào chăm sóc nhé.", 
+            payload, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<InboxItemDto>> GetInboxAsync(string? status, CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.UserId;
@@ -268,12 +352,16 @@ public sealed class MatchService
 
             var pet = await _petRepository.GetByMatchIdAsync(match.Id, cancellationToken);
             var petDto = pet is null
-                ? new PetStateDto { Name = string.Empty, Hp = 80, Level = 0 }
+                ? new PetStateDto { Name = string.Empty, Hp = 80, Level = 0, Type = string.Empty, CurrentEmotion = "Neutral", IsDead = false, IsFrozen = false }
                 : new PetStateDto
                 {
                     Name = pet.Name ?? string.Empty,
                     Hp = pet.Hp,
-                    Level = (int)pet.Stage
+                    Level = (int)pet.Stage,
+                    Type = pet.Type.ToString(),
+                    CurrentEmotion = pet.CurrentEmotion.ToString(),
+                    IsDead = pet.IsDead,
+                    IsFrozen = pet.IsFrozen
                 };
 
             var isPending = match.Status == MatchStatus.Pending;

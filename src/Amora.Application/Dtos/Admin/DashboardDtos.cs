@@ -22,4 +22,22 @@ public sealed class DashboardStatsResponseDto
     public int TotalVoiceMatches { get; init; }
     public int PendingReports { get; init; }
     public List<UserSummaryDto> LatestUsers { get; init; } = [];
+    public List<TrafficPointDto> TrafficData { get; init; } = [];
+    public SystemHealthDto SystemHealth { get; init; } = new();
+}
+
+public sealed class TrafficPointDto
+{
+    public string Day { get; init; } = string.Empty; // e.g. "MON", "TUE"
+    public int Recordings { get; init; }
+    public int Plays { get; init; }
+}
+
+public sealed class SystemHealthDto
+{
+    public int ApiLatencyMs { get; init; }
+    public double StorageUsedPercentage { get; init; }
+    public double UptimePercentage { get; init; }
+    public string BackupSize { get; init; } = "0B";
+    public DateTimeOffset? LastBackupTime { get; init; }
 }

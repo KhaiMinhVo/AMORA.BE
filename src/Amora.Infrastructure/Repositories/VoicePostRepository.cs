@@ -66,9 +66,11 @@ public sealed class VoicePostRepository : IVoicePostRepository
             .Select(x => new
             {
                 Post = x.Post,
-                IsBoosted = _dbContext.PostBoostRecords.Any(b => b.PostId == x.Post.Id && b.ExpiresAt > now)
+                IsBoosted = _dbContext.PostBoostRecords.Any(b => b.PostId == x.Post.Id && b.ExpiresAt > now),
+                IsPreferredTone = viewer.PreferredVoiceTones != null && x.Post.Tone.HasValue && viewer.PreferredVoiceTones.Contains(x.Post.Tone.Value)
             })
             .OrderByDescending(x => x.IsBoosted)
+            .ThenByDescending(x => (x.Post.ReactionCount * 2) + (x.Post.MatchCount * 5) + (x.IsPreferredTone ? 50 : 0))
             .ThenByDescending(x => x.Post.CreatedAt)
             .ThenByDescending(x => x.Post.Id);
 
@@ -134,5 +136,16 @@ public sealed class VoicePostRepository : IVoicePostRepository
             _dbContext.VoicePosts.Update(post);
         }
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<Dictionary<DateOnly, int>> GetDailyCountsAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken cancellationToken = default)
+    {
+        var logs = await _dbContext.VoicePosts
+            .Where(x => x.CreatedAt >= start && x.CreatedAt <= end)
+            .GroupBy(x => x.CreatedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return logs.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Count);
     }
 }

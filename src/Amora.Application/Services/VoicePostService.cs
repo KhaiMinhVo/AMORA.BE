@@ -8,6 +8,8 @@ using Amora.Application.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MediatR;
+using Amora.Application.Posts.Commands;
 
 namespace Amora.Application.Services;
 
@@ -46,6 +48,21 @@ public sealed class VoicePostService
         _scopeFactory = scopeFactory;
         _logger = logger;
         _trustScoreService = trustScoreService;
+    }
+
+    public async Task LogPlayAsync(Guid postId, CancellationToken cancellationToken = default)
+    {
+        var log = new AudioPlayLog
+        {
+            Id = Guid.NewGuid(),
+            UserId = _currentUserService.UserId,
+            PostId = postId,
+            PlayedAt = DateTimeOffset.UtcNow
+        };
+        
+        using var scope = _scopeFactory.CreateScope();
+        var audioLogRepo = scope.ServiceProvider.GetRequiredService<IAudioPlayLogRepository>();
+        await audioLogRepo.AddAsync(log, cancellationToken);
     }
 
     public async Task<CreateVoicePostResponseDto> CreateAsync(CreateVoicePostRequest request, CancellationToken cancellationToken = default)
@@ -150,6 +167,16 @@ public sealed class VoicePostService
                         await adminNotifier.NotifyAutoBlockedContentAsync("Voice Post", "Chứa nội dung vi phạm/toxic.", userId);
                     }
                 }
+            }
+
+            try
+            {
+                var scopedMediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                await scopedMediator.Send(new AnalyzeVoiceToneCommand(post.Id));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to dispatch AnalyzeVoiceToneCommand for post {PostId}", post.Id);
             }
         });
 

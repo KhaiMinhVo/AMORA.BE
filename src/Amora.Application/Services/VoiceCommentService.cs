@@ -33,6 +33,21 @@ public sealed class VoiceCommentService
         _notificationService = notificationService;
     }
 
+    public async Task LogPlayAsync(Guid commentId, CancellationToken cancellationToken = default)
+    {
+        var log = new AudioPlayLog
+        {
+            Id = Guid.NewGuid(),
+            UserId = _currentUserService.UserId,
+            CommentId = commentId,
+            PlayedAt = DateTimeOffset.UtcNow
+        };
+        
+        using var scope = _scopeFactory.CreateScope();
+        var audioLogRepo = scope.ServiceProvider.GetRequiredService<IAudioPlayLogRepository>();
+        await audioLogRepo.AddAsync(log, cancellationToken);
+    }
+
     public async Task<CreateCommentResponseDto> CreateCommentAsync(Guid postId, CreateVoiceCommentRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.AudioUrl))
