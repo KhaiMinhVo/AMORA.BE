@@ -90,4 +90,18 @@ public sealed class PostsController : ControllerBase
         await _voicePostService.LogPlayAsync(postId, cancellationToken);
         return Ok(ApiResponse<object>.Ok(null, "Play logged."));
     }
+
+    /// <summary>
+    /// Xem danh sach nguoi da tha react vao post (chi chu post moi duoc xem).
+    /// </summary>
+    [HttpGet("{postId:guid}/reactions")]
+    public async Task<ActionResult<ApiResponse<PostReactionsResponseDto>>> GetPostReactions(
+        Guid postId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _voicePostService.GetPostReactionsAsync(postId, page, pageSize, cancellationToken);
+        return Ok(ApiResponse<PostReactionsResponseDto>.Ok(result));
+    }
 }

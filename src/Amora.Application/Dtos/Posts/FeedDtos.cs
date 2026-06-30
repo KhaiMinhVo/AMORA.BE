@@ -38,3 +38,18 @@ public sealed class FeedResponseDto
 
     public IReadOnlyList<FeedPostItemDto> Items { get; init; } = Array.Empty<FeedPostItemDto>();
 }
+
+public sealed class PostReactionItemDto
+{
+    public Guid UserId { get; init; }
+    public string DisplayName { get; init; } = string.Empty;
+    public string AvatarUrl { get; init; } = string.Empty;
+    public string ReactionType { get; init; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; init; }
+}
+
+public sealed class PostReactionsResponseDto
+{
+    public int TotalCount { get; init; }
+    public IReadOnlyList<PostReactionItemDto> Items { get; init; } = Array.Empty<PostReactionItemDto>();
+}

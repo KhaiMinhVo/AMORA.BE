@@ -31,6 +31,19 @@ public sealed class PostReactionRepository : IPostReactionRepository
         return reactions;
     }
 
+    public async Task<(IReadOnlyList<PostReaction> Items, int TotalCount)> GetReactionsByPostIdAsync(Guid postId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.PostReactions
+            .Include(x => x.User)
+            .Where(x => x.PostId == postId)
+            .OrderByDescending(x => x.CreatedAt);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
     public async Task AddAsync(PostReaction reaction, CancellationToken cancellationToken = default)
     {
         await _dbContext.PostReactions.AddAsync(reaction, cancellationToken);

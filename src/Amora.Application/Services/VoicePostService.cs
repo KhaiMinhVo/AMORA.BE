@@ -214,6 +214,33 @@ public sealed class VoicePostService
         return url;
     }
 
+    public async Task<PostReactionsResponseDto> GetPostReactionsAsync(Guid postId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var post = await _voicePostRepository.GetByIdAsync(postId, cancellationToken);
+        if (post == null)
+            throw new KeyNotFoundException("Post not found.");
+
+        if (post.PosterId != _currentUserService.UserId)
+            throw new UnauthorizedAccessException("Bạn chỉ được xem danh sách lượt thích của bài đăng do chính bạn tạo.");
+
+        var (items, totalCount) = await _postReactionRepository.GetReactionsByPostIdAsync(postId, page, pageSize, cancellationToken);
+
+        var dtos = items.Select(x => new PostReactionItemDto
+        {
+            UserId = x.UserId,
+            DisplayName = x.User.DisplayName,
+            AvatarUrl = x.User.AvatarUrl,
+            ReactionType = x.Type.ToString(),
+            CreatedAt = x.CreatedAt
+        }).ToList();
+
+        return new PostReactionsResponseDto
+        {
+            TotalCount = totalCount,
+            Items = dtos
+        };
+    }
+
     public async Task<FeedResponseDto> GetFeedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
         page = Math.Max(page, 1);
