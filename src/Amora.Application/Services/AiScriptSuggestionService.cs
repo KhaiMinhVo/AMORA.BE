@@ -33,7 +33,8 @@ public sealed class AiScriptSuggestionService
             throw new InvalidOperationException("Chưa cấu hình Gemini API Key. Vui lòng thiết lập biến môi trường GEMINI_API_KEY hoặc cấu hình trong appsettings.json.");
         }
 
-        string prompt = $"Bạn là một chuyên gia tư vấn hẹn hò. Hãy viết 3 đoạn kịch bản giới thiệu bản thân ngắn gọn (khoảng 30-50 từ, đọc mất 10-30 giây) để dùng làm audio intro trên ứng dụng hẹn hò.\n" +
+        string prompt = "Bạn là trợ lý gợi ý nội dung cho ứng dụng AMORA, một nền tảng kết nối bằng giọng nói.\n" +
+                        "Hãy tạo 1 đoạn gợi ý để người dùng đọc khi thu âm \"Giọng nói giới thiệu bản thân\".\n\n" +
                         $"Tên người dùng: {displayName}\n";
         
         if (!string.IsNullOrWhiteSpace(bio))
@@ -45,12 +46,28 @@ public sealed class AiScriptSuggestionService
             prompt += $"Sở thích: {interests}\n";
         }
         
-        prompt += "\nYêu cầu:\n" +
-                  "- Giọng điệu tự nhiên, vui vẻ, LỊCH SỰ và TRƯỞNG THÀNH. Có thể thả thính nhưng phải tinh tế.\n" +
-                  "- Tuyệt đối KHÔNG dùng từ lóng, KHÔNG thô tục, KHÔNG suồng sã hay sến súa.\n" +
-                  "- Nội dung phải là một câu hoàn chỉnh, trôi chảy, văn minh và tôn trọng người nghe.\n" +
-                  "- Mỗi kịch bản là một dòng riêng biệt, bắt đầu bằng dấu gạch ngang (-).\n" +
-                  "- Tuyệt đối không viết lan man, không thêm text giải thích.";
+        prompt += "\nMục tiêu:\n" +
+                  "- Đoạn gợi ý phải tự nhiên, chân thành, dễ đọc thành tiếng.\n" +
+                  "- Khi đọc, nội dung nên kéo dài khoảng 10 đến 30 giây.\n" +
+                  "- Nội dung phù hợp với app kết nối/hẹn hò bằng giọng nói.\n" +
+                  "- Giúp người nghe cảm nhận được tính cách, sở thích và mong muốn kết nối của người nói.\n" +
+                  "- Giọng văn ấm áp, lịch sự, gần gũi, không quá sến, không quá trang trọng.\n\n" +
+                  "Yêu cầu:\n" +
+                  "1. Chỉ tạo 1 đoạn content duy nhất cho mỗi lần gọi.\n" +
+                  "2. Mỗi lần gọi phải tạo một đoạn khác với các lần trước, không lặp lại nguyên văn.\n" +
+                  "3. Đoạn gợi ý dài khoảng 2 đến 4 câu ngắn.\n" +
+                  "4. Không cần title.\n" +
+                  "5. Không giải thích.\n" +
+                  "6. Không dùng từ nhạy cảm, phản cảm, tiêu cực hoặc quá riêng tư.\n" +
+                  "7. Không nhắc đến thông tin cá nhân cụ thể như số điện thoại, địa chỉ, mạng xã hội.\n" +
+                  "8. Nội dung nên thay đổi đa dạng theo nhiều phong cách (nhẹ nhàng, vui vẻ, trưởng thành, hướng nội, năng động, chân thành, hài hước nhẹ, lãng mạn vừa phải).\n" +
+                  "9. Không dùng các câu quá chung chung như \"Mình là một người bình thường\".\n" +
+                  "10. Không hứa hẹn quá đà hoặc tạo cảm giác giả tạo.\n\n" +
+                  "Format trả về:\n" +
+                  "{\n" +
+                  "  \"content\": \"Xin chào, mình là người thích những cuộc trò chuyện tự nhiên và chân thành...\"\n" +
+                  "}\n\n" +
+                  "Chỉ trả về JSON object đúng format trên, không giải thích thêm.";
 
         var requestBody = new
         {
@@ -66,10 +83,11 @@ public sealed class AiScriptSuggestionService
             },
             generationConfig = new
             {
-                temperature = 0.7,
+                temperature = 0.9,
                 topP = 0.9,
                 topK = 40,
-                maxOutputTokens = 1024
+                maxOutputTokens = 1024,
+                responseMimeType = "application/json"
             }
         };
 
@@ -92,20 +110,21 @@ public sealed class AiScriptSuggestionService
                     
                     if (!string.IsNullOrWhiteSpace(text))
                     {
-                        var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                        var suggestions = new List<string>();
-                        foreach (var line in lines)
+                        try
                         {
-                            var cleanLine = line.Trim().TrimStart('-', '*', ' ');
-                            if (!string.IsNullOrWhiteSpace(cleanLine) && cleanLine.Length > 10)
+                            using var suggestionDoc = JsonDocument.Parse(text);
+                            if (suggestionDoc.RootElement.TryGetProperty("content", out var contentProp))
                             {
-                                suggestions.Add(cleanLine);
+                                var suggestion = contentProp.GetString();
+                                if (!string.IsNullOrWhiteSpace(suggestion))
+                                {
+                                    return new List<string> { suggestion.Trim() };
+                                }
                             }
                         }
-                        
-                        if (suggestions.Count > 0)
+                        catch (Exception ex)
                         {
-                            return suggestions;
+                            _logger.LogError(ex, "Failed to parse AI suggestion JSON. Raw output: {Text}", text);
                         }
                     }
                 }
