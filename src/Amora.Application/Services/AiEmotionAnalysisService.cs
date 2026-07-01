@@ -32,7 +32,14 @@ public sealed class AiEmotionAnalysisService
 
         try
         {
-            var prompt = $@"Bạn là một chuyên gia phân tích tâm lý. Dựa vào cuộc hội thoại sau, hãy phân tích cảm xúc chung và trả về 1 trong các từ khóa sau tương ứng với cảm xúc của cuộc hội thoại: Neutral, Happy, Sad. Chỉ trả về đúng 1 từ khóa đó, không trả về thêm bất kỳ văn bản nào khác.
+            var prompt = $@"Bạn là một chuyên gia phân tích tâm lý. Dựa vào cuộc hội thoại sau, hãy phân tích cảm xúc chung và trả về 1 trong các từ khóa sau tương ứng với cảm xúc của cuộc hội thoại: Neutral, Happy, Sad.
+
+Quy tắc phân loại:
+- Happy: Khi cuộc hội thoại có những lời khen ngợi, động viên, chia sẻ niềm vui, sự đồng cảm tích cực, tiếng cười (haha, hehe), sự quan tâm nồng nhiệt hoặc hào hứng.
+- Sad: Khi cuộc hội thoại có sự than vãn, mệt mỏi, buồn chán, tiêu cực, tổn thương, chia sẻ khó khăn, thất vọng hoặc sự thờ ơ, lạnh nhạt.
+- Neutral: Khi cuộc hội thoại chỉ là hỏi đáp thông tin thông thường (ví dụ: chào hỏi cơ bản, ăn cơm chưa, đang làm gì), không bộc lộ rõ cảm xúc tích cực hay tiêu cực.
+
+Chỉ trả về đúng 1 từ khóa (Neutral, Happy hoặc Sad), không trả về thêm bất kỳ văn bản nào khác.
 
 Cuộc hội thoại:
 {conversationText}";
