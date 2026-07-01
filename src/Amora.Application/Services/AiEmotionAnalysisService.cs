@@ -32,7 +32,7 @@ public sealed class AiEmotionAnalysisService
 
         try
         {
-            var prompt = $@"Bạn là một chuyên gia phân tích tâm lý. Dựa vào cuộc hội thoại sau, hãy phân tích cảm xúc chung và trả về 1 trong các từ khóa sau tương ứng với cảm xúc của cuộc hội thoại: Neutral, Happy, Sad, Angry, Romantic, Excited. Chỉ trả về đúng 1 từ khóa đó, không trả về thêm bất kỳ văn bản nào khác.
+            var prompt = $@"Bạn là một chuyên gia phân tích tâm lý. Dựa vào cuộc hội thoại sau, hãy phân tích cảm xúc chung và trả về 1 trong các từ khóa sau tương ứng với cảm xúc của cuộc hội thoại: Neutral, Happy, Sad. Chỉ trả về đúng 1 từ khóa đó, không trả về thêm bất kỳ văn bản nào khác.
 
 Cuộc hội thoại:
 {conversationText}";
