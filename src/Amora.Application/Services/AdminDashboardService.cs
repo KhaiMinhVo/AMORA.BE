@@ -34,12 +34,14 @@ public sealed class AdminDashboardService
         _storageService = storageService;
     }
 
-    public async Task<DashboardStatsResponseDto> GetDashboardStatsAsync(CancellationToken cancellationToken = default)
+    public async Task<DashboardStatsResponseDto> GetDashboardStatsAsync(DateTimeOffset? startDate, DateTimeOffset? endDate, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
+        var end = endDate ?? now;
+        var start = startDate ?? end.AddDays(-6);
+
         var thirtyDaysAgo = now.AddDays(-30);
         var sixtyDaysAgo = now.AddDays(-60);
-        var sevenDaysAgo = now.AddDays(-6);
 
         var totalUsers = await _userRepository.CountUsersAsync(cancellationToken);
         var usersLast30Days = await _userRepository.CountUsersCreatedBetweenAsync(thirtyDaysAgo, now, cancellationToken);
@@ -66,24 +68,29 @@ public sealed class AdminDashboardService
             Email = u.Email ?? string.Empty,
             AvatarUrl = u.AvatarUrl,
             CreatedAt = u.CreatedAt,
+            LastActiveAt = u.LastActiveAt,
             IsBanned = u.IsBanned
         }).ToList();
 
         // Voice Traffic Calculation
         var trafficData = new List<TrafficPointDto>();
-        var postCounts = await _voicePostRepository.GetDailyCountsAsync(sevenDaysAgo, now, cancellationToken);
-        var commentCounts = await _voiceCommentRepository.GetDailyCountsAsync(sevenDaysAgo, now, cancellationToken);
-        var playCounts = await _audioPlayLogRepository.GetDailyPlayCountsAsync(sevenDaysAgo, now, cancellationToken);
+        var postCounts = await _voicePostRepository.GetDailyCountsAsync(start, end, cancellationToken);
+        var commentCounts = await _voiceCommentRepository.GetDailyCountsAsync(start, end, cancellationToken);
+        var playCounts = await _audioPlayLogRepository.GetDailyPlayCountsAsync(start, end, cancellationToken);
 
-        for (int i = 6; i >= 0; i--)
+        var totalDays = (int)Math.Ceiling((end - start).TotalDays);
+        if (totalDays <= 0) totalDays = 1;
+        if (totalDays > 30) totalDays = 30;
+
+        for (int i = totalDays - 1; i >= 0; i--)
         {
-            var date = DateOnly.FromDateTime(now.AddDays(-i).Date);
+            var date = DateOnly.FromDateTime(end.AddDays(-i).Date);
             var recordings = postCounts.GetValueOrDefault(date, 0) + commentCounts.GetValueOrDefault(date, 0);
             var plays = playCounts.GetValueOrDefault(date, 0);
             
             trafficData.Add(new TrafficPointDto
             {
-                Day = date.ToString("ddd").ToUpperInvariant(),
+                Day = date.ToString("MM/dd"),
                 Recordings = recordings,
                 Plays = plays
             });

@@ -79,7 +79,7 @@ public sealed class UserRepository : IUserRepository
     public async Task<IReadOnlyList<AppUser>> GetLatestUsersAsync(int count, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Users
-            .OrderByDescending(u => u.CreatedAt)
+            .OrderByDescending(u => u.LastActiveAt ?? u.CreatedAt)
             .Take(count)
             .ToListAsync(cancellationToken);
     }
