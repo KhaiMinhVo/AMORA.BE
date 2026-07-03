@@ -29,12 +29,13 @@ public sealed class AudioPlayLogRepository : IAudioPlayLogRepository
 
     public async Task<Dictionary<DateOnly, int>> GetDailyPlayCountsAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken cancellationToken = default)
     {
-        var logs = await _dbContext.AudioPlayLogs
+        var dates = await _dbContext.AudioPlayLogs
             .Where(x => x.PlayedAt >= start && x.PlayedAt <= end)
-            .GroupBy(x => x.PlayedAt.Date)
-            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .Select(x => x.PlayedAt)
             .ToListAsync(cancellationToken);
 
-        return logs.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Count);
+        return dates
+            .GroupBy(x => DateOnly.FromDateTime(x.ToOffset(TimeSpan.FromHours(7)).DateTime))
+            .ToDictionary(g => g.Key, g => g.Count());
     }
 }

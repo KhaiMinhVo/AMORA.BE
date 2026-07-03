@@ -140,12 +140,13 @@ public sealed class VoicePostRepository : IVoicePostRepository
 
     public async Task<Dictionary<DateOnly, int>> GetDailyCountsAsync(DateTimeOffset start, DateTimeOffset end, CancellationToken cancellationToken = default)
     {
-        var logs = await _dbContext.VoicePosts
+        var dates = await _dbContext.VoicePosts
             .Where(x => x.CreatedAt >= start && x.CreatedAt <= end)
-            .GroupBy(x => x.CreatedAt.Date)
-            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .Select(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return logs.ToDictionary(x => DateOnly.FromDateTime(x.Date), x => x.Count);
+        return dates
+            .GroupBy(x => DateOnly.FromDateTime(x.ToOffset(TimeSpan.FromHours(7)).DateTime))
+            .ToDictionary(g => g.Key, g => g.Count());
     }
 }
