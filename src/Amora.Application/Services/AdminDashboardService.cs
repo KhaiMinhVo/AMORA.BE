@@ -37,7 +37,9 @@ public sealed class AdminDashboardService
     public async Task<DashboardStatsResponseDto> GetDashboardStatsAsync(DateTimeOffset? startDate, DateTimeOffset? endDate, CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
-        var end = endDate ?? now;
+        var end = endDate.HasValue 
+            ? new DateTimeOffset(endDate.Value.Date.AddDays(1).AddTicks(-1), endDate.Value.Offset) 
+            : now;
         var start = startDate ?? end.AddDays(-6);
 
         var thirtyDaysAgo = now.AddDays(-30);
