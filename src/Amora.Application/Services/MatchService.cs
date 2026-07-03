@@ -113,9 +113,9 @@ public sealed class MatchService
             throw new ValidationApiException("Bình luận này không thuộc về bài đăng đã chọn.");
         }
 
-        if (comment.Status != VoiceCommentStatus.Pending)
+        if (comment.Status != VoiceCommentStatus.Pending && comment.Status != VoiceCommentStatus.Accepted)
         {
-            throw new ConflictApiException("Bình luận này đã được xử lý.");
+            throw new ConflictApiException("Bình luận này không hợp lệ để kết nối.");
         }
 
         var result = await _matchConnectionRepository.CreateConnectionAsync(post.Id, comment.Id, post.PosterId, cancellationToken);

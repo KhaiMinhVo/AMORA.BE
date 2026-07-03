@@ -53,9 +53,9 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
             throw new InvalidOperationException("Comment does not belong to the selected post.");
         }
 
-        if (comment.Status != VoiceCommentStatus.Pending)
+        if (comment.Status != VoiceCommentStatus.Pending && comment.Status != VoiceCommentStatus.Accepted)
         {
-            throw new InvalidOperationException("Comment has already been processed.");
+            throw new InvalidOperationException("Comment status is invalid for matching.");
         }
 
         comment.Status = VoiceCommentStatus.Accepted;
