@@ -17,6 +17,7 @@ public sealed class PetCoordinator
     private readonly IPetRealtimeNotifier _petNotifier;
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly Services.NotificationService _notificationService;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
     public PetCoordinator(
         IPetRepository petRepository,
@@ -24,7 +25,8 @@ public sealed class PetCoordinator
         IMessagePublisher messagePublisher,
         IPetRealtimeNotifier petNotifier,
         IChatMessageRepository chatMessageRepository,
-        Services.NotificationService notificationService)
+        Services.NotificationService notificationService,
+        IRealtimeNotifier realtimeNotifier)
     {
         _petRepository = petRepository;
         _matchRepository = matchRepository;
@@ -32,6 +34,7 @@ public sealed class PetCoordinator
         _petNotifier = petNotifier;
         _chatMessageRepository = chatMessageRepository;
         _notificationService = notificationService;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<Pet> CreateForMatchAsync(Guid matchId, CancellationToken cancellationToken)
@@ -238,7 +241,7 @@ public sealed class PetCoordinator
             };
 
             await _chatMessageRepository.AddAsync(sysMsg, cancellationToken);
-            await _messagePublisher.PublishAsync(new ChatMessageReceivedMessage(pet.MatchId, sysMsg.Id), cancellationToken);
+            await _realtimeNotifier.NotifyNewMessageAsync(sysMsg, cancellationToken: cancellationToken);
 
             pet.LastMoodMessageDate = today;
         }
