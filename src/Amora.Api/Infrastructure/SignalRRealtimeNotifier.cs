@@ -146,4 +146,21 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
         await _hubContext.Clients.Group("Admins")
             .SendAsync("ReceiveAdminNotification", payload, cancellationToken);
     }
+
+    public async Task NotifySystemNotificationAsync(Guid userId, Notification notification, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            id = notification.Id,
+            type = notification.Type.ToString(),
+            title = notification.Title,
+            body = notification.Body,
+            isRead = notification.IsRead,
+            dataJson = notification.DataJson,
+            createdAt = notification.CreatedAt
+        };
+
+        await _hubContext.Clients.Group(RealtimeGroupNames.User(userId.ToString()))
+            .SendAsync("ReceiveSystemNotification", payload, cancellationToken);
+    }
 }

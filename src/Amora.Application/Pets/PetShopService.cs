@@ -346,15 +346,6 @@ public sealed class PetShopService
             return;
         }
         
-        if (item.Code == "pet_water")
-        {
-            var oldEnergy = pet.Energy;
-            pet.Energy = Math.Min(pet.Energy + 30, 100);
-            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 10;
-            activityDescription = $"Cho thú cưng uống {item.Name} (+{pet.Energy - oldEnergy} Năng lượng, +10 RP)";
-            return;
-        }
-
         if (item.ItemType == ItemType.Toy)
         {
             var oldMood = pet.Mood;

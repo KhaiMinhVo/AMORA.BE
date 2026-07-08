@@ -3,6 +3,7 @@ using System;
 using Amora.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Amora.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AmoraDbContext))]
-    partial class AmoraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708053523_UpdateRevivePotions")]
+    partial class UpdateRevivePotions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -647,6 +650,9 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("DeathTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Energy")
+                        .HasColumnType("integer");
+
                     b.Property<string>("EquippedCosmeticsJson")
                         .HasColumnType("text");
 
@@ -679,9 +685,6 @@ namespace Amora.Infrastructure.Data.Migrations
 
                     b.Property<DateTimeOffset>("LastInteractionAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly?>("LastMoodMessageDate")
-                        .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("LastPartnerMessageAt")
                         .HasColumnType("timestamp with time zone");

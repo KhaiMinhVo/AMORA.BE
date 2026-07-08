@@ -3,6 +3,7 @@ using System;
 using Amora.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Amora.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AmoraDbContext))]
-    partial class AmoraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260707170309_UpdateRevivalFlaskTo100Hp")]
+    partial class UpdateRevivalFlaskTo100Hp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -647,6 +650,9 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("DeathTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Energy")
+                        .HasColumnType("integer");
+
                     b.Property<string>("EquippedCosmeticsJson")
                         .HasColumnType("text");
 
@@ -665,9 +671,6 @@ namespace Amora.Infrastructure.Data.Migrations
                     b.Property<double>("HpSnapshotSum")
                         .HasColumnType("double precision");
 
-                    b.Property<int>("IdlePenaltyStep")
-                        .HasColumnType("integer");
-
                     b.Property<bool>("IsDead")
                         .HasColumnType("boolean");
 
@@ -679,9 +682,6 @@ namespace Amora.Infrastructure.Data.Migrations
 
                     b.Property<DateTimeOffset>("LastInteractionAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly?>("LastMoodMessageDate")
-                        .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("LastPartnerMessageAt")
                         .HasColumnType("timestamp with time zone");
@@ -1069,29 +1069,15 @@ namespace Amora.Infrastructure.Data.Migrations
                         new
                         {
                             Id = new Guid("f1000001-0001-4001-8001-000000000005"),
-                            Code = "revive_potion_50",
+                            Code = "revival_flask",
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             DailyPurchaseLimit = 0,
-                            Description = "Thuốc Hồi Sinh (Revive Potion)",
-                            EffectJson = "{\"hp\":50, \"revive\":true}",
+                            Description = "Bình Hồi Sinh",
+                            EffectJson = "{\"hp\":100, \"revive\":true}",
                             IsActive = true,
                             ItemType = "Revival",
-                            Name = "Thuốc Hồi Sinh (Revive Potion)",
+                            Name = "Bình Hồi Sinh",
                             PriceDiamonds = 50,
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = new Guid("f1000001-0001-4001-8001-000000000008"),
-                            Code = "revive_potion_30",
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            DailyPurchaseLimit = 0,
-                            Description = "Thuốc Hồi Sinh (Recovery Potion)",
-                            EffectJson = "{\"hp\":30, \"revive\":true}",
-                            IsActive = true,
-                            ItemType = "Revival",
-                            Name = "Thuốc Hồi Sinh (Recovery Potion)",
-                            PriceDiamonds = 30,
                             UpdatedAt = new DateTimeOffset(new DateTime(2026, 5, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
                         },
                         new

@@ -7,7 +7,6 @@ public sealed class PetStatusDto
     public Guid MatchId { get; init; }
     public int Hp { get; init; }
     public int Mood { get; init; }
-    public int Energy { get; init; }
     public long Rp { get; init; }
     public int VoiceExpToday { get; init; }
     public int MaxVoiceExpPerDay { get; init; } = 50;

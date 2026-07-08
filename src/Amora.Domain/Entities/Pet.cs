@@ -12,7 +12,7 @@ public sealed class Pet : BaseEntity
 
     public int Mood { get; set; } = 50;
 
-    public int Energy { get; set; } = 50;
+    public DateOnly? LastMoodMessageDate { get; set; }
 
     public long Rp { get; set; }
 
@@ -29,6 +29,9 @@ public sealed class Pet : BaseEntity
     public int UnanalyzedMessageCount { get; set; }
 
     public DateTimeOffset LastInteractionAt { get; set; } = DateTimeOffset.UtcNow;
+    
+    /// <summary>Bước phạt hiện tại (0: 0h, 1: 6h, 2: 12h, 3: 18h, 4: 24h).</summary>
+    public int IdlePenaltyStep { get; set; }
 
     public DateTimeOffset? LastPartnerMessageAt { get; set; }
 

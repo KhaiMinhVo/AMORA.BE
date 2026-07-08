@@ -126,6 +126,7 @@ public sealed class PetCoordinator
         var replyDelay = ComputeReplyDelayMinutes(pet, result.UserId);
         await EvaluateStageAndTypeAsync(pet, cancellationToken);
         pet.LastInteractionAt = DateTimeOffset.UtcNow;
+        pet.IdlePenaltyStep = 0;
         pet.UpdatedAt = DateTimeOffset.UtcNow;
 
         await LogAsync(pet, "VoiceVibe", result, cancellationToken);
@@ -171,7 +172,6 @@ public sealed class PetCoordinator
             MatchId = pet.MatchId,
             Hp = pet.Hp,
             Mood = pet.Mood,
-            Energy = pet.Energy,
             Rp = pet.Rp,
             VoiceExpToday = pet.RpFromVoiceToday,
             MaxVoiceExpPerDay = 50,
@@ -203,8 +203,45 @@ public sealed class PetCoordinator
 
     private async Task SaveAndNotifyAsync(Pet pet, CancellationToken cancellationToken)
     {
+        await CheckAndTriggerMoodMessageAsync(pet, cancellationToken);
         await _petRepository.SaveChangesAsync(cancellationToken);
         await NotifyAsync(pet, cancellationToken);
+    }
+
+    private async Task CheckAndTriggerMoodMessageAsync(Pet pet, CancellationToken cancellationToken)
+    {
+        var today = Amora.Application.Common.TimeHelper.GetVietnamToday();
+        if (pet.LastMoodMessageDate == today) return; // Chỉ gửi 1 lần mỗi ngày để tránh spam
+
+        string? moodMessage = null;
+
+        if (pet.Mood < 10)
+        {
+            moodMessage = "Hai bạn cãi nhau hay bơ mình làm mình buồn quá 😿";
+        }
+        else if (pet.Mood > 90)
+        {
+            moodMessage = "Hôm nay hai bạn dễ thương ghê 🥰";
+        }
+
+        if (moodMessage != null)
+        {
+            // Insert System Message into Chat
+            var sysMsg = new ChatMessage
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                MatchId = pet.MatchId,
+                SenderId = null, // System
+                MessageType = MessageType.System,
+                Content = moodMessage,
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            await _chatMessageRepository.AddAsync(sysMsg, cancellationToken);
+            await _messagePublisher.PublishAsync(new ChatMessageReceivedMessage(pet.MatchId, sysMsg.Id), cancellationToken);
+
+            pet.LastMoodMessageDate = today;
+        }
     }
 
     private async Task NotifyAsync(Pet pet, CancellationToken cancellationToken)

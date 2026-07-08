@@ -34,25 +34,46 @@ public static class PetEngine
         }
     }
 
-    /// <summary>Giảm HP theo thời gian không tương tác (gọi mỗi 15 phút).</summary>
     public static int ApplyDecay(Pet pet, DateTimeOffset now)
     {
-        if (pet.IsFrozen) return 0;
+        if (pet.IsFrozen || pet.IsDead) return 0;
 
         var idle = now - pet.LastInteractionAt;
-        if (idle < TimeSpan.FromHours(6)) return 0;
+        int totalLoss = 0;
 
-        var loss = idle >= TimeSpan.FromHours(12) ? 5 : 2;
-        pet.Hp = Math.Max(0, pet.Hp - loss);
-        pet.LastInteractionAt = now;
-        pet.UpdatedAt = now;
-
-        if (pet.Hp == 0)
+        while (pet.IdlePenaltyStep < 4)
         {
-            pet.IsFrozen = true;
+            var nextStep = pet.IdlePenaltyStep + 1;
+            int stepLoss = 0;
+
+            if (nextStep == 1 && idle >= TimeSpan.FromHours(6))
+                stepLoss = 20;
+            else if (nextStep == 2 && idle >= TimeSpan.FromHours(12))
+                stepLoss = 20;
+            else if (nextStep == 3 && idle >= TimeSpan.FromHours(18))
+                stepLoss = 30;
+            else if (nextStep == 4 && idle >= TimeSpan.FromHours(24))
+                stepLoss = 30;
+
+            if (stepLoss == 0) break;
+
+            totalLoss += stepLoss;
+            pet.Mood = Math.Max(0, pet.Mood - 10);
+            pet.IdlePenaltyStep = nextStep;
         }
 
-        return loss;
+        if (totalLoss > 0)
+        {
+            pet.Hp = Math.Max(0, pet.Hp - totalLoss);
+            pet.UpdatedAt = now;
+
+            if (pet.Hp == 0)
+            {
+                pet.IsFrozen = true;
+            }
+        }
+
+        return totalLoss;
     }
 
     public static int ApplyHpGain(Pet pet, int rawGain, bool bypassCap = false)
@@ -70,6 +91,7 @@ public static class PetEngine
         pet.Hp = Math.Min(MaxHp, pet.Hp + allowed);
         pet.HpGainedIn24h += allowed;
         pet.LastInteractionAt = DateTimeOffset.UtcNow;
+        pet.IdlePenaltyStep = 0;
         pet.UpdatedAt = DateTimeOffset.UtcNow;
 
         if (pet.Hp > 0) pet.IsFrozen = false;
@@ -159,8 +181,8 @@ public static class PetEngine
     {
         var avgHp = pet.HpSnapshotCount > 0 ? pet.HpSnapshotSum / pet.HpSnapshotCount : pet.Hp;
 
-        // Cập nhật các mốc tiến hóa mới
-        if (pet.Rp >= 1500 && avgHp >= 80) return GrowthStage.Legend; // Trưởng thành cuối cùng
+        // Cập nhật các mốc tiến hóa mới (thêm điều kiện Mood)
+        if (pet.Rp >= 1500 && avgHp >= 80 && pet.Mood >= 80) return GrowthStage.Legend; // Trưởng thành cuối cùng
         if (pet.Rp >= 1000 && avgHp >= 70) return GrowthStage.Adult;  // Trưởng thành
         if (pet.Rp >= 700 && avgHp >= 65) return GrowthStage.Young;   // Thiếu niên
         if (pet.Rp >= 300 && avgHp >= 60) return GrowthStage.Sprout;  // Thú non

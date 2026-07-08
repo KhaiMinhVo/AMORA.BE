@@ -19,4 +19,6 @@ public interface IRealtimeNotifier
     Task NotifyDiamondBalanceChangedAsync(Guid userId, int newBalance, int delta, string reason, CancellationToken cancellationToken = default);
 
     Task NotifyAdminAsync(string message, CancellationToken cancellationToken = default);
+
+    Task NotifySystemNotificationAsync(Guid userId, Notification notification, CancellationToken cancellationToken = default);
 }

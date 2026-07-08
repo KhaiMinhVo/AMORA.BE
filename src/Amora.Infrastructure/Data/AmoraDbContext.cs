@@ -411,7 +411,8 @@ public sealed class AmoraDbContext : DbContext
             ShopSeed(ShopItem2, "gentle_bath", "Sữa Tắm Dịu Nhẹ", "Consumable", 20, """{"hp":20}"""),
             ShopSeed(ShopItem3, "growth_potion", "Lọ Thuốc Tăng Trưởng", "Buff", 30, """{"buff":"DoubleVoiceRp","hours":6}"""),
             ShopSeed(ShopItem4, "resonance_candy", "Kẹo Cộng Hưởng", "Consumable", 10, """{"rp":10}"""),
-            ShopSeed(ShopItem5, "revival_flask", "Bình Hồi Sinh", "Revival", 50, """{"hp":50}"""),
+            ShopSeed(ShopItem5, "revive_potion_50", "Thuốc Hồi Sinh (Revive Potion)", "Revival", 50, """{"hp":50, "revive":true}"""),
+            ShopSeed(ShopItem8, "revive_potion_30", "Thuốc Hồi Sinh (Recovery Potion)", "Revival", 30, """{"hp":30, "revive":true}"""),
             ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000010"), "premium_7d", "Premium 7 Days", "Subscription", 70, """{"premium_days":7}"""),
             ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000011"), "premium_30d", "Premium 1 Month", "Subscription", 138, """{"premium_days":30}"""),
             ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000012"), "gold_7d", "Gold 7 Days", "Subscription", 98, """{"gold_days":7}"""),
@@ -428,6 +429,7 @@ public sealed class AmoraDbContext : DbContext
     private static readonly Guid ShopItem5 = Guid.Parse("f1000001-0001-4001-8001-000000000005");
     private static readonly Guid ShopItem6 = Guid.Parse("f1000001-0001-4001-8001-000000000006");
     private static readonly Guid ShopItem7 = Guid.Parse("f1000001-0001-4001-8001-000000000007");
+    private static readonly Guid ShopItem8 = Guid.Parse("f1000001-0001-4001-8001-000000000008");
 
     private static ShopItem ShopSeed(Guid id, string code, string name, string type, int diamonds, string effect)
     {

@@ -1,3 +1,4 @@
+using Amora.Application.Abstractions;
 using Amora.Application.Common;
 using Amora.Application.Dtos.Notifications;
 using Amora.Domain.Entities;
@@ -11,11 +12,16 @@ public sealed class NotificationService
 {
     private readonly INotificationRepository _notificationRepository;
     private readonly ILogger<NotificationService> _logger;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
-    public NotificationService(INotificationRepository notificationRepository, ILogger<NotificationService> logger)
+    public NotificationService(
+        INotificationRepository notificationRepository, 
+        ILogger<NotificationService> logger,
+        IRealtimeNotifier realtimeNotifier)
     {
         _notificationRepository = notificationRepository;
         _logger = logger;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<PagedResult<NotificationDto>> GetUserNotificationsAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
@@ -75,8 +81,7 @@ public sealed class NotificationService
             await _notificationRepository.AddAsync(notification, cancellationToken);
             await _notificationRepository.SaveChangesAsync(cancellationToken);
             
-            // TODO: In the future, we can inject a real-time service here (like SignalR Hub or FCM)
-            // _realtimeNotifier.SendNotification(userId, notification);
+            await _realtimeNotifier.NotifySystemNotificationAsync(userId, notification, cancellationToken);
         }
         catch (Exception ex)
         {
