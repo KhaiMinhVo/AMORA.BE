@@ -34,7 +34,8 @@ public sealed class AdminShopController : ControllerBase
             Description = item.Description,
             ItemType = item.ItemType.ToString(),
             PriceDiamonds = item.PriceDiamonds,
-            IsActive = item.IsActive
+            IsActive = item.IsActive,
+            ImageUrl = item.ImageUrl
         }).ToList();
 
         return Ok(new { success = true, data = dtos });

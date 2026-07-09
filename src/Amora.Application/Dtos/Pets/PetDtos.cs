@@ -49,6 +49,7 @@ public sealed class ShopItemDto
     public string ItemType { get; init; } = string.Empty;
     public int PriceDiamonds { get; init; }
     public bool IsActive { get; init; }
+    public string? ImageUrl { get; init; }
 }
 
 public sealed class InventoryItemDto
@@ -58,6 +59,7 @@ public sealed class InventoryItemDto
     public string Name { get; init; } = string.Empty;
     public string ItemType { get; init; } = string.Empty;
     public int Quantity { get; init; }
+    public string? ImageUrl { get; init; }
 }
 
 public sealed class BuyItemRequest

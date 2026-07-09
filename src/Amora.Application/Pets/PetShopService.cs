@@ -47,7 +47,8 @@ public sealed class PetShopService
             Code = s.ShopItem?.Code ?? string.Empty,
             Name = s.ShopItem?.Name ?? string.Empty,
             ItemType = s.ShopItem != null ? MapFrontendItemType(s.ShopItem) : string.Empty,
-            Quantity = s.Quantity
+            Quantity = s.Quantity,
+            ImageUrl = s.ShopItem?.ImageUrl
         }).ToList();
     }
 
@@ -430,6 +431,7 @@ public sealed class PetShopService
         Description = item.Description,
         ItemType = MapFrontendItemType(item),
         PriceDiamonds = item.PriceDiamonds,
-        IsActive = item.IsActive
+        IsActive = item.IsActive,
+        ImageUrl = item.ImageUrl
     };
 }
