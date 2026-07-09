@@ -20,7 +20,7 @@ public interface IUserRepository
 
     Task UpdateAsync(AppUser user, CancellationToken cancellationToken = default);
 
-    Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetAllUsersAsync(int page, int pageSize, string? keyword = null, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetAllUsersAsync(int page, int pageSize, string? keyword = null, string? subscriptionType = null, bool? isBanned = null, CancellationToken cancellationToken = default);
 
     Task<int> CountUsersAsync(CancellationToken cancellationToken = default);
 

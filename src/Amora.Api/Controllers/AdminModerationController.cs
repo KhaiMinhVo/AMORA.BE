@@ -21,12 +21,18 @@ public sealed class AdminModerationController : ControllerBase
     /// Lấy danh sách toàn bộ users trong hệ thống (có phân trang và tìm kiếm)
     /// </summary>
     [HttpGet("users")]
-    public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? keyword = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 20, 
+        [FromQuery] string? keyword = null, 
+        [FromQuery] string? subscriptionType = null, 
+        [FromQuery] bool? isBanned = null, 
+        CancellationToken cancellationToken = default)
     {
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 20;
 
-        var result = await _adminService.GetUsersAsync(page, pageSize, keyword, cancellationToken);
+        var result = await _adminService.GetUsersAsync(page, pageSize, keyword, subscriptionType, isBanned, cancellationToken);
         return Ok(result);
     }
 

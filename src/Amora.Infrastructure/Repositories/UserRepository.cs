@@ -44,7 +44,7 @@ public sealed class UserRepository : IUserRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetAllUsersAsync(int page, int pageSize, string? keyword = null, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<AppUser> Items, int TotalCount)> GetAllUsersAsync(int page, int pageSize, string? keyword = null, string? subscriptionType = null, bool? isBanned = null, CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Users.AsNoTracking();
 
@@ -53,6 +53,19 @@ public sealed class UserRepository : IUserRepository
             query = query.Where(x => 
                 x.Email != null && x.Email.Contains(keyword) || 
                 x.DisplayName.Contains(keyword));
+        }
+
+        if (!string.IsNullOrWhiteSpace(subscriptionType) && subscriptionType != "all")
+        {
+            if (Enum.TryParse<Amora.Domain.Enums.SubscriptionType>(subscriptionType, true, out var subType))
+            {
+                query = query.Where(x => x.SubscriptionType == subType);
+            }
+        }
+
+        if (isBanned.HasValue)
+        {
+            query = query.Where(x => x.IsBanned == isBanned.Value);
         }
 
         var total = await query.CountAsync(cancellationToken);

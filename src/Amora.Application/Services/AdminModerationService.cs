@@ -31,9 +31,9 @@ public sealed class AdminModerationService
         _voicePostRepository = voicePostRepository;
     }
 
-    public async Task<PaginatedList<AdminUserDto>> GetUsersAsync(int page, int pageSize, string? keyword, CancellationToken cancellationToken = default)
+    public async Task<PaginatedList<AdminUserDto>> GetUsersAsync(int page, int pageSize, string? keyword, string? subscriptionType, bool? isBanned, CancellationToken cancellationToken = default)
     {
-        var (users, totalCount) = await _userRepository.GetAllUsersAsync(page, pageSize, keyword, cancellationToken);
+        var (users, totalCount) = await _userRepository.GetAllUsersAsync(page, pageSize, keyword, subscriptionType, isBanned, cancellationToken);
         var dtos = users.Select(u => new AdminUserDto
         {
             Id = u.Id,
