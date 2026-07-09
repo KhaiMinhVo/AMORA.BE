@@ -31,6 +31,17 @@ public sealed class AdminModerationController : ControllerBase
     }
 
     /// <summary>
+    /// Tạo tài khoản Admin mới
+    /// </summary>
+    [HttpPost("users/create-admin")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CreateAdmin([FromBody] CreateAdminRequest request, CancellationToken cancellationToken = default)
+    {
+        await _adminService.CreateAdminAsync(request, cancellationToken);
+        return Ok(new { message = "Admin account created successfully." });
+    }
+
+    /// <summary>
     /// Lấy thông tin chi tiết của một user (dùng cho trang chi tiết người dùng)
     /// </summary>
     [HttpGet("users/{userId:guid}")]

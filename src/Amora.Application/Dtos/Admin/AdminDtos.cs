@@ -56,6 +56,13 @@ public sealed class ResolveAppealRequest
     public string Action { get; init; } = string.Empty;
 }
 
+public sealed class CreateAdminRequest
+{
+    public string Email { get; init; } = string.Empty;
+    public string Password { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
+}
+
 public sealed class AdminUserDto
 {
     public Guid Id { get; init; }
@@ -65,6 +72,8 @@ public sealed class AdminUserDto
     public string SubscriptionType { get; init; } = string.Empty;
     public bool IsBanned { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
+    public string AvatarUrl { get; init; } = string.Empty;
+    public DateTimeOffset? LastActiveAt { get; init; }
 }
 
 public sealed class AdminUserDetailDto

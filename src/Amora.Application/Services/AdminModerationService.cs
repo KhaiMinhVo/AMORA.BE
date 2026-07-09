@@ -42,7 +42,9 @@ public sealed class AdminModerationService
             Role = u.Role,
             SubscriptionType = u.SubscriptionType.ToString(),
             IsBanned = u.IsBanned,
-            CreatedAt = u.CreatedAt
+            CreatedAt = u.CreatedAt,
+            AvatarUrl = u.AvatarUrl ?? "",
+            LastActiveAt = u.LastActiveAt
         });
 
         return new PaginatedList<AdminUserDto>
@@ -52,6 +54,34 @@ public sealed class AdminModerationService
             Page = page,
             PageSize = pageSize
         };
+    }
+
+    public async Task CreateAdminAsync(CreateAdminRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            throw new ValidationApiException("Email và mật khẩu không được để trống.");
+        }
+
+        var existingUser = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+        if (existingUser is not null)
+        {
+            throw new ValidationApiException("Email này đã được sử dụng.");
+        }
+
+        var newAdmin = new Amora.Domain.Entities.AppUser
+        {
+            Id = Guid.NewGuid(),
+            Email = request.Email.Trim().ToLowerInvariant(),
+            DisplayName = string.IsNullOrWhiteSpace(request.DisplayName) ? "Admin" : request.DisplayName.Trim(),
+            PasswordHash = Amora.Application.Services.PasswordHasher.Hash(request.Password),
+            Role = "Admin",
+            SubscriptionType = SubscriptionType.Free,
+            CreatedAt = DateTimeOffset.UtcNow,
+            LastActiveAt = DateTimeOffset.UtcNow
+        };
+
+        await _userRepository.AddAsync(newAdmin, cancellationToken);
     }
 
     public async Task<AdminUserDetailDto> GetUserDetailsAsync(Guid userId, CancellationToken cancellationToken = default)
