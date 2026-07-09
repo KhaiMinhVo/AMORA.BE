@@ -19,11 +19,19 @@ public sealed class PetFeatureGateService
 
     public async Task ValidateSendAsync(Guid matchId, MessageType type, CancellationToken cancellationToken)
     {
-        if (type is MessageType.Text or MessageType.Voice or MessageType.System)
+        if (type is MessageType.Text or MessageType.System)
             return;
 
         var pet = await _pets.GetByMatchIdAsync(matchId, cancellationToken)
             ?? throw new NotFoundApiException("Không tìm thấy thú cưng cho cuộc trò chuyện này.");
+
+        if (type == MessageType.Voice && pet.IsFrozen)
+        {
+            throw new ForbiddenApiException("Thú cưng đang bị đóng băng. Không thể gửi tin nhắn thoại.");
+        }
+        
+        if (type == MessageType.Voice)
+            return;
 
         var features = PetFeatureUnlocks.ForStage(pet.Stage).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
