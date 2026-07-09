@@ -69,8 +69,16 @@ public sealed class VoicePostRepository : IVoicePostRepository
                 IsBoosted = _dbContext.PostBoostRecords.Any(b => b.PostId == x.Post.Id && b.ExpiresAt > now),
                 IsPreferredTone = viewer.PreferredVoiceTones != null && x.Post.Tone.HasValue && viewer.PreferredVoiceTones.Contains(x.Post.Tone.Value)
             })
-            .OrderByDescending(x => x.IsBoosted)
-            .ThenByDescending(x => (x.Post.ReactionCount * 2) + (x.Post.MatchCount * 5) + (x.IsPreferredTone ? 50 : 0))
+            .Select(x => new
+            {
+                x.Post,
+                x.IsBoosted,
+                RankScore = (x.IsBoosted ? 150 : 0)
+                            + (x.Post.ReactionCount * 2)
+                            + (x.Post.MatchCount * 5)
+                            + (x.IsPreferredTone ? 50 : 0)
+            })
+            .OrderByDescending(x => x.RankScore)
             .ThenByDescending(x => x.Post.CreatedAt)
             .ThenByDescending(x => x.Post.Id);
 
