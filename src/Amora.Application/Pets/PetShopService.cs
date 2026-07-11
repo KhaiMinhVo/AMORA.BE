@@ -336,56 +336,69 @@ public sealed class PetShopService
 
     private static void ApplyItemEffect(Pet pet, ShopItem item, out string activityDescription)
     {
-        activityDescription = $"Đã sử dụng vật phẩm {item.Name}";
+        var actions = new List<string>();
+        var oldHp = pet.Hp;
+        var oldMood = pet.Mood;
 
-        if (item.Code == "pet_food")
+        if (item.HpReward > 0)
         {
-            var oldHp = pet.Hp;
-            pet.Hp = Math.Min(pet.Hp + 30, 100);
-            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 10;
-            activityDescription = $"Cho thú cưng ăn {item.Name} (+{pet.Hp - oldHp} HP, +10 RP)";
-            return;
+            PetEngine.ApplyHpGain(pet, item.HpReward, bypassCap: true);
+            actions.Add($"+{pet.Hp - oldHp} HP");
         }
-        
+
+        if (item.ExpReward > 0)
+        {
+            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += item.ExpReward;
+            actions.Add($"+{item.ExpReward} RP");
+        }
+
         if (item.ItemType == ItemType.Toy)
         {
-            var oldMood = pet.Mood;
             pet.Mood = Math.Min(pet.Mood + 20, 100);
             if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 20;
-            activityDescription = $"Chơi đùa cùng thú cưng với {item.Name} (+{pet.Mood - oldMood} Tâm trạng, +20 RP)";
-            return;
+            actions.Add($"+{pet.Mood - oldMood} Tâm trạng");
+            if (item.ExpReward == 0) actions.Add("+20 RP");
         }
 
-        if (string.IsNullOrWhiteSpace(item.EffectJson) || item.EffectJson == "{}") return;
-
-        using var doc = JsonDocument.Parse(item.EffectJson);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("revive", out var reviveProp) && reviveProp.GetBoolean())
+        if (!string.IsNullOrWhiteSpace(item.EffectJson) && item.EffectJson != "{}")
         {
-            pet.IsDead = false;
-            pet.IsFrozen = false;
-            activityDescription = $"Hồi sinh thú cưng bằng {item.Name}";
-        }
+            using var doc = JsonDocument.Parse(item.EffectJson);
+            var root = doc.RootElement;
 
-        if (root.TryGetProperty("hp", out var hpProp))
-        {
-            PetEngine.ApplyHpGain(pet, hpProp.GetInt32(), bypassCap: true);
-        }
-
-        if (root.TryGetProperty("rp", out var rpProp))
-        {
-            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += rpProp.GetInt32();
-        }
-
-        if (root.TryGetProperty("buff", out var buffProp))
-        {
-            if (Enum.TryParse<PetBuffType>(buffProp.GetString(), ignoreCase: true, out var buffType))
+            if (root.TryGetProperty("revive", out var reviveProp) && reviveProp.GetBoolean())
             {
-                var minutes = root.TryGetProperty("minutes", out var m) ? m.GetInt32() : 60;
-                PetEngine.AddBuff(pet, buffType, TimeSpan.FromMinutes(minutes));
+                pet.IsDead = false;
+                pet.IsFrozen = false;
+                actions.Add("Hồi sinh");
+            }
+
+            if (root.TryGetProperty("hp", out var hpProp) && item.HpReward == 0)
+            {
+                var hpVal = hpProp.GetInt32();
+                PetEngine.ApplyHpGain(pet, hpVal, bypassCap: true);
+                actions.Add($"+{pet.Hp - oldHp} HP");
+            }
+
+            if (root.TryGetProperty("rp", out var rpProp) && item.ExpReward == 0)
+            {
+                var rpVal = rpProp.GetInt32();
+                if (!pet.IsFrozen && !pet.IsDead) pet.Rp += rpVal;
+                actions.Add($"+{rpVal} RP");
+            }
+
+            if (root.TryGetProperty("buff", out var buffProp))
+            {
+                if (Enum.TryParse<PetBuffType>(buffProp.GetString(), ignoreCase: true, out var buffType))
+                {
+                    var minutes = root.TryGetProperty("minutes", out var m) ? m.GetInt32() : 60;
+                    PetEngine.AddBuff(pet, buffType, TimeSpan.FromMinutes(minutes));
+                    actions.Add($"Buff {buffType}");
+                }
             }
         }
+
+        var actionStr = actions.Count > 0 ? $" ({string.Join(", ", actions)})" : "";
+        activityDescription = $"Đã sử dụng vật phẩm {item.Name}{actionStr}";
     }
 
     private static void ApplySubscription(AppUser user, ShopItem item, int quantity)

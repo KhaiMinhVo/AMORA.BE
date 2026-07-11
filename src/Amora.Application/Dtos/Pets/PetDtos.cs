@@ -50,6 +50,8 @@ public sealed class ShopItemDto
     public int PriceDiamonds { get; init; }
     public bool IsActive { get; init; }
     public string? ImageUrl { get; init; }
+    public int HpReward { get; init; }
+    public int ExpReward { get; init; }
 }
 
 public sealed class InventoryItemDto
@@ -60,6 +62,8 @@ public sealed class InventoryItemDto
     public string ItemType { get; init; } = string.Empty;
     public int Quantity { get; init; }
     public string? ImageUrl { get; init; }
+    public int HpReward { get; init; }
+    public int ExpReward { get; init; }
 }
 
 public sealed class BuyItemRequest

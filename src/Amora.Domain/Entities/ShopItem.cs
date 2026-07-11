@@ -29,4 +29,10 @@ public sealed class ShopItem : BaseEntity
     /// <summary>Giới hạn số lần mua trong ngày (0 = không giới hạn).</summary>
     public int DailyPurchaseLimit { get; set; }
 
+    /// <summary>Số lượng HP hồi lại khi dùng vật phẩm này.</summary>
+    public int HpReward { get; set; }
+
+    /// <summary>Số lượng EXP (RP) nhận được khi dùng vật phẩm này.</summary>
+    public int ExpReward { get; set; }
+
 }

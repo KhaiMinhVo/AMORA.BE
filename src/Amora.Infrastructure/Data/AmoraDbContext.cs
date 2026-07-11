@@ -407,16 +407,16 @@ public sealed class AmoraDbContext : DbContext
     {
         var items = new[]
         {
-            ShopSeed(ShopItem1, "pet_food", "Túi Thức Ăn Cho Pet", "Consumable", 15, """{"hp":30}"""),
-            ShopSeed(ShopItem2, "gentle_bath", "Sữa Tắm Dịu Nhẹ", "Consumable", 20, """{"hp":20}"""),
-            ShopSeed(ShopItem3, "growth_potion", "Lọ Thuốc Tăng Trưởng", "Buff", 30, """{"buff":"DoubleVoiceRp","hours":6}"""),
-            ShopSeed(ShopItem4, "resonance_candy", "Kẹo Cộng Hưởng", "Consumable", 10, """{"rp":10}"""),
-            ShopSeed(ShopItem5, "revive_potion_50", "Thuốc Hồi Sinh (Revive Potion)", "Revival", 50, """{"hp":50, "revive":true}"""),
-            ShopSeed(ShopItem8, "revive_potion_30", "Thuốc Hồi Sinh (Recovery Potion)", "Revival", 30, """{"hp":30, "revive":true}"""),
-            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000010"), "premium_7d", "Premium 7 Days", "Subscription", 70, """{"premium_days":7}"""),
-            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000011"), "premium_30d", "Premium 1 Month", "Subscription", 138, """{"premium_days":30}"""),
-            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000012"), "gold_7d", "Gold 7 Days", "Subscription", 98, """{"gold_days":7}"""),
-            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000013"), "gold_30d", "Gold 1 Month", "Subscription", 198, """{"gold_days":30}""")
+            ShopSeed(ShopItem1, "pet_food", "Túi Thức Ăn Cho Pet", "Food", 15, """{"hp":30}""", 30, 10),
+            ShopSeed(ShopItem2, "gentle_bath", "Sữa Tắm Dịu Nhẹ", "Consumable", 20, """{"hp":20}""", 20, 0),
+            ShopSeed(ShopItem3, "growth_potion", "Lọ Thuốc Tăng Trưởng", "Buff", 30, """{"buff":"DoubleVoiceRp","hours":6}""", 0, 0),
+            ShopSeed(ShopItem4, "resonance_candy", "Kẹo Cộng Hưởng", "Consumable", 10, """{"rp":10}""", 0, 10),
+            ShopSeed(ShopItem5, "revive_potion_50", "Thuốc Hồi Sinh (Revive Potion)", "Revival", 50, """{"hp":50, "revive":true}""", 50, 0),
+            ShopSeed(ShopItem8, "revive_potion_30", "Thuốc Hồi Sinh (Recovery Potion)", "Revival", 30, """{"hp":30, "revive":true}""", 30, 0),
+            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000010"), "premium_7d", "Premium 7 Days", "Subscription", 70, """{"premium_days":7}""", 0, 0),
+            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000011"), "premium_30d", "Premium 1 Month", "Subscription", 138, """{"premium_days":30}""", 0, 0),
+            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000012"), "gold_7d", "Gold 7 Days", "Subscription", 98, """{"gold_days":7}""", 0, 0),
+            ShopSeed(Guid.Parse("f1000001-0001-4001-8001-000000000013"), "gold_30d", "Gold 1 Month", "Subscription", 198, """{"gold_days":30}""", 0, 0)
         };
 
         entity.HasData(items);
@@ -431,7 +431,7 @@ public sealed class AmoraDbContext : DbContext
     private static readonly Guid ShopItem7 = Guid.Parse("f1000001-0001-4001-8001-000000000007");
     private static readonly Guid ShopItem8 = Guid.Parse("f1000001-0001-4001-8001-000000000008");
 
-    private static ShopItem ShopSeed(Guid id, string code, string name, string type, int diamonds, string effect)
+    private static ShopItem ShopSeed(Guid id, string code, string name, string type, int diamonds, string effect, int hpReward = 0, int expReward = 0)
     {
         return new ShopItem
         {
@@ -442,6 +442,8 @@ public sealed class AmoraDbContext : DbContext
             ItemType = Enum.Parse<ItemType>(type),
             PriceDiamonds = diamonds,
             EffectJson = effect,
+            HpReward = hpReward,
+            ExpReward = expReward,
             IsActive = true,
             CreatedAt = new DateTimeOffset(2026, 5, 16, 0, 0, 0, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(2026, 5, 16, 0, 0, 0, TimeSpan.Zero)

@@ -35,7 +35,9 @@ public sealed class AdminShopController : ControllerBase
             ItemType = item.ItemType.ToString(),
             PriceDiamonds = item.PriceDiamonds,
             IsActive = item.IsActive,
-            ImageUrl = item.ImageUrl
+            ImageUrl = item.ImageUrl,
+            HpReward = item.HpReward,
+            ExpReward = item.ExpReward
         }).ToList();
 
         return Ok(new { success = true, data = dtos });
@@ -61,6 +63,8 @@ public sealed class AdminShopController : ControllerBase
                 ItemType = parsedType,
                 PriceDiamonds = request.PriceDiamonds,
                 EffectJson = request.EffectJson ?? "{}",
+                HpReward = request.HpReward,
+                ExpReward = request.ExpReward,
                 ImageUrl = request.ImageUrl,
                 MinStage = string.IsNullOrWhiteSpace(request.MinStage) ? null : Enum.Parse<GrowthStage>(request.MinStage, ignoreCase: true),
                 DailyPurchaseLimit = request.DailyPurchaseLimit,
@@ -105,6 +109,9 @@ public sealed class AdminShopController : ControllerBase
             {
                 item.EffectJson = string.IsNullOrWhiteSpace(request.EffectJson) ? "{}" : request.EffectJson;
             }
+
+            if (request.HpReward.HasValue) item.HpReward = request.HpReward.Value;
+            if (request.ExpReward.HasValue) item.ExpReward = request.ExpReward.Value;
 
             if (request.ImageUrl is not null) item.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
             if (request.IsActive.HasValue) item.IsActive = request.IsActive.Value;
@@ -204,6 +211,8 @@ public sealed class UpdateShopItemRequest
     public string? EffectJson { get; set; }
     public string? ImageUrl { get; set; }
     public bool? IsActive { get; set; }
+    public int? HpReward { get; set; }
+    public int? ExpReward { get; set; }
 }
 
 public sealed class CreateShopItemRequest
@@ -217,4 +226,6 @@ public sealed class CreateShopItemRequest
     public string? ImageUrl { get; set; }
     public string? MinStage { get; set; }
     public int DailyPurchaseLimit { get; set; }
+    public int HpReward { get; set; }
+    public int ExpReward { get; set; }
 }
