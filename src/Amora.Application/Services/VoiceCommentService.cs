@@ -96,12 +96,15 @@ public sealed class VoiceCommentService
         
         if (post.PosterId != userId)
         {
+            var actorName = user?.DisplayName ?? "Người dùng Amora";
+            var actorAvatar = user?.AvatarUrl ?? "default_avatar.png";
+            
             await _notificationService.SendNotificationAsync(
                 post.PosterId,
                 NotificationType.VoiceFeed,
                 "Có người vừa phản hồi bài đăng của bạn!",
                 "Một người dùng vừa để lại lời nhắn cho Voice Post của bạn.",
-                $"{{\"postId\": \"{post.Id}\"}}",
+                $"{{\"postId\":\"{post.Id}\",\"actorName\":\"{actorName}\",\"actorAvatar\":\"{actorAvatar}\"}}",
                 cancellationToken
             );
         }
