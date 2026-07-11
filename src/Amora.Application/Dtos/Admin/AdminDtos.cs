@@ -89,9 +89,9 @@ public sealed class AdminUserDetailDto
     public int Diamonds { get; init; }
 }
 
-public sealed class ModerationStatsDto
+public sealed class ContentModerationStatsDto
 {
-    public int TotalReports { get; init; }
-    public int PendingReview { get; init; }
-    public int AutoBlocked { get; init; }
+    public int TotalViolationReports { get; set; }
+    public int PendingReview { get; set; }
+    public int AutoBlockedCount { get; set; }
 }

@@ -69,8 +69,8 @@ public sealed class UserBanRepository : IUserBanRepository
         return _dbContext.UserBans.CountAsync(b => b.IsActive && b.AppealStatus == AppealStatus.Pending, cancellationToken);
     }
 
-    public Task<int> CountAiBansAsync(CancellationToken cancellationToken = default)
+    public Task<int> CountAllAiBansCountAsync(CancellationToken cancellationToken = default)
     {
-        return _dbContext.UserBans.CountAsync(b => b.BanReason.Contains("[AI AUTOMATED]"), cancellationToken);
+        return _dbContext.UserBans.CountAsync(b => b.BanReason.StartsWith("[AI AUTOMATED]"), cancellationToken);
     }
 }

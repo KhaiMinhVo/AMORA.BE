@@ -319,18 +319,18 @@ public sealed class AdminModerationService
         await _userBanRepository.UpdateAsync(activeBan, cancellationToken);
     }
 
-    public async Task<ModerationStatsDto> GetModerationStatsAsync(CancellationToken cancellationToken = default)
+    public async Task<ContentModerationStatsDto> GetModerationStatsAsync(CancellationToken cancellationToken = default)
     {
         var totalReports = await _reportRepository.CountAllReportsAsync(cancellationToken);
         var pendingReports = await _reportRepository.CountPendingReportsAsync(cancellationToken);
         var pendingAppeals = await _userBanRepository.CountPendingAppealsCountAsync(cancellationToken);
-        var autoBlocked = await _userBanRepository.CountAiBansAsync(cancellationToken);
+        var autoBlocked = await _userBanRepository.CountAllAiBansCountAsync(cancellationToken);
         
-        return new ModerationStatsDto
+        return new ContentModerationStatsDto
         {
-            TotalReports = totalReports,
+            TotalViolationReports = totalReports,
             PendingReview = pendingReports + pendingAppeals,
-            AutoBlocked = autoBlocked
+            AutoBlockedCount = autoBlocked
         };
     }
 }

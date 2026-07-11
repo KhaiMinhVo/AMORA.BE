@@ -15,5 +15,5 @@ public interface IUserBanRepository
     Task AddAsync(UserBan userBan, CancellationToken cancellationToken = default);
     Task UpdateAsync(UserBan userBan, CancellationToken cancellationToken = default);
     Task<int> CountPendingAppealsCountAsync(CancellationToken cancellationToken = default);
-    Task<int> CountAiBansAsync(CancellationToken cancellationToken = default);
+    Task<int> CountAllAiBansCountAsync(CancellationToken cancellationToken = default);
 }
