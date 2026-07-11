@@ -88,3 +88,10 @@ public sealed class AdminUserDetailDto
     public int TotalReportsAgainstUser { get; init; }
     public int Diamonds { get; init; }
 }
+
+public sealed class ModerationStatsDto
+{
+    public int TotalReports { get; init; }
+    public int PendingReview { get; init; }
+    public int AutoBlocked { get; init; }
+}

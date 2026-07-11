@@ -132,4 +132,13 @@ public sealed class AdminModerationController : ControllerBase
         await _adminService.ResolveAppealAsync(userId, request, cancellationToken);
         return Ok(new { message = "Appeal resolved successfully." });
     }
+    /// <summary>
+    /// Lấy thống kê kiểm duyệt (số lượng báo cáo, tài khoản bị khoá)
+    /// </summary>
+    [HttpGet("moderation/stats")]
+    public async Task<IActionResult> GetModerationStats(CancellationToken cancellationToken = default)
+    {
+        var result = await _adminService.GetModerationStatsAsync(cancellationToken);
+        return Ok(result);
+    }
 }

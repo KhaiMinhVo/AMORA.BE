@@ -12,6 +12,10 @@ public sealed class AmoraDbContext : DbContext
     public static readonly Guid SeedPost1Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     public static readonly Guid SeedPost2Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
+    public static readonly Guid SeedUserReportedId = Guid.Parse("44444444-4444-4444-4444-444444444444");
+    public static readonly Guid SeedUserAppealedId = Guid.Parse("55555555-5555-5555-5555-555555555555");
+    public static readonly Guid SeedUserAiBannedId = Guid.Parse("66666666-6666-6666-6666-666666666666");
+
     public AmoraDbContext(DbContextOptions<AmoraDbContext> options) : base(options)
     {
     }
@@ -116,6 +120,32 @@ public sealed class AmoraDbContext : DbContext
                     AvatarUrl = "admin.png",
                     Role = "Admin",
                     CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
+                },
+                new AppUser
+                {
+                    Id = SeedUserReportedId,
+                    DisplayName = "Nguyễn Văn Vi Phạm",
+                    Email = "vipham@gmail.com",
+                    AvatarUrl = "vipham.png",
+                    CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
+                },
+                new AppUser
+                {
+                    Id = SeedUserAppealedId,
+                    DisplayName = "Trần Kháng Cáo",
+                    Email = "khangcao@gmail.com",
+                    AvatarUrl = "khangcao.png",
+                    IsBanned = true,
+                    CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
+                },
+                new AppUser
+                {
+                    Id = SeedUserAiBannedId,
+                    DisplayName = "Người Bị AI Cấm",
+                    Email = "aiban@gmail.com",
+                    AvatarUrl = "aiban.png",
+                    IsBanned = true,
+                    CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
                 });
         });
 
@@ -218,6 +248,17 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             entity.Property(x => x.Description).HasMaxLength(500);
             entity.HasIndex(x => new { x.ReporterId, x.TargetUserId }).IsUnique();
+            
+            entity.HasData(new UserReport
+            {
+                Id = Guid.Parse("41111111-1111-1111-1111-111111111111"),
+                ReporterId = SeedUserAId,
+                TargetUserId = SeedUserReportedId,
+                Reason = ReportReason.Harassment,
+                Description = "Quấy rối người khác",
+                Status = ReportStatus.Pending,
+                CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
+            });
         });
 
         modelBuilder.Entity<UserBlock>(entity =>
@@ -239,6 +280,28 @@ public sealed class AmoraDbContext : DbContext
                 .WithMany(u => u.Bans)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasData(
+                new UserBan
+                {
+                    Id = Guid.Parse("77777777-7777-7777-7777-777777777777"),
+                    UserId = SeedUserAppealedId,
+                    BanReason = "Banned by Admin",
+                    AppealReason = "Đây là hiểu nhầm",
+                    AppealStatus = AppealStatus.Pending,
+                    IsActive = true,
+                    CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
+                },
+                new UserBan
+                {
+                    Id = Guid.Parse("88888888-8888-8888-8888-888888888888"),
+                    UserId = SeedUserAiBannedId,
+                    BanReason = "[AI AUTOMATED] Toxic behavior detected",
+                    AppealStatus = null,
+                    IsActive = true,
+                    CreatedAt = new DateTimeOffset(2026, 5, 15, 0, 0, 0, TimeSpan.Zero)
+                }
+            );
         });
 
         modelBuilder.Entity<Pet>(entity =>

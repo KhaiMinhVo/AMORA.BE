@@ -17,4 +17,6 @@ public interface IUserReportRepository
     Task UpdateAsync(UserReport report, CancellationToken cancellationToken = default);
 
     Task<int> CountPendingReportsAsync(CancellationToken cancellationToken = default);
+
+    Task<int> CountAllReportsAsync(CancellationToken cancellationToken = default);
 }

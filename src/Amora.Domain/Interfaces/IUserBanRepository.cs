@@ -14,4 +14,6 @@ public interface IUserBanRepository
     Task<(IReadOnlyList<UserBan> Items, int TotalCount)> GetPendingAppealsAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task AddAsync(UserBan userBan, CancellationToken cancellationToken = default);
     Task UpdateAsync(UserBan userBan, CancellationToken cancellationToken = default);
+    Task<int> CountPendingAppealsCountAsync(CancellationToken cancellationToken = default);
+    Task<int> CountAiBansAsync(CancellationToken cancellationToken = default);
 }
