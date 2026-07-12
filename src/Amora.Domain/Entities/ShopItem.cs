@@ -35,4 +35,6 @@ public sealed class ShopItem : BaseEntity
     /// <summary>Số lượng EXP (RP) nhận được khi dùng vật phẩm này.</summary>
     public int ExpReward { get; set; }
 
+    /// <summary>Số lượng Mood (Tâm trạng) nhận được khi dùng vật phẩm này.</summary>
+    public int MoodReward { get; set; }
 }

@@ -37,7 +37,8 @@ public sealed class AdminShopController : ControllerBase
             IsActive = item.IsActive,
             ImageUrl = item.ImageUrl,
             HpReward = item.HpReward,
-            ExpReward = item.ExpReward
+            ExpReward = item.ExpReward,
+            MoodReward = item.MoodReward
         }).ToList();
 
         return Ok(new { success = true, data = dtos });
@@ -65,6 +66,7 @@ public sealed class AdminShopController : ControllerBase
                 EffectJson = request.EffectJson ?? "{}",
                 HpReward = request.HpReward,
                 ExpReward = request.ExpReward,
+                MoodReward = request.MoodReward,
                 ImageUrl = request.ImageUrl,
                 MinStage = string.IsNullOrWhiteSpace(request.MinStage) ? null : Enum.Parse<GrowthStage>(request.MinStage, ignoreCase: true),
                 DailyPurchaseLimit = request.DailyPurchaseLimit,
@@ -112,6 +114,7 @@ public sealed class AdminShopController : ControllerBase
 
             if (request.HpReward.HasValue) item.HpReward = request.HpReward.Value;
             if (request.ExpReward.HasValue) item.ExpReward = request.ExpReward.Value;
+            if (request.MoodReward.HasValue) item.MoodReward = request.MoodReward.Value;
 
             if (request.ImageUrl is not null) item.ImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
             if (request.IsActive.HasValue) item.IsActive = request.IsActive.Value;
@@ -213,6 +216,7 @@ public sealed class UpdateShopItemRequest
     public bool? IsActive { get; set; }
     public int? HpReward { get; set; }
     public int? ExpReward { get; set; }
+    public int? MoodReward { get; set; }
 }
 
 public sealed class CreateShopItemRequest
@@ -228,4 +232,5 @@ public sealed class CreateShopItemRequest
     public int DailyPurchaseLimit { get; set; }
     public int HpReward { get; set; }
     public int ExpReward { get; set; }
+    public int MoodReward { get; set; }
 }

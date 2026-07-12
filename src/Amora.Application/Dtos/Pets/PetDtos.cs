@@ -52,6 +52,7 @@ public sealed class ShopItemDto
     public string? ImageUrl { get; init; }
     public int HpReward { get; init; }
     public int ExpReward { get; init; }
+    public int MoodReward { get; init; }
 }
 
 public sealed class InventoryItemDto
@@ -64,6 +65,7 @@ public sealed class InventoryItemDto
     public string? ImageUrl { get; init; }
     public int HpReward { get; init; }
     public int ExpReward { get; init; }
+    public int MoodReward { get; init; }
 }
 
 public sealed class BuyItemRequest

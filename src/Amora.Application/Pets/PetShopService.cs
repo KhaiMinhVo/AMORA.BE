@@ -48,7 +48,10 @@ public sealed class PetShopService
             Name = s.ShopItem?.Name ?? string.Empty,
             ItemType = s.ShopItem != null ? MapFrontendItemType(s.ShopItem) : string.Empty,
             Quantity = s.Quantity,
-            ImageUrl = s.ShopItem?.ImageUrl
+            ImageUrl = s.ShopItem?.ImageUrl,
+            HpReward = s.ShopItem?.HpReward ?? 0,
+            ExpReward = s.ShopItem?.ExpReward ?? 0,
+            MoodReward = s.ShopItem?.MoodReward ?? 0
         }).ToList();
     }
 
@@ -352,6 +355,12 @@ public sealed class PetShopService
             actions.Add($"+{item.ExpReward} RP");
         }
 
+        if (item.MoodReward > 0)
+        {
+            pet.Mood = Math.Min(pet.Mood + item.MoodReward, 100);
+            actions.Add($"+{pet.Mood - oldMood} Tâm trạng");
+        }
+
         if (item.ItemType == ItemType.Toy)
         {
             pet.Mood = Math.Min(pet.Mood + 20, 100);
@@ -445,6 +454,9 @@ public sealed class PetShopService
         ItemType = MapFrontendItemType(item),
         PriceDiamonds = item.PriceDiamonds,
         IsActive = item.IsActive,
-        ImageUrl = item.ImageUrl
+        ImageUrl = item.ImageUrl,
+        HpReward = item.HpReward,
+        ExpReward = item.ExpReward,
+        MoodReward = item.MoodReward
     };
 }

@@ -494,7 +494,7 @@ public sealed class AmoraDbContext : DbContext
     private static readonly Guid ShopItem7 = Guid.Parse("f1000001-0001-4001-8001-000000000007");
     private static readonly Guid ShopItem8 = Guid.Parse("f1000001-0001-4001-8001-000000000008");
 
-    private static ShopItem ShopSeed(Guid id, string code, string name, string type, int diamonds, string effect, int hpReward = 0, int expReward = 0)
+    private static ShopItem ShopSeed(Guid id, string code, string name, string type, int diamonds, string effect, int hpReward = 0, int expReward = 0, int moodReward = 0)
     {
         return new ShopItem
         {
@@ -507,6 +507,7 @@ public sealed class AmoraDbContext : DbContext
             EffectJson = effect,
             HpReward = hpReward,
             ExpReward = expReward,
+            MoodReward = moodReward,
             IsActive = true,
             CreatedAt = new DateTimeOffset(2026, 5, 16, 0, 0, 0, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(2026, 5, 16, 0, 0, 0, TimeSpan.Zero)
