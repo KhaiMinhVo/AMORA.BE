@@ -38,6 +38,15 @@ public static class PetEngine
     {
         if (pet.IsFrozen || pet.IsDead) return 0;
 
+        // Auto-fix zombie pets that reached max penalty but didn't freeze properly
+        if (pet.IdlePenaltyStep >= 4)
+        {
+            pet.Hp = 0;
+            pet.IsFrozen = true;
+            pet.UpdatedAt = now;
+            return 1; // Return > 0 to trigger database save in PetCoordinator
+        }
+
         var idle = now - pet.LastInteractionAt;
         int totalLoss = 0;
 
