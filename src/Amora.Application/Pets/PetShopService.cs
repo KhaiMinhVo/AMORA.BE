@@ -378,6 +378,9 @@ public sealed class PetShopService
             {
                 pet.IsDead = false;
                 pet.IsFrozen = false;
+                pet.IdlePenaltyStep = 0;
+                pet.LastInteractionAt = DateTimeOffset.UtcNow;
+                if (pet.Hp == 0) pet.Hp = 10;
                 actions.Add("Hồi sinh");
             }
 
