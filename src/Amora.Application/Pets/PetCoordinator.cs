@@ -218,11 +218,11 @@ public sealed class PetCoordinator
 
         string? moodMessage = null;
 
-        if (pet.Mood < 10)
+        if (pet.Mood <= 20)
         {
             moodMessage = "Hai bạn cãi nhau hay bơ mình làm mình buồn quá 😿";
         }
-        else if (pet.Mood > 90)
+        else if (pet.Mood >= 80)
         {
             moodMessage = "Hôm nay hai bạn dễ thương ghê 🥰";
         }
