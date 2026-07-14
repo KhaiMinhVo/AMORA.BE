@@ -232,7 +232,7 @@ public sealed class PetCoordinator
             // Insert System Message into Chat
             var sysMsg = new ChatMessage
             {
-                Id = Guid.NewGuid().ToString("N"),
+                Id = Guid.NewGuid().ToString("N")[..24], // 24 hex chars for MongoDB ObjectId
                 MatchId = pet.MatchId,
                 SenderId = null, // System
                 MessageType = MessageType.System,
