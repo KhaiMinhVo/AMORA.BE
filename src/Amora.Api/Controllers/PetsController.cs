@@ -108,6 +108,20 @@ public sealed class PetsController : ControllerBase
         await _mediator.Send(new EquipCosmeticCommand(_currentUser.UserId, matchId, request.ItemId), cancellationToken);
         return Ok(ApiResponse<object>.Ok(null, "Mặc phụ kiện thành công."));
     }
+
+    /// <summary>
+    /// Đặt tên ban đầu cho Pet (Chỉ dùng khi Pet đang ở dạng Trứng và chưa có tên).
+    /// </summary>
+    [HttpPost("{matchId:guid}/initial-name")]
+    [ProducesResponseType(typeof(ApiResponse<SetInitialPetNameResult>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<SetInitialPetNameResult>>> SetInitialName(
+        Guid matchId,
+        [FromBody] SetInitialPetNameRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new SetInitialPetNameCommand(_currentUser.UserId, matchId, request.Name), cancellationToken);
+        return Ok(ApiResponse<SetInitialPetNameResult>.Ok(result, "Initial pet name set successfully."));
+    }
 }
 
 public sealed class RenamePetRequest

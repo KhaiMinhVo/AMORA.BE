@@ -87,3 +87,8 @@ public sealed class TransactionDto
     public DateTimeOffset CreatedAt { get; init; }
     public string? ItemName { get; init; }
 }
+
+public sealed class SetInitialPetNameRequest
+{
+    public string Name { get; set; } = string.Empty;
+}
