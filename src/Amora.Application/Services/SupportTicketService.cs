@@ -11,13 +11,16 @@ public sealed class SupportTicketService
 {
     private readonly ISupportTicketRepository _supportTicketRepository;
     private readonly IUserRepository _userRepository;
+    private readonly AdminNotificationService _adminNotificationService;
 
     public SupportTicketService(
         ISupportTicketRepository supportTicketRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        AdminNotificationService adminNotificationService)
     {
         _supportTicketRepository = supportTicketRepository;
         _userRepository = userRepository;
+        _adminNotificationService = adminNotificationService;
     }
 
     public async Task CreateTicketAsync(Guid userId, CreateTicketRequest request, CancellationToken cancellationToken = default)
@@ -37,6 +40,7 @@ public sealed class SupportTicketService
         };
 
         await _supportTicketRepository.AddAsync(ticket, cancellationToken);
+        await _adminNotificationService.NotifyNewSupportTicketAsync(userId, user.DisplayName, ticket.Type.ToString(), ticket.Description, cancellationToken);
     }
 
     public async Task<PaginatedList<SupportTicketDto>> GetTicketsForAdminAsync(int page, int pageSize, CancellationToken cancellationToken = default)
@@ -54,7 +58,8 @@ public sealed class SupportTicketService
             Description = t.Description,
             Status = t.Status,
             CreatedAt = t.CreatedAt,
-            ResolvedAt = t.ResolvedAt
+            ResolvedAt = t.ResolvedAt,
+            ResolutionNote = t.ResolutionNote
         });
 
         return new PaginatedList<SupportTicketDto>

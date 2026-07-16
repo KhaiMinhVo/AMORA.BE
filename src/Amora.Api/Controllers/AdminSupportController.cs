@@ -83,4 +83,21 @@ public class AdminSupportController : ControllerBase
 
         return Ok(new { message = "Đã xác nhận và đóng khiếu nại." });
     }
+
+    [HttpPost("support-tickets/{ticketId}/resolve")]
+    public async Task<IActionResult> ResolveGeneralTicket(
+        Guid ticketId, 
+        [FromBody] ResolveGeneralTicketRequest request, 
+        CancellationToken cancellationToken)
+    {
+        var ticket = await _supportTicketRepository.GetByIdForUpdateAsync(ticketId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy yêu cầu hỗ trợ.");
+
+        ticket.Status = request.Status;
+        ticket.ResolvedAt = request.Status == SupportTicketStatus.Resolved ? DateTimeOffset.UtcNow : ticket.ResolvedAt;
+        ticket.ResolutionNote = request.ResolutionNote;
+
+        await _supportTicketRepository.UpdateAsync(ticket, cancellationToken);
+        return Ok(new { success = true, message = "Đã cập nhật trạng thái yêu cầu hỗ trợ." });
+    }
 }

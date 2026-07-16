@@ -20,4 +20,5 @@ public sealed class SupportTicket
     
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ResolvedAt { get; set; }
+    public string? ResolutionNote { get; set; }
 }

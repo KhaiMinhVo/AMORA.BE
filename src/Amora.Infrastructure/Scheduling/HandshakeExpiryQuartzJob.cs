@@ -62,7 +62,7 @@ public sealed class HandshakeExpiryQuartzJob : IJob
             {
                 var systemMessage = new ChatMessage
                 {
-                    Id = Guid.NewGuid().ToString("N"),
+                    Id = Guid.NewGuid().ToString("N")[..24], // 24 hex chars for MongoDB ObjectId
                     MatchId = match.Id,
                     SenderId = null,
                     MessageType = MessageType.System,

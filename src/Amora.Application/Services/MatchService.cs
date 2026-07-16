@@ -411,7 +411,7 @@ public sealed class MatchService
 
         var systemMessage = new ChatMessage
         {
-            Id = Guid.NewGuid().ToString("N"),
+            Id = Guid.NewGuid().ToString("N")[..24], // 24 hex chars for MongoDB ObjectId
             MatchId = matchId,
             SenderId = null,
             MessageType = MessageType.System,

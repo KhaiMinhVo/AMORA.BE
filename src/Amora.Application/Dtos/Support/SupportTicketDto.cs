@@ -14,6 +14,7 @@ public class SupportTicketDto
     public SupportTicketStatus Status { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
+    public string? ResolutionNote { get; set; }
 }
 
 public class CreateTicketRequest
@@ -24,4 +25,10 @@ public class CreateTicketRequest
     
     [Required(ErrorMessage = "Vui lòng nhập mô tả vấn đề.")]
     public string Description { get; set; } = string.Empty;
+}
+
+public class ResolveGeneralTicketRequest
+{
+    public SupportTicketStatus Status { get; set; }
+    public string? ResolutionNote { get; set; }
 }

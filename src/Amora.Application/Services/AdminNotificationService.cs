@@ -85,4 +85,21 @@ public sealed class AdminNotificationService
         await _notificationRepository.AddAsync(notification, cancellationToken);
         await _adminNotifier.NotifyNewAdminAlertAsync(notification, cancellationToken);
     }
+
+    public async Task NotifyNewSupportTicketAsync(Guid userId, string userName, string type, string description, CancellationToken cancellationToken = default)
+    {
+        var notification = new AdminNotification
+        {
+            Id = Guid.NewGuid(),
+            Type = AdminNotificationType.SystemAlert,
+            Title = "Yêu cầu hỗ trợ mới",
+            Message = $"Người dùng {userName} đã gửi yêu cầu hỗ trợ ({type}): {description}",
+            ActionUrl = "/admin/support",
+            IsRead = false,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        await _notificationRepository.AddAsync(notification, cancellationToken);
+        await _adminNotifier.NotifyNewAdminAlertAsync(notification, cancellationToken);
+    }
 }
