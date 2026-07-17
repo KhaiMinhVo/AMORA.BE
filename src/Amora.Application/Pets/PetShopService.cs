@@ -345,28 +345,23 @@ public sealed class PetShopService
 
         if (item.HpReward > 0)
         {
-            PetEngine.ApplyHpGain(pet, item.HpReward, bypassCap: true);
-            actions.Add($"+{pet.Hp - oldHp} HP");
+            pet.Hp = Math.Min(pet.Hp + item.HpReward, 100);
+            if (pet.Hp > oldHp) actions.Add($"+{pet.Hp - oldHp} HP");
         }
 
         if (item.ExpReward > 0)
         {
-            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += item.ExpReward;
-            actions.Add($"+{item.ExpReward} RP");
+            if (!pet.IsFrozen && !pet.IsDead) 
+            {
+                pet.Rp += item.ExpReward;
+                actions.Add($"+{item.ExpReward} RP");
+            }
         }
 
         if (item.MoodReward > 0)
         {
             pet.Mood = Math.Min(pet.Mood + item.MoodReward, 100);
-            actions.Add($"+{pet.Mood - oldMood} Tâm trạng");
-        }
-
-        if (item.ItemType == ItemType.Toy)
-        {
-            pet.Mood = Math.Min(pet.Mood + 20, 100);
-            if (!pet.IsFrozen && !pet.IsDead) pet.Rp += 20;
-            actions.Add($"+{pet.Mood - oldMood} Tâm trạng");
-            if (item.ExpReward == 0) actions.Add("+20 RP");
+            if (pet.Mood > oldMood) actions.Add($"+{pet.Mood - oldMood} Tâm trạng");
         }
 
         if (!string.IsNullOrWhiteSpace(item.EffectJson) && item.EffectJson != "{}")
@@ -382,20 +377,6 @@ public sealed class PetShopService
                 pet.LastInteractionAt = DateTimeOffset.UtcNow;
                 if (pet.Hp == 0) pet.Hp = 10;
                 actions.Add("Hồi sinh");
-            }
-
-            if (root.TryGetProperty("hp", out var hpProp) && item.HpReward == 0)
-            {
-                var hpVal = hpProp.GetInt32();
-                PetEngine.ApplyHpGain(pet, hpVal, bypassCap: true);
-                actions.Add($"+{pet.Hp - oldHp} HP");
-            }
-
-            if (root.TryGetProperty("rp", out var rpProp) && item.ExpReward == 0)
-            {
-                var rpVal = rpProp.GetInt32();
-                if (!pet.IsFrozen && !pet.IsDead) pet.Rp += rpVal;
-                actions.Add($"+{rpVal} RP");
             }
 
             if (root.TryGetProperty("buff", out var buffProp))
