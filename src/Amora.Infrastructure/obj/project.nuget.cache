@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "g8Q0Cw8j1as=",
+  "dgSpecHash": "R265RwTEpaY=",
   "success": true,
   "projectFilePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Infrastructure\\Amora.Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -108,7 +108,10 @@
     "C:\\Users\\vopha\\.nuget\\packages\\system.threading.ratelimiting\\8.0.0\\system.threading.ratelimiting.8.0.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\system.threading.tasks\\4.3.0\\system.threading.tasks.4.3.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\twilio\\7.14.9\\twilio.7.14.9.nupkg.sha512",
-    "C:\\Users\\vopha\\.nuget\\packages\\zstdsharp.port\\0.7.3\\zstdsharp.port.0.7.3.nupkg.sha512"
+    "C:\\Users\\vopha\\.nuget\\packages\\zstdsharp.port\\0.7.3\\zstdsharp.port.0.7.3.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.29\\microsoft.netcore.app.ref.8.0.29.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.29\\microsoft.windowsdesktop.app.ref.8.0.29.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.29\\microsoft.aspnetcore.app.ref.8.0.29.nupkg.sha512"
   ],
   "logs": []
 }

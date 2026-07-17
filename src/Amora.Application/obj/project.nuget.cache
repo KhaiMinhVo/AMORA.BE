@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "aG7tn/fwAvE=",
+  "dgSpecHash": "U/PmnoztXRs=",
   "success": true,
   "projectFilePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Application\\Amora.Application.csproj",
   "expectedPackageFiles": [
@@ -29,7 +29,10 @@
     "C:\\Users\\vopha\\.nuget\\packages\\system.codedom\\7.0.0\\system.codedom.7.0.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\system.diagnostics.diagnosticsource\\8.0.0\\system.diagnostics.diagnosticsource.8.0.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\system.management\\7.0.2\\system.management.7.0.2.nupkg.sha512",
-    "C:\\Users\\vopha\\.nuget\\packages\\system.text.json\\8.0.6\\system.text.json.8.0.6.nupkg.sha512"
+    "C:\\Users\\vopha\\.nuget\\packages\\system.text.json\\8.0.6\\system.text.json.8.0.6.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.29\\microsoft.netcore.app.ref.8.0.29.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.29\\microsoft.windowsdesktop.app.ref.8.0.29.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.29\\microsoft.aspnetcore.app.ref.8.0.29.nupkg.sha512"
   ],
   "logs": [
     {

@@ -154,6 +154,11 @@ public sealed class MatchService
             throw new ConflictApiException("Yêu cầu ghép đôi này không ở trạng thái chờ.");
         }
 
+        if (match.ExpiresAt <= DateTimeOffset.UtcNow)
+        {
+            throw new ConflictApiException("Yêu cầu ghép đôi này đã hết hạn.");
+        }
+
         try
         {
             await _matchConnectionRepository.ExecuteInTransactionAsync(async () =>
