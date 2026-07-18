@@ -19,6 +19,7 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
         Guid postId,
         Guid commentId,
         Guid posterId,
+        bool deductExtraSlot = false,
         CancellationToken cancellationToken = default)
     {
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -79,6 +80,16 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
         _dbContext.VoiceComments.Update(comment);
         _dbContext.VoicePosts.Update(post);
 
+        if (deductExtraSlot)
+        {
+            var user = await _dbContext.Users.SingleOrDefaultAsync(x => x.Id == posterId, cancellationToken);
+            if (user != null && user.ExtraMatchSlots > 0)
+            {
+                user.ExtraMatchSlots--;
+                _dbContext.Users.Update(user);
+            }
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
@@ -115,9 +126,13 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
 
     public Task<int> CountMatchesCreatedTodayAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var today = DateTimeOffset.UtcNow.Date;
+        var vietnamZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+        var nowVietnam = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamZone);
+        var startOfTodayVietnam = nowVietnam.Date;
+        var startOfTodayUtc = TimeZoneInfo.ConvertTimeToUtc(startOfTodayVietnam, vietnamZone);
+
         return _dbContext.MatchConnections
-            .Where(x => x.UserAId == userId && x.CreatedAt >= today)
+            .Where(x => x.UserAId == userId && x.CreatedAt >= startOfTodayUtc)
             .CountAsync(cancellationToken);
     }
 
@@ -194,5 +209,16 @@ public sealed class MatchConnectionRepository : IMatchConnectionRepository
     public Task<int> CountTotalMatchesAsync(CancellationToken cancellationToken = default)
     {
         return _dbContext.MatchConnections.CountAsync(cancellationToken);
+    }
+
+    public Task<MatchConnection?> GetMatchBetweenUsersAsync(Guid userAId, Guid userBId, CancellationToken cancellationToken = default)
+    {
+        return _dbContext.MatchConnections
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => (x.Status == MatchStatus.Active || x.Status == MatchStatus.Pending)
+                     && ((x.UserAId == userAId && x.UserBId == userBId)
+                         || (x.UserAId == userBId && x.UserBId == userAId)),
+                cancellationToken);
     }
 }

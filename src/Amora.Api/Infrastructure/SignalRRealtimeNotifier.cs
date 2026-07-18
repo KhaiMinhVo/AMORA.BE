@@ -163,4 +163,17 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
         await _hubContext.Clients.Group(RealtimeGroupNames.User(userId.ToString()))
             .SendAsync("ReceiveSystemNotification", payload, cancellationToken);
     }
+
+    public async Task NotifyChatBlockStatusChangedAsync(Guid userId, Guid matchId, string blockStatus, bool canSendMessages, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            matchId = matchId,
+            blockStatus = blockStatus,
+            canSendMessages = canSendMessages
+        };
+
+        await _hubContext.Clients.Group(RealtimeGroupNames.User(userId.ToString()))
+            .SendAsync("ChatBlockStatusChanged", payload, cancellationToken);
+    }
 }

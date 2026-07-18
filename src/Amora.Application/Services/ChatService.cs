@@ -23,6 +23,7 @@ public sealed class ChatService
     private readonly IChatReadStateRepository _readState;
     private readonly AiModerationService _aiModerationService;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
+    private readonly IUserBlockRepository _userBlockRepository;
 
     public ChatService(
         ICurrentUserService currentUserService,
@@ -33,7 +34,8 @@ public sealed class ChatService
         PetFeatureGateService featureGate,
         IChatReadStateRepository readState,
         AiModerationService aiModerationService,
-        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
+        Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
+        IUserBlockRepository userBlockRepository)
     {
         _currentUserService = currentUserService;
         _matchConnectionRepository = matchConnectionRepository;
@@ -44,6 +46,7 @@ public sealed class ChatService
         _readState = readState;
         _aiModerationService = aiModerationService;
         _scopeFactory = scopeFactory;
+        _userBlockRepository = userBlockRepository;
     }
 
     public async Task<MessageHistoryResponseDto> GetHistoryAsync(Guid matchId, string? cursor, int limit, CancellationToken cancellationToken = default)
@@ -93,6 +96,15 @@ public sealed class ChatService
         if (match is null || match.Status != Domain.Enums.MatchStatus.Active)
         {
             throw new ValidationApiException("Match đã hết hạn hoặc không còn hoạt động.");
+        }
+
+        var partnerId = match.UserAId == _currentUserService.UserId ? match.UserBId : match.UserAId;
+        bool isBlockedByMe = await _userBlockRepository.IsBlockedAsync(_currentUserService.UserId, partnerId, cancellationToken);
+        bool isBlockedByThem = await _userBlockRepository.IsBlockedAsync(partnerId, _currentUserService.UserId, cancellationToken);
+        
+        if (isBlockedByMe || isBlockedByThem)
+        {
+            throw new ForbiddenApiException("Chat blocked", "CHAT_BLOCKED");
         }
 
         if (!Enum.TryParse<MessageType>(request.Type, ignoreCase: true, out var messageType))

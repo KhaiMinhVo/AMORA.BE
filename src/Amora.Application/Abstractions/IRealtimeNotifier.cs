@@ -21,4 +21,6 @@ public interface IRealtimeNotifier
     Task NotifyAdminAsync(string message, CancellationToken cancellationToken = default);
 
     Task NotifySystemNotificationAsync(Guid userId, Notification notification, CancellationToken cancellationToken = default);
+
+    Task NotifyChatBlockStatusChangedAsync(Guid userId, Guid matchId, string blockStatus, bool canSendMessages, CancellationToken cancellationToken = default);
 }

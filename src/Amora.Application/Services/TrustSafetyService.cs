@@ -19,6 +19,8 @@ public sealed class TrustSafetyService
     private readonly IVoiceCommentRepository _voiceCommentRepository;
     private readonly AdminNotificationService _adminNotificationService;
     private readonly TrustScoreService _trustScoreService;
+    private readonly IMatchConnectionRepository _matchConnectionRepository;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
     public TrustSafetyService(
         ICurrentUserService currentUserService,
@@ -30,7 +32,9 @@ public sealed class TrustSafetyService
         IVoicePostRepository voicePostRepository,
         IVoiceCommentRepository voiceCommentRepository,
         AdminNotificationService adminNotificationService,
-        TrustScoreService trustScoreService)
+        TrustScoreService trustScoreService,
+        IMatchConnectionRepository matchConnectionRepository,
+        IRealtimeNotifier realtimeNotifier)
     {
         _currentUserService = currentUserService;
         _reportRepository = reportRepository;
@@ -42,6 +46,8 @@ public sealed class TrustSafetyService
         _voiceCommentRepository = voiceCommentRepository;
         _adminNotificationService = adminNotificationService;
         _trustScoreService = trustScoreService;
+        _matchConnectionRepository = matchConnectionRepository;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     // ── Report ──────────────────────────────────────────────────────────────
@@ -166,6 +172,13 @@ public sealed class TrustSafetyService
 
         await _blockRepository.AddAsync(block, cancellationToken);
 
+        var match = await _matchConnectionRepository.GetMatchBetweenUsersAsync(blockerId, targetUserId, cancellationToken);
+        if (match != null)
+        {
+            await _realtimeNotifier.NotifyChatBlockStatusChangedAsync(blockerId, match.Id, "BlockedByMe", false, cancellationToken);
+            await _realtimeNotifier.NotifyChatBlockStatusChangedAsync(targetUserId, match.Id, "BlockedMe", false, cancellationToken);
+        }
+
         return new BlockResponseDto
         {
             BlockedUserId = targetUserId,
@@ -181,6 +194,24 @@ public sealed class TrustSafetyService
             throw new NotFoundApiException("Người dùng này không nằm trong danh sách chặn của bạn.");
 
         await _blockRepository.RemoveAsync(blockerId, targetUserId, cancellationToken);
+
+        var match = await _matchConnectionRepository.GetMatchBetweenUsersAsync(blockerId, targetUserId, cancellationToken);
+        if (match != null)
+        {
+            // Kiểm tra xem đầu kia có đang block lại mình không (mutual block)
+            bool isBlockedByThem = await _blockRepository.IsBlockedAsync(targetUserId, blockerId, cancellationToken);
+            
+            if (isBlockedByThem)
+            {
+                await _realtimeNotifier.NotifyChatBlockStatusChangedAsync(blockerId, match.Id, "BlockedMe", false, cancellationToken);
+                await _realtimeNotifier.NotifyChatBlockStatusChangedAsync(targetUserId, match.Id, "BlockedByMe", false, cancellationToken);
+            }
+            else
+            {
+                await _realtimeNotifier.NotifyChatBlockStatusChangedAsync(blockerId, match.Id, "None", true, cancellationToken);
+                await _realtimeNotifier.NotifyChatBlockStatusChangedAsync(targetUserId, match.Id, "None", true, cancellationToken);
+            }
+        }
     }
 
     public async Task<IEnumerable<BlockedUserDto>> GetBlockedUsersAsync(CancellationToken cancellationToken = default)

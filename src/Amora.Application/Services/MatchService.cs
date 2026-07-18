@@ -41,7 +41,8 @@ public sealed class MatchService
         NotificationService notificationService,
         Microsoft.Extensions.Logging.ILogger<MatchService> logger,
         IUserPresenceTracker presenceTracker,
-        TrustScoreService trustScoreService)
+        TrustScoreService trustScoreService,
+        IUserBlockRepository blockRepository)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -57,6 +58,7 @@ public sealed class MatchService
         _logger = logger;
         _presenceTracker = presenceTracker;
         _trustScoreService = trustScoreService;
+        _blockRepository = blockRepository;
     }
 
     public async Task<MatchCreatedResponseDto> CreateMatchAsync(CreateMatchRequest request, CancellationToken cancellationToken = default)
@@ -93,12 +95,7 @@ public sealed class MatchService
             throw new ConflictApiException($"Bạn đã đạt giới hạn Match trong ngày ({dailyLimit} cơ bản + {user.ExtraMatchSlots} mua thêm). Hãy nâng cấp gói cước hoặc mua thêm lượt để Match tiếp!");
         }
 
-        // Deduct extra match slots if daily free limit is exceeded
-        if (todayMatches >= dailyLimit && user.ExtraMatchSlots > 0)
-        {
-            user.ExtraMatchSlots--;
-            await _userRepository.UpdateAsync(user, cancellationToken);
-        }
+        bool deductExtraSlot = todayMatches >= dailyLimit && user.ExtraMatchSlots > 0;
 
         var comment = await _voiceCommentRepository.GetByIdAsync(request.CommentId, cancellationToken)
             ?? throw new NotFoundApiException("Bình luận bằng giọng nói không tồn tại.");
@@ -118,7 +115,7 @@ public sealed class MatchService
             throw new ConflictApiException("Bình luận này không hợp lệ để kết nối.");
         }
 
-        var result = await _matchConnectionRepository.CreateConnectionAsync(post.Id, comment.Id, post.PosterId, cancellationToken);
+        var result = await _matchConnectionRepository.CreateConnectionAsync(post.Id, comment.Id, post.PosterId, deductExtraSlot, cancellationToken);
 
         var payload = $"{{\"matchId\": \"{result.MatchConnection.Id}\"}}";
         
@@ -370,6 +367,22 @@ public sealed class MatchService
                 };
 
             var isPending = match.Status == MatchStatus.Pending;
+
+            string blockStatus = "None";
+            bool isBlockedByMe = await _blockRepository.IsBlockedAsync(userId, partnerId, cancellationToken);
+            if (isBlockedByMe)
+            {
+                blockStatus = "BlockedByMe";
+            }
+            else
+            {
+                bool isBlockedByThem = await _blockRepository.IsBlockedAsync(partnerId, userId, cancellationToken);
+                if (isBlockedByThem)
+                {
+                    blockStatus = "BlockedMe";
+                }
+            }
+
             inboxItems.Add(new InboxItemDto
             {
                 MatchId = match.Id,
@@ -394,7 +407,9 @@ public sealed class MatchService
                 PetState = petDto,
                 Status = match.Status.ToString(),
                 IsSender = match.UserAId == userId,
-                ExpiresAt = match.ExpiresAt
+                ExpiresAt = match.ExpiresAt,
+                BlockStatus = blockStatus,
+                CanSendMessages = blockStatus == "None"
             });
         }
 
@@ -426,5 +441,28 @@ public sealed class MatchService
 
         await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
         await _realtimeNotifier.NotifyNewMessageAsync(systemMessage, cancellationToken: cancellationToken);
+    }
+    public async Task<MatchQuotaDto> GetQuotaAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
+            ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
+
+        int baseLimit = user.SubscriptionType switch
+        {
+            Domain.Enums.SubscriptionType.Gold => 8,
+            Domain.Enums.SubscriptionType.Premium => 5,
+            _ => 3
+        };
+
+        var usedToday = await _matchConnectionRepository.CountMatchesCreatedTodayAsync(userId, cancellationToken);
+        var remaining = Math.Max(0, baseLimit - usedToday) + user.ExtraMatchSlots;
+
+        return new MatchQuotaDto
+        {
+            BaseLimit = baseLimit,
+            UsedToday = usedToday,
+            ExtraSlots = user.ExtraMatchSlots,
+            Remaining = remaining
+        };
     }
 }

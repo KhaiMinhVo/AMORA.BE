@@ -74,4 +74,8 @@ public sealed class InboxItemDto
 
     /// <summary>Handshake 24h: thời điểm match sẽ hết hạn nếu không nhắn tin.</summary>
     public DateTimeOffset ExpiresAt { get; init; }
+
+    public string BlockStatus { get; init; } = "None"; // None, BlockedByMe, BlockedMe
+
+    public bool CanSendMessages { get; init; } = true;
 }

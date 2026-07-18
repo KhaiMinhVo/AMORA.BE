@@ -75,6 +75,20 @@ public sealed class MatchesController : ControllerBase
     }
 
     /// <summary>
+    /// Lấy thông tin quota match của user (số lượt còn lại trong ngày).
+    /// </summary>
+    [HttpGet("quota")]
+    public async Task<ActionResult<ApiResponse<MatchQuotaDto>>> GetQuota(CancellationToken cancellationToken)
+    {
+        var userIdString = User.FindFirst("id")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdString, out var userId))
+            return Unauthorized(ApiResponse<object>.Fail("Invalid user token."));
+
+        var result = await _matchService.GetQuotaAsync(userId, cancellationToken);
+        return Ok(ApiResponse<MatchQuotaDto>.Ok(result));
+    }
+
+    /// <summary>
     /// Lay inbox match theo trang thai (neu co).
     /// </summary>
     [HttpGet]

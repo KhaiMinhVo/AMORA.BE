@@ -8,6 +8,7 @@ public interface IMatchConnectionRepository
         Guid postId,
         Guid commentId,
         Guid posterId,
+        bool deductExtraSlot = false,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<MatchConnection>> GetActiveByUserAsync(Guid userId, CancellationToken cancellationToken = default);
@@ -37,4 +38,6 @@ public interface IMatchConnectionRepository
     Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default);
 
     Task<int> CountTotalMatchesAsync(CancellationToken cancellationToken = default);
+
+    Task<MatchConnection?> GetMatchBetweenUsersAsync(Guid userAId, Guid userBId, CancellationToken cancellationToken = default);
 }
