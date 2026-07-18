@@ -331,6 +331,14 @@ app.MapGet("/api/logs", () =>
 
 app.UseRouting();
 app.UseCors("AllowSpecificOrigins");
+
+app.Use((context, next) =>
+{
+    context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+    context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "unsafe-none");
+    return next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
