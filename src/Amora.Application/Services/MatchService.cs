@@ -26,6 +26,7 @@ public sealed class MatchService
     private readonly Microsoft.Extensions.Logging.ILogger<MatchService> _logger;
     private readonly IUserPresenceTracker _presenceTracker;
     private readonly TrustScoreService _trustScoreService;
+    private readonly IUserBlockRepository _blockRepository;
 
     public MatchService(
         ICurrentUserService currentUserService,

@@ -180,7 +180,6 @@ public sealed class ChatService
         await _matchConnectionRepository.CompleteHandshakeAsync(matchId, cancellationToken);
         var expiresAt = DateTimeOffset.MaxValue;
         
-        var partnerId = match.UserAId == _currentUserService.UserId ? match.UserBId : match.UserAId;
         var partnerState = await _readState.GetAsync(partnerId, matchId, cancellationToken);
         var since = partnerState?.LastReadAt ?? DateTimeOffset.MinValue;
         var unreadCount = await _readState.CountUnreadAsync(partnerId, matchId, since, cancellationToken);
