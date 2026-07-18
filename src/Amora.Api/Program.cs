@@ -352,4 +352,10 @@ app.MapHub<PetHub>("/hubs/pet");
 app.MapHub<CallHub>("/hubs/call");
 app.MapHub<AdminHub>("/hubs/admin");
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AmoraDbContext>();
+    db.Database.Migrate();
+}
+
 app.Run();
