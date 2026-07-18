@@ -82,7 +82,7 @@ public sealed class MatchesController : ControllerBase
     {
         var userIdString = User.FindFirst("id")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdString, out var userId))
-            return Unauthorized(ApiResponse<object>.Fail("Invalid user token."));
+            return Unauthorized(ApiResponse<object>.Fail("Invalid user token.", "UNAUTHORIZED"));
 
         var result = await _matchService.GetQuotaAsync(userId, cancellationToken);
         return Ok(ApiResponse<MatchQuotaDto>.Ok(result));
