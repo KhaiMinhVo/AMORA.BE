@@ -70,6 +70,8 @@ public sealed class AmoraDbContext : DbContext
 
     public DbSet<PostReaction> PostReactions => Set<PostReaction>();
 
+    public DbSet<UserPushToken> UserPushTokens => Set<UserPushToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppUser>(entity =>
@@ -461,6 +463,19 @@ public sealed class AmoraDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.PlayedAt);
             entity.HasIndex(x => x.UserId);
+        });
+
+        modelBuilder.Entity<UserPushToken>(entity =>
+        {
+            entity.ToTable("UserPushTokens");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.UserId, x.DeviceId }).IsUnique();
+            entity.HasIndex(x => x.Token);
+            entity.Property(x => x.DeviceId).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Platform).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Token).HasMaxLength(500).IsRequired();
+
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         base.OnModelCreating(modelBuilder);

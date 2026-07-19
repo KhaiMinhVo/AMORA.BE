@@ -103,6 +103,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IPostBoostRecordRepository, PostBoostRecordRepository>();
 builder.Services.AddScoped<IAdminNotificationRepository, AdminNotificationRepository>();
 builder.Services.AddScoped<IPostReactionRepository, PostReactionRepository>();
+builder.Services.AddScoped<IUserPushTokenRepository, UserPushTokenRepository>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 
@@ -137,6 +138,8 @@ builder.Services.AddScoped<AdminModerationService>();
 builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AdminNotificationService>();
+builder.Services.AddScoped<IExpoPushService, Amora.Infrastructure.Services.ExpoPushService>();
+builder.Services.AddHttpClient("ExpoPush");
 
 var awsOptions = builder.Configuration.GetAWSOptions();
 var awsServiceUrl = builder.Configuration["AWS:ServiceURL"];

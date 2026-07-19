@@ -78,4 +78,36 @@ public sealed class NotificationsController : ControllerBase
         await _notificationService.DeleteAsync(id, _currentUser.UserId, cancellationToken);
         return Ok(ApiResponse<object>.Ok(null, "Deleted successfully."));
     }
+
+    // ── Push Token Management ──────────────────────────────────────────
+
+    /// <summary>
+    /// Lưu hoặc cập nhật Expo Push Token cho thiết bị hiện tại.
+    /// </summary>
+    [HttpPut("push-token")]
+    public async Task<IActionResult> RegisterPushToken([FromBody] RegisterPushTokenRequest request, CancellationToken cancellationToken = default)
+    {
+        await _notificationService.RegisterPushTokenAsync(
+            _currentUser.UserId, 
+            request.Token, 
+            request.DeviceId, 
+            request.Platform, 
+            cancellationToken);
+
+        return Ok(ApiResponse<object>.Ok(null, "Push token registered."));
+    }
+
+    /// <summary>
+    /// Xóa Expo Push Token khi đăng xuất.
+    /// </summary>
+    [HttpDelete("push-token")]
+    public async Task<IActionResult> RemovePushToken([FromBody] RemovePushTokenRequest request, CancellationToken cancellationToken = default)
+    {
+        await _notificationService.RemovePushTokenAsync(
+            _currentUser.UserId, 
+            request.DeviceId, 
+            cancellationToken);
+
+        return Ok(ApiResponse<object>.Ok(null, "Push token removed."));
+    }
 }

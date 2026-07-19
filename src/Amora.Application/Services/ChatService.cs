@@ -24,6 +24,7 @@ public sealed class ChatService
     private readonly AiModerationService _aiModerationService;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
     private readonly IUserBlockRepository _userBlockRepository;
+    private readonly IExpoPushService _expoPushService;
 
     public ChatService(
         ICurrentUserService currentUserService,
@@ -35,7 +36,8 @@ public sealed class ChatService
         IChatReadStateRepository readState,
         AiModerationService aiModerationService,
         Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
-        IUserBlockRepository userBlockRepository)
+        IUserBlockRepository userBlockRepository,
+        IExpoPushService expoPushService)
     {
         _currentUserService = currentUserService;
         _matchConnectionRepository = matchConnectionRepository;
@@ -47,6 +49,7 @@ public sealed class ChatService
         _aiModerationService = aiModerationService;
         _scopeFactory = scopeFactory;
         _userBlockRepository = userBlockRepository;
+        _expoPushService = expoPushService;
     }
 
     public async Task<MessageHistoryResponseDto> GetHistoryAsync(Guid matchId, string? cursor, int limit, CancellationToken cancellationToken = default)
@@ -185,6 +188,12 @@ public sealed class ChatService
         var unreadCount = await _readState.CountUnreadAsync(partnerId, matchId, since, cancellationToken);
 
         await _realtimeNotifier.NotifyNewMessageAsync(message, unreadCount, expiresAt, cancellationToken);
+
+        // Expo Push — gửi cho đối phương khi có tin nhắn mới
+        var pushTitle = messageType == MessageType.Voice ? "Tin nhắn thoại mới" : "Tin nhắn mới";
+        var pushBody = messageType == MessageType.Voice ? "Bạn nhận được một tin nhắn thoại mới." : "Bạn nhận được một tin nhắn mới.";
+        var pushData = new { matchId = matchId.ToString(), type = "chat" };
+        _ = _expoPushService.SendPushAsync(partnerId, pushTitle, pushBody, pushData, cancellationToken);
 
         return new SendMessageResponseDto
         {
