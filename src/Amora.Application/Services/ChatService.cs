@@ -164,25 +164,28 @@ public sealed class ChatService
                 request.ContentUrl!,
                 request.Duration ?? 0), cancellationToken);
         }
-        else if (messageType == MessageType.Image || messageType == MessageType.Sticker)
+        else if (messageType == MessageType.Image)
         {
             await _mediator.Send(new ProcessTextMessagePetCommand(matchId, _currentUserService.UserId), cancellationToken);
         }
 
         // Trigger AI Emotion Analysis for Voice and Image (if we ever support text, it will be caught here)
-        _ = Task.Run(async () => 
+        if (messageType != MessageType.Sticker)
         {
-            try
+            _ = Task.Run(async () => 
             {
-                using var scope = _scopeFactory.CreateScope();
-                var scopedMediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                await scopedMediator.Send(new AnalyzeConversationEmotionCommand(matchId));
-            }
-            catch (Exception)
-            {
-                // Mute background exceptions
-            }
-        });
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var scopedMediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                    await scopedMediator.Send(new AnalyzeConversationEmotionCommand(matchId));
+                }
+                catch (Exception)
+                {
+                    // Mute background exceptions
+                }
+            });
+        }
 
         // Handshake 24h: Gỡ bỏ thời hạn khi có tin nhắn đầu tiên, giúp Match trở thành vĩnh viễn.
         await _matchConnectionRepository.CompleteHandshakeAsync(matchId, cancellationToken);
