@@ -14,6 +14,7 @@ public sealed class AdminModerationService
     private readonly IRealtimeNotifier _realtimeNotifier;
     private readonly IPetTransactionRepository _petTransactionRepository;
     private readonly IVoicePostRepository _voicePostRepository;
+    private readonly NotificationService _notificationService;
 
     public AdminModerationService(
         IUserReportRepository reportRepository,
@@ -21,7 +22,8 @@ public sealed class AdminModerationService
         IUserBanRepository userBanRepository,
         IRealtimeNotifier realtimeNotifier,
         IPetTransactionRepository petTransactionRepository,
-        IVoicePostRepository voicePostRepository)
+        IVoicePostRepository voicePostRepository,
+        NotificationService notificationService)
     {
         _reportRepository = reportRepository;
         _userRepository = userRepository;
@@ -29,6 +31,7 @@ public sealed class AdminModerationService
         _realtimeNotifier = realtimeNotifier;
         _petTransactionRepository = petTransactionRepository;
         _voicePostRepository = voicePostRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<PaginatedList<AdminUserDto>> GetUsersAsync(int page, int pageSize, string? keyword, string? subscriptionType, bool? isBanned, CancellationToken cancellationToken = default)
@@ -176,6 +179,26 @@ public sealed class AdminModerationService
         }
 
         await _reportRepository.UpdateAsync(report, cancellationToken);
+
+        // Notify the reporter
+        var bodyMsg = !string.IsNullOrWhiteSpace(request.ResolutionNote) 
+            ? $"Phản hồi từ quản trị viên: {request.ResolutionNote}" 
+            : "Báo cáo của bạn đã được quản trị viên xử lý.";
+
+        var payload = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            reportId = report.Id.ToString(),
+            action = request.Action,
+            resolutionNote = request.ResolutionNote
+        });
+
+        await _notificationService.SendNotificationAsync(
+            report.ReporterId,
+            NotificationType.System,
+            "Báo cáo vi phạm đã được xử lý",
+            bodyMsg,
+            payload,
+            cancellationToken);
     }
 
     public async Task RefundDiamondsAsync(Guid userId, int amount, string reason, CancellationToken cancellationToken = default)

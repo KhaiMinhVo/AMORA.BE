@@ -20,17 +20,20 @@ public class AdminSupportController : ControllerBase
     private readonly PayOsService _payOsService;
     private readonly IPaymentTransactionRepository _paymentTransactionRepository;
     private readonly ISupportTicketRepository _supportTicketRepository;
+    private readonly NotificationService _notificationService;
 
     public AdminSupportController(
         SupportTicketService supportTicketService,
         PayOsService payOsService,
         IPaymentTransactionRepository paymentTransactionRepository,
-        ISupportTicketRepository supportTicketRepository)
+        ISupportTicketRepository supportTicketRepository,
+        NotificationService notificationService)
     {
         _supportTicketService = supportTicketService;
         _payOsService = payOsService;
         _paymentTransactionRepository = paymentTransactionRepository;
         _supportTicketRepository = supportTicketRepository;
+        _notificationService = notificationService;
     }
 
     [HttpGet("support-tickets")]
@@ -98,6 +101,28 @@ public class AdminSupportController : ControllerBase
         ticket.ResolutionNote = request.ResolutionNote;
 
         await _supportTicketRepository.UpdateAsync(ticket, cancellationToken);
+
+        // Notify the user who created the ticket
+        var bodyMsg = $"Trạng thái: {request.Status}";
+        if (!string.IsNullOrWhiteSpace(request.ResolutionNote))
+        {
+            bodyMsg += $"\nPhản hồi từ Admin: {request.ResolutionNote}";
+        }
+
+        var payload = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            ticketId = ticket.Id.ToString(),
+            status = request.Status.ToString()
+        });
+
+        await _notificationService.SendNotificationAsync(
+            ticket.UserId,
+            NotificationType.System,
+            "Yêu cầu hỗ trợ đã được cập nhật",
+            bodyMsg,
+            payload,
+            cancellationToken);
+
         return Ok(new { success = true, message = "Đã cập nhật trạng thái yêu cầu hỗ trợ." });
     }
 }
