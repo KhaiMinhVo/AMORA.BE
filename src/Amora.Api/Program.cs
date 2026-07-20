@@ -114,7 +114,7 @@ builder.Services.Configure<IapOptions>(builder.Configuration.GetSection(IapOptio
 builder.Services.AddHttpClient("AppleIap");
 builder.Services.AddHttpClient("GoogleIap");
 builder.Services.AddScoped<AppleAppStorePurchaseVerifier>();
-builder.Services.AddScoped<GooglePlayPurchaseVerifier>();
+builder.Services.AddScoped<IGooglePlayPurchaseVerifier, GooglePlayPurchaseVerifier>();
 builder.Services.AddScoped<IInAppPurchaseVerifier, CompositeInAppPurchaseVerifier>();
 builder.Services.AddSingleton<AppleServerNotificationVerifier>();
 builder.Services.AddSingleton<GoogleWebhookTokenValidator>();

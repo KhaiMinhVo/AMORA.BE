@@ -13,7 +13,7 @@ namespace Amora.Infrastructure.Iap;
 /// Google Play — cần service account JSON (GOOGLE_APPLICATION_CREDENTIALS).
 /// Production: bật Google Play Android Developer API.
 /// </summary>
-public sealed class GooglePlayPurchaseVerifier
+public sealed class GooglePlayPurchaseVerifier : Amora.Application.Abstractions.IGooglePlayPurchaseVerifier
 {
     private const string AndroidPublisherScope = "https://www.googleapis.com/auth/androidpublisher";
 
@@ -36,6 +36,12 @@ public sealed class GooglePlayPurchaseVerifier
         var packageName = _options.GooglePackageName;
         if (string.IsNullOrWhiteSpace(packageName))
             return IapVerificationResult.Fail("Google package name not configured.");
+
+        // Dev bypass
+        if (_options.AllowDevBypass && Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
+        {
+            return IapVerificationResult.Ok();
+        }
 
         var accessToken = await TryGetAccessTokenAsync(cancellationToken)
             ?? Environment.GetEnvironmentVariable("GOOGLE_PLAY_API_TOKEN");
@@ -60,6 +66,35 @@ public sealed class GooglePlayPurchaseVerifier
             return IapVerificationResult.Fail("Purchase not completed.");
 
         return IapVerificationResult.Ok();
+    }
+
+    public async Task<bool> AcknowledgePurchaseAsync(string productId, string token, CancellationToken cancellationToken)
+    {
+        var packageName = _options.GooglePackageName;
+        if (string.IsNullOrWhiteSpace(packageName))
+            return false;
+
+        // Dev bypass
+        if (_options.AllowDevBypass && Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Production")
+        {
+            return true;
+        }
+
+        var accessToken = await TryGetAccessTokenAsync(cancellationToken)
+            ?? Environment.GetEnvironmentVariable("GOOGLE_PLAY_API_TOKEN");
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return false;
+        }
+
+        var url =
+            $"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{packageName}/purchases/products/{productId}/tokens/{token}:acknowledge";
+
+        var client = _httpClientFactory.CreateClient("GoogleIap");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.PostAsync(url, null, cancellationToken);
+        return response.IsSuccessStatusCode;
     }
 
     private async Task<string?> TryGetAccessTokenAsync(CancellationToken cancellationToken)

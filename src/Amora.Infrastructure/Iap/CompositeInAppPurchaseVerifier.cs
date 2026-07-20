@@ -9,13 +9,13 @@ namespace Amora.Infrastructure.Iap;
 public sealed class CompositeInAppPurchaseVerifier : IInAppPurchaseVerifier
 {
     private readonly AppleAppStorePurchaseVerifier _apple;
-    private readonly GooglePlayPurchaseVerifier _google;
+    private readonly IGooglePlayPurchaseVerifier _google;
     private readonly IapOptions _options;
     private readonly ILogger<CompositeInAppPurchaseVerifier> _logger;
 
     public CompositeInAppPurchaseVerifier(
         AppleAppStorePurchaseVerifier apple,
-        GooglePlayPurchaseVerifier google,
+        IGooglePlayPurchaseVerifier google,
         IOptions<IapOptions> options,
         ILogger<CompositeInAppPurchaseVerifier> logger)
     {

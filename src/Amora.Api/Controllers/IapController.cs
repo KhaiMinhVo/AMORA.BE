@@ -13,12 +13,18 @@ namespace Amora.Api.Controllers;
 public sealed class IapController : ControllerBase
 {
     private readonly IapGemService _iapService;
+    private readonly GooglePlayPurchaseService _googlePlayService;
     private readonly ICurrentUserService _currentUser;
     private readonly Microsoft.Extensions.Options.IOptions<IapOptions> _iapOptions;
 
-    public IapController(IapGemService iapService, ICurrentUserService currentUser, Microsoft.Extensions.Options.IOptions<IapOptions> iapOptions)
+    public IapController(
+        IapGemService iapService,
+        GooglePlayPurchaseService googlePlayService,
+        ICurrentUserService currentUser,
+        Microsoft.Extensions.Options.IOptions<IapOptions> iapOptions)
     {
         _iapService = iapService;
+        _googlePlayService = googlePlayService;
         _currentUser = currentUser;
         _iapOptions = iapOptions;
     }
@@ -35,16 +41,28 @@ public sealed class IapController : ControllerBase
     {
         var gemsGranted = _iapOptions.Value.Products.GetValueOrDefault(request.ProductId, 0);
 
-        var balance = await _iapService.VerifyAndCreditAsync(
-            _currentUser.UserId,
-            new IapVerificationRequest
-            {
-                Platform = request.Platform,
-                ProductId = request.ProductId,
-                TransactionId = request.TransactionId,
-                ReceiptOrToken = request.ReceiptOrToken
-            },
-            cancellationToken);
+        int balance;
+        if (string.Equals(request.Platform, _iapOptions.Value.GooglePlatform, StringComparison.OrdinalIgnoreCase))
+        {
+            balance = await _googlePlayService.ProcessPurchaseAsync(
+                _currentUser.UserId,
+                request.ProductId,
+                request.ReceiptOrToken,
+                cancellationToken);
+        }
+        else
+        {
+            balance = await _iapService.VerifyAndCreditAsync(
+                _currentUser.UserId,
+                new IapVerificationRequest
+                {
+                    Platform = request.Platform,
+                    ProductId = request.ProductId,
+                    TransactionId = request.TransactionId,
+                    ReceiptOrToken = request.ReceiptOrToken
+                },
+                cancellationToken);
+        }
 
         return Ok(ApiResponse<VerifyIapPurchaseResponse>.Ok(new VerifyIapPurchaseResponse
         {

@@ -12,7 +12,7 @@ public sealed class IapOptions
 
     public string ApplePlatform { get; set; } = "Apple";
 
-    public string? GooglePackageName { get; set; }
+    public string GooglePackageName { get; set; } = "vn.com.amora.app";
 
     public string? GoogleServiceAccountJsonPath { get; set; }
 

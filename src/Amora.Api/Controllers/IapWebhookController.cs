@@ -102,6 +102,12 @@ public sealed class IapWebhookController : ControllerBase
         if (notification is null)
             return BadRequest(new { success = false, message = "Invalid Google payload." });
 
+        if (!string.IsNullOrWhiteSpace(_options.GooglePackageName) 
+            && !string.Equals(notification.PackageName, _options.GooglePackageName, StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { success = false, message = "Google packageName mismatch." });
+        }
+
         // Idempotency: use Pub/Sub messageId (guaranteed unique by Google)
         var eventId = envelope.Message.MessageId ?? ComputeEventId(payloadJson);
         var isDuplicate = await _iapWebhookService.TryRecordWebhookEventAsync(
@@ -115,20 +121,28 @@ public sealed class IapWebhookController : ControllerBase
         if (isDuplicate)
             return Ok(new { success = true, duplicate = true });
 
-        if (notification.IsRefund)
+        try
         {
-            await _iapWebhookService.HandleRefundAsync(_options.GooglePlatform, notification.TransactionId, notification.NotificationType.ToString(), cancellationToken);
-        }
-        else if (notification.IsRenewal)
-        {
-            await _iapWebhookService.HandleRenewalAsync(_options.GooglePlatform, notification.TransactionId, cancellationToken);
-        }
-        else if (notification.IsCanceled)
-        {
-            await _iapWebhookService.HandleSubscriptionCanceledAsync(_options.GooglePlatform, notification.TransactionId, cancellationToken);
-        }
+            if (notification.IsRefund)
+            {
+                await _iapWebhookService.HandleRefundAsync(_options.GooglePlatform, notification.TransactionId, notification.NotificationType.ToString(), cancellationToken);
+            }
+            else if (notification.IsRenewal)
+            {
+                await _iapWebhookService.HandleRenewalAsync(_options.GooglePlatform, notification.TransactionId, cancellationToken);
+            }
+            else if (notification.IsCanceled)
+            {
+                await _iapWebhookService.HandleSubscriptionCanceledAsync(_options.GooglePlatform, notification.TransactionId, cancellationToken);
+            }
 
-        return Ok(new { success = true });
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing Google Webhook for event {EventId}", eventId);
+            return StatusCode(500, new { success = false, message = "Internal server error" });
+        }
     }
 
     private async Task<bool> ValidateGoogleAuthorizationAsync(CancellationToken cancellationToken)
@@ -206,6 +220,8 @@ public sealed class IapWebhookController : ControllerBase
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
+            var packageName = root.TryGetProperty("packageName", out var pkg) ? pkg.GetString() : null;
+
             if (root.TryGetProperty("subscriptionNotification", out var subscription))
             {
                 var token = subscription.GetProperty("purchaseToken").GetString();
@@ -214,7 +230,7 @@ public sealed class IapWebhookController : ControllerBase
                 if (string.IsNullOrWhiteSpace(token))
                     return null;
 
-                return new GoogleNotificationPayload(token, type, true);
+                return new GoogleNotificationPayload(token, type, true, packageName);
             }
 
             if (root.TryGetProperty("oneTimeProductNotification", out var oneTime))
@@ -225,7 +241,7 @@ public sealed class IapWebhookController : ControllerBase
                 if (string.IsNullOrWhiteSpace(token))
                     return null;
 
-                return new GoogleNotificationPayload(token, type, false);
+                return new GoogleNotificationPayload(token, type, false, packageName);
             }
         }
         catch (Exception)
@@ -245,7 +261,7 @@ public sealed class IapWebhookController : ControllerBase
 
     private sealed record AppleNotificationPayload(string TransactionId, string? BundleId, string? NotificationType);
 
-    private sealed record GoogleNotificationPayload(string TransactionId, int NotificationType, bool IsSubscription)
+    private sealed record GoogleNotificationPayload(string TransactionId, int NotificationType, bool IsSubscription, string? PackageName)
     {
         // Google subscription notification types:
         //  1 = RECOVERED, 2 = RENEWED, 3 = CANCELED, 4 = PURCHASED,
