@@ -120,6 +120,11 @@ public sealed class ChatService
             throw new ValidationApiException("Yêu cầu phải có link nội dung đối với tin nhắn thoại/ảnh.");
         }
 
+        if (messageType == MessageType.Sticker && string.IsNullOrWhiteSpace(request.Content) && string.IsNullOrWhiteSpace(request.ContentUrl))
+        {
+            throw new ValidationApiException("Yêu cầu phải có nội dung hoặc link đối với nhãn dán.");
+        }
+
         await _featureGate.ValidateSendAsync(matchId, messageType, cancellationToken);
         if (messageType == MessageType.Image)
             await _featureGate.RegisterImageSentAsync(matchId, _currentUserService.UserId, cancellationToken);
@@ -159,7 +164,7 @@ public sealed class ChatService
                 request.ContentUrl!,
                 request.Duration ?? 0), cancellationToken);
         }
-        else if (messageType == MessageType.Image)
+        else if (messageType == MessageType.Image || messageType == MessageType.Sticker)
         {
             await _mediator.Send(new ProcessTextMessagePetCommand(matchId, _currentUserService.UserId), cancellationToken);
         }
@@ -190,8 +195,18 @@ public sealed class ChatService
         await _realtimeNotifier.NotifyNewMessageAsync(message, unreadCount, expiresAt, cancellationToken);
 
         // Expo Push — gửi cho đối phương khi có tin nhắn mới
-        var pushTitle = messageType == MessageType.Voice ? "Tin nhắn thoại mới" : "Tin nhắn mới";
-        var pushBody = messageType == MessageType.Voice ? "Bạn nhận được một tin nhắn thoại mới." : "Bạn nhận được một tin nhắn mới.";
+        var pushTitle = messageType switch
+        {
+            MessageType.Voice => "Tin nhắn thoại mới",
+            MessageType.Sticker => "Nhãn dán mới",
+            _ => "Tin nhắn mới"
+        };
+        var pushBody = messageType switch
+        {
+            MessageType.Voice => "Bạn nhận được một tin nhắn thoại mới.",
+            MessageType.Sticker => "Bạn nhận được một nhãn dán mới.",
+            _ => "Bạn nhận được một tin nhắn mới."
+        };
         var pushData = new { matchId = matchId.ToString(), type = "chat" };
         _ = _expoPushService.SendPushAsync(partnerId, pushTitle, pushBody, pushData, cancellationToken);
 

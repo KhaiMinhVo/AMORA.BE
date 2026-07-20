@@ -19,7 +19,7 @@ public sealed class PetFeatureGateService
 
     public async Task ValidateSendAsync(Guid matchId, MessageType type, CancellationToken cancellationToken)
     {
-        if (type is MessageType.Text or MessageType.System)
+        if (type is MessageType.Text or MessageType.System or MessageType.Sticker)
             return;
 
         var pet = await _pets.GetByMatchIdAsync(matchId, cancellationToken)
