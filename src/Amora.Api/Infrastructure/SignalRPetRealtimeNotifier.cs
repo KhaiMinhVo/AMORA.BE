@@ -23,6 +23,9 @@ public sealed class SignalRPetRealtimeNotifier : IPetRealtimeNotifier
             rp = dto.Rp,
             stage = dto.Stage,
             stageName = dto.StageName,
+            type = dto.Type,
+            typeName = dto.TypeName,
+            typeDescription = dto.TypeDescription,
             isFrozen = dto.IsFrozen,
             unlockedFeatures = dto.UnlockedFeatures
         };

@@ -96,4 +96,125 @@ public class PetCoordinatorTests
             m.MatchId == matchId && m.UserId == userId && m.AudioUrl == "audio.url" && m.DurationSeconds == 15.5
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task EvaluateChronotypeAsync_MorningMost_ShouldReturnDog()
+    {
+        var matchId = Guid.NewGuid();
+        _mockMatchRepo.Setup(m => m.GetByIdAsync(matchId, It.IsAny<CancellationToken>())).ReturnsAsync(new MatchConnection());
+        var msgs = new List<ChatMessage>
+        {
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 0, 0, 0, TimeSpan.Zero) }, // 07:00 local (Monday) -> Morning
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 1, 0, 0, TimeSpan.Zero) }, // 08:00 local (Monday) -> Morning
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 16, 0, 0, TimeSpan.Zero) } // 23:00 local (Monday) -> Night
+        };
+        _mockPetRepo.Setup(p => p.GetByMatchIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Pet { MatchId = matchId });
+        var mockChatRepo = new Mock<IChatMessageRepository>();
+        var page = ((IReadOnlyList<ChatMessage>)msgs, (string)null!);
+        mockChatRepo.Setup(c => c.GetByMatchAsync(matchId, null, 500, It.IsAny<CancellationToken>())).ReturnsAsync(page);
+
+        var coordinator = new PetCoordinator(_mockPetRepo.Object, _mockMatchRepo.Object, _mockPublisher.Object, _mockNotifier.Object, mockChatRepo.Object, null!, null!);
+        var result = await coordinator.EvaluateChronotypeAsync(matchId, CancellationToken.None);
+
+        result.Should().Be(PetType.Dog);
+    }
+
+    [Fact]
+    public async Task EvaluateChronotypeAsync_NightMost_ShouldReturnCat()
+    {
+        var matchId = Guid.NewGuid();
+        _mockMatchRepo.Setup(m => m.GetByIdAsync(matchId, It.IsAny<CancellationToken>())).ReturnsAsync(new MatchConnection());
+        var msgs = new List<ChatMessage>
+        {
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 0, 0, 0, TimeSpan.Zero) }, // 07:00 local (Monday) -> Morning
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 16, 0, 0, TimeSpan.Zero) }, // 23:00 local (Monday) -> Night
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 17, 0, 0, TimeSpan.Zero) } // 00:00 local (Tuesday) -> Night
+        };
+        var mockChatRepo = new Mock<IChatMessageRepository>();
+        var page = ((IReadOnlyList<ChatMessage>)msgs, (string)null!);
+        mockChatRepo.Setup(c => c.GetByMatchAsync(matchId, null, 500, It.IsAny<CancellationToken>())).ReturnsAsync(page);
+
+        var coordinator = new PetCoordinator(_mockPetRepo.Object, _mockMatchRepo.Object, _mockPublisher.Object, _mockNotifier.Object, mockChatRepo.Object, null!, null!);
+        var result = await coordinator.EvaluateChronotypeAsync(matchId, CancellationToken.None);
+
+        result.Should().Be(PetType.Cat);
+    }
+
+    [Fact]
+    public async Task EvaluateChronotypeAsync_DaytimeMost_ShouldReturnRabbit()
+    {
+        var matchId = Guid.NewGuid();
+        _mockMatchRepo.Setup(m => m.GetByIdAsync(matchId, It.IsAny<CancellationToken>())).ReturnsAsync(new MatchConnection());
+        var msgs = new List<ChatMessage>
+        {
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 0, 0, 0, TimeSpan.Zero) }, // 07:00 local -> Morning
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 6, 0, 0, TimeSpan.Zero) }, // 13:00 local -> Daytime
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 8, 0, 0, TimeSpan.Zero) }  // 15:00 local -> Daytime
+        };
+        var mockChatRepo = new Mock<IChatMessageRepository>();
+        mockChatRepo.Setup(c => c.GetByMatchAsync(matchId, null, 500, It.IsAny<CancellationToken>())).ReturnsAsync(((IReadOnlyList<ChatMessage>)msgs, (string)null!));
+
+        var coordinator = new PetCoordinator(_mockPetRepo.Object, _mockMatchRepo.Object, _mockPublisher.Object, _mockNotifier.Object, mockChatRepo.Object, null!, null!);
+        var result = await coordinator.EvaluateChronotypeAsync(matchId, CancellationToken.None);
+
+        result.Should().Be(PetType.Rabbit);
+    }
+
+    [Fact]
+    public async Task EvaluateChronotypeAsync_WeekendMost_ShouldReturnOtter()
+    {
+        var matchId = Guid.NewGuid();
+        _mockMatchRepo.Setup(m => m.GetByIdAsync(matchId, It.IsAny<CancellationToken>())).ReturnsAsync(new MatchConnection());
+        var msgs = new List<ChatMessage>
+        {
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 6, 0, 0, TimeSpan.Zero) }, // Monday 13:00 local -> Daytime
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 7, 0, 0, 0, TimeSpan.Zero) }, // Saturday 07:00 local -> Weekend
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 8, 0, 0, 0, TimeSpan.Zero) }  // Sunday 07:00 local -> Weekend
+        };
+        var mockChatRepo = new Mock<IChatMessageRepository>();
+        mockChatRepo.Setup(c => c.GetByMatchAsync(matchId, null, 500, It.IsAny<CancellationToken>())).ReturnsAsync(((IReadOnlyList<ChatMessage>)msgs, (string)null!));
+
+        var coordinator = new PetCoordinator(_mockPetRepo.Object, _mockMatchRepo.Object, _mockPublisher.Object, _mockNotifier.Object, mockChatRepo.Object, null!, null!);
+        var result = await coordinator.EvaluateChronotypeAsync(matchId, CancellationToken.None);
+
+        result.Should().Be(PetType.Otter);
+    }
+
+    [Fact]
+    public async Task EvaluateChronotypeAsync_TieBreaker_ShouldBeDeterministic()
+    {
+        var matchId = Guid.NewGuid();
+        _mockMatchRepo.Setup(m => m.GetByIdAsync(matchId, It.IsAny<CancellationToken>())).ReturnsAsync(new MatchConnection());
+        var msgs = new List<ChatMessage>
+        {
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 0, 0, 0, TimeSpan.Zero) }, // Morning
+            new ChatMessage { MessageType = MessageType.Voice, CreatedAt = new DateTimeOffset(2023, 1, 2, 16, 0, 0, TimeSpan.Zero) } // Night
+        };
+        var mockChatRepo = new Mock<IChatMessageRepository>();
+        mockChatRepo.Setup(c => c.GetByMatchAsync(matchId, null, 500, It.IsAny<CancellationToken>())).ReturnsAsync(((IReadOnlyList<ChatMessage>)msgs, (string)null!));
+
+        var coordinator = new PetCoordinator(_mockPetRepo.Object, _mockMatchRepo.Object, _mockPublisher.Object, _mockNotifier.Object, mockChatRepo.Object, null!, null!);
+        var result = await coordinator.EvaluateChronotypeAsync(matchId, CancellationToken.None);
+
+        // Tie breaker is Morning(Dog) > Night(Cat) > Otter > Rabbit
+        // Since Morning and Night are both 1, it should pick Morning (Dog).
+        result.Should().Be(PetType.Dog);
+    }
+
+    [Fact]
+    public async Task EvaluateChronotypeAsync_NoVoice_ShouldBeDeterministicFallback()
+    {
+        var matchId = Guid.NewGuid();
+        _mockMatchRepo.Setup(m => m.GetByIdAsync(matchId, It.IsAny<CancellationToken>())).ReturnsAsync(new MatchConnection());
+        var mockChatRepo = new Mock<IChatMessageRepository>();
+        mockChatRepo.Setup(c => c.GetByMatchAsync(matchId, null, 500, It.IsAny<CancellationToken>())).ReturnsAsync(((IReadOnlyList<ChatMessage>)new List<ChatMessage>(), (string)null!));
+
+        var coordinator = new PetCoordinator(_mockPetRepo.Object, _mockMatchRepo.Object, _mockPublisher.Object, _mockNotifier.Object, mockChatRepo.Object, null!, null!);
+        var result = await coordinator.EvaluateChronotypeAsync(matchId, CancellationToken.None);
+
+        var hash = Math.Abs(matchId.GetHashCode());
+        var expectedType = (PetType)((hash % 4) + 1);
+
+        result.Should().Be(expectedType);
+    }
 }

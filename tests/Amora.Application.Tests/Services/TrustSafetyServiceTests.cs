@@ -34,6 +34,10 @@ public class TrustSafetyServiceTests
             null!,
             null!,
             null!,
+            null!,
+            null!,
+            null!,
+            null!,
             null!
         );
     }

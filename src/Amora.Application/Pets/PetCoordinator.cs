@@ -5,6 +5,9 @@ using Amora.Application.Messaging;
 using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Amora.Application.Tests")]
 
 namespace Amora.Application.Pets;
 
@@ -272,21 +275,21 @@ public sealed class PetCoordinator
             }
         }
 
-        if (oldStage == GrowthStage.ResonanceSeed && pet.Stage >= GrowthStage.Sprout && pet.Type == PetType.None)
+        if (pet.Stage >= GrowthStage.Sprout && pet.Type == PetType.None)
         {
             pet.Type = await EvaluateChronotypeAsync(pet.MatchId, cancellationToken);
         }
     }
 
-    private async Task<PetType> EvaluateChronotypeAsync(Guid matchId, CancellationToken cancellationToken)
+    internal async Task<PetType> EvaluateChronotypeAsync(Guid matchId, CancellationToken cancellationToken)
     {
         var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
-        if (match == null) return PetType.Dog;
+        if (match == null) return DeterministicFallback(matchId);
 
         var result = await _chatMessageRepository.GetByMatchAsync(matchId, null, 500, cancellationToken);
         var messages = result.Items.Where(x => x.MessageType == MessageType.Voice).ToList();
         
-        if (messages.Count == 0) return PetType.Dog;
+        if (messages.Count == 0) return DeterministicFallback(matchId);
 
         int morningCount = 0;   // 05:00 - 11:59 (Dog)
         int daytimeCount = 0;   // 12:00 - 21:59 Weekdays (Rabbit)
@@ -321,11 +324,20 @@ public sealed class PetCoordinator
         }
 
         var maxCount = Math.Max(Math.Max(morningCount, daytimeCount), Math.Max(nightCount, weekendCount));
+        if (maxCount == 0) return DeterministicFallback(matchId);
 
         if (maxCount == morningCount) return PetType.Dog;
         if (maxCount == nightCount) return PetType.Cat;
-        if (maxCount == weekendCount) return PetType.Otter;
-        return PetType.Rabbit;
+        if (maxCount == daytimeCount) return PetType.Rabbit;
+        return PetType.Otter;
+    }
+
+    private static PetType DeterministicFallback(Guid matchId)
+    {
+        // Hash the GUID to get a deterministic positive integer
+        var hash = Math.Abs(matchId.GetHashCode());
+        // Types are 1 to 4: Dog(1), Cat(2), Rabbit(3), Otter(4)
+        return (PetType)((hash % 4) + 1);
     }
 
     private async Task LogAsync(Pet pet, string eventType, object payload, CancellationToken cancellationToken)
