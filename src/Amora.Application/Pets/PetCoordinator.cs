@@ -281,63 +281,11 @@ public sealed class PetCoordinator
         }
     }
 
-    internal async Task<PetType> EvaluateChronotypeAsync(Guid matchId, CancellationToken cancellationToken)
+    internal Task<PetType> EvaluateChronotypeAsync(Guid matchId, CancellationToken cancellationToken)
     {
-        var match = await _matchRepository.GetByIdAsync(matchId, cancellationToken);
-        if (match == null) return DeterministicFallback(matchId);
-
-        var result = await _chatMessageRepository.GetByMatchAsync(matchId, null, 500, cancellationToken);
-        var messages = result.Items.Where(x => x.MessageType == MessageType.Voice).ToList();
-        
-        if (messages.Count == 0) return DeterministicFallback(matchId);
-
-        int morningCount = 0;   // 05:00 - 11:59 (Dog)
-        int daytimeCount = 0;   // 12:00 - 21:59 Weekdays (Rabbit)
-        int nightCount = 0;     // 22:00 - 04:59 (Cat)
-        int weekendCount = 0;   // Saturday, Sunday (Otter)
-
-        foreach (var msg in messages)
-        {
-            // Convert UTC to local time (GMT+7)
-            var localTime = msg.CreatedAt.ToOffset(TimeSpan.FromHours(7));
-
-            if (localTime.DayOfWeek == DayOfWeek.Saturday || localTime.DayOfWeek == DayOfWeek.Sunday)
-            {
-                weekendCount++;
-            }
-            else
-            {
-                if (localTime.Hour >= 5 && localTime.Hour < 12)
-                {
-                    morningCount++;
-                }
-                else if (localTime.Hour >= 12 && localTime.Hour < 22)
-                {
-                    daytimeCount++;
-                }
-                else
-                {
-                    // 22:00 to 04:59
-                    nightCount++;
-                }
-            }
-        }
-
-        var maxCount = Math.Max(Math.Max(morningCount, daytimeCount), Math.Max(nightCount, weekendCount));
-        if (maxCount == 0) return DeterministicFallback(matchId);
-
-        if (maxCount == morningCount) return PetType.Dog;
-        if (maxCount == nightCount) return PetType.Cat;
-        if (maxCount == daytimeCount) return PetType.Rabbit;
-        return PetType.Otter;
-    }
-
-    private static PetType DeterministicFallback(Guid matchId)
-    {
-        // Hash the GUID to get a deterministic positive integer
-        var hash = Math.Abs(matchId.GetHashCode());
-        // Types are 1 to 4: Dog(1), Cat(2), Rabbit(3), Otter(4)
-        return (PetType)((hash % 4) + 1);
+        // Yêu cầu mới: Quả trứng nở ra random 1 trong 4 loại thú cưng
+        var randomType = (PetType)Random.Shared.Next(1, 5);
+        return Task.FromResult(randomType);
     }
 
     private async Task LogAsync(Pet pet, string eventType, object payload, CancellationToken cancellationToken)
