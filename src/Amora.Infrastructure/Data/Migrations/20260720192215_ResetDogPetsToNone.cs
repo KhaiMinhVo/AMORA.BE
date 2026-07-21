@@ -10,7 +10,7 @@ namespace Amora.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("UPDATE \"Pets\" SET \"Type\" = 0 WHERE \"Type\" = 1 AND \"Stage\" >= 1;");
+            migrationBuilder.Sql("UPDATE \"Pets\" SET \"Type\" = 0 WHERE \"Type\" = 1 AND \"Stage\" != 'ResonanceSeed';");
         }
 
         /// <inheritdoc />
