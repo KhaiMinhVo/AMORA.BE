@@ -188,13 +188,11 @@ public static class PetEngine
 
     public static GrowthStage EvaluateStage(Pet pet)
     {
-        var avgHp = pet.HpSnapshotCount > 0 ? pet.HpSnapshotSum / pet.HpSnapshotCount : pet.Hp;
-
-        // Cập nhật các mốc tiến hóa mới (thêm điều kiện Mood)
-        if (pet.Rp >= 1500 && avgHp >= 80 && pet.Mood >= 80) return GrowthStage.Legend; // Trưởng thành cuối cùng
-        if (pet.Rp >= 1000 && avgHp >= 70) return GrowthStage.Adult;  // Trưởng thành
-        if (pet.Rp >= 700 && avgHp >= 65) return GrowthStage.Young;   // Thiếu niên
-        if (pet.Rp >= 300 && avgHp >= 60) return GrowthStage.Sprout;  // Thú non
+        // Điều kiện tiến hoá: dùng RP (EXP) và Mood thay cho HP theo tài liệu thiết kế
+        if (pet.Rp >= 5000 && pet.Mood >= 80) return GrowthStage.Legend; // Trưởng thành cuối cùng
+        if (pet.Rp >= 2500 && pet.Mood >= 70) return GrowthStage.Adult;  // Trưởng thành
+        if (pet.Rp >= 1400 && pet.Mood >= 65) return GrowthStage.Young;   // Thiếu niên
+        if (pet.Rp >= 600 && pet.Mood >= 60) return GrowthStage.Sprout;  // Thú non
 
         return GrowthStage.ResonanceSeed; // Trứng
     }
