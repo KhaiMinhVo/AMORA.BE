@@ -96,7 +96,7 @@ public sealed class AiScriptSuggestionService
 
         try
         {
-            var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={_apiKey}", content, cancellationToken);
+            var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}", content, cancellationToken);
             
             if (response.IsSuccessStatusCode)
             {
