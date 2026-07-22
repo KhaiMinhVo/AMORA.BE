@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "6J/z4WduC7Q=",
+  "dgSpecHash": "nY/JJwC6cL0=",
   "success": true,
   "projectFilePath": "D:\\FPTU\\EXE\\AMORA.BE\\src\\Amora.Api\\Amora.Api.csproj",
   "expectedPackageFiles": [
@@ -17,6 +17,8 @@
     "C:\\Users\\vopha\\.nuget\\packages\\grpc.net.client\\2.52.0\\grpc.net.client.2.52.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\grpc.net.common\\2.52.0\\grpc.net.common.2.52.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\magick.net-q16-anycpu\\14.15.0\\magick.net-q16-anycpu.14.15.0.nupkg.sha512",
+    "C:\\Users\\vopha\\.nuget\\packages\\magick.net.core\\14.15.0\\magick.net.core.14.15.0.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\mediatr\\12.4.1\\mediatr.12.4.1.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",
     "C:\\Users\\vopha\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.8\\microsoft.aspnetcore.authentication.jwtbearer.8.0.8.nupkg.sha512",

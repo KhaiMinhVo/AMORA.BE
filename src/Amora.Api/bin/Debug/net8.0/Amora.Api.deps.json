@@ -165,6 +165,67 @@
           }
         }
       },
+      "Magick.NET-Q16-AnyCPU/14.15.0": {
+        "dependencies": {
+          "Magick.NET.Core": "14.15.0"
+        },
+        "runtime": {
+          "lib/net8.0/Magick.NET-Q16-AnyCPU.dll": {
+            "assemblyVersion": "14.15.0.0",
+            "fileVersion": "14.15.0.0"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/linux-arm64/native/Magick.Native-Q16-arm64.dll.so": {
+            "rid": "linux-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-musl-x64/native/Magick.Native-Q16-x64.dll.so": {
+            "rid": "linux-musl-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-x64/native/Magick.Native-Q16-x64.dll.so": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/osx-arm64/native/Magick.Native-Q16-arm64.dll.dylib": {
+            "rid": "osx-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/osx-x64/native/Magick.Native-Q16-x64.dll.dylib": {
+            "rid": "osx-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-arm64/native/Magick.Native-Q16-arm64.dll": {
+            "rid": "win-arm64",
+            "assetType": "native",
+            "fileVersion": "10.3.0.0"
+          },
+          "runtimes/win-x64/native/Magick.Native-Q16-x64.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "10.3.0.0"
+          },
+          "runtimes/win-x86/native/Magick.Native-Q16-x86.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "10.3.0.0"
+          }
+        }
+      },
+      "Magick.NET.Core/14.15.0": {
+        "runtime": {
+          "lib/net8.0/Magick.NET.Core.dll": {
+            "assemblyVersion": "14.15.0.0",
+            "fileVersion": "14.15.0.0"
+          }
+        }
+      },
       "MediatR/12.4.1": {
         "dependencies": {
           "MediatR.Contracts": "2.0.1",
@@ -1449,6 +1510,7 @@
           "Amora.Application": "1.0.0",
           "Amora.Domain": "1.0.0",
           "Google.Apis.Auth": "1.74.0",
+          "Magick.NET-Q16-AnyCPU": "14.15.0",
           "Microsoft.EntityFrameworkCore": "8.0.8",
           "Microsoft.EntityFrameworkCore.Relational": "8.0.8",
           "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions": "8.0.8",
@@ -1567,6 +1629,20 @@
       "sha512": "sha512-lQKvtaTDOXnoVJ20ibTuSIOf2i0uO0MPbDhd1jm238I+U/2ZnRENj0cktKZhtchBMtCUSRQ5v4xBCUbKNmyVMw==",
       "path": "humanizer.core/2.14.1",
       "hashPath": "humanizer.core.2.14.1.nupkg.sha512"
+    },
+    "Magick.NET-Q16-AnyCPU/14.15.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-TB1Wc2hojzOMJ4tkBcXubASgtYSjEovoFpOjnfTjJXKVtKHGaN60juR+5YWFFhch1UUENcThaRWUXOWRcoGKkQ==",
+      "path": "magick.net-q16-anycpu/14.15.0",
+      "hashPath": "magick.net-q16-anycpu.14.15.0.nupkg.sha512"
+    },
+    "Magick.NET.Core/14.15.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xgD1zqb4KQ1gMQcd3eIRp8hFMHBxzW9fOpLLDR7BWN0oCwZ0i6NW7rIUiCdsEi/NuZi1UlCLWBHh3v7Y2E3LIw==",
+      "path": "magick.net.core/14.15.0",
+      "hashPath": "magick.net.core.14.15.0.nupkg.sha512"
     },
     "MediatR/12.4.1": {
       "type": "package",

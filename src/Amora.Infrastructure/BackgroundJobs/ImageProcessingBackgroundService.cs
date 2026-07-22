@@ -61,7 +61,7 @@ public class ImageProcessingBackgroundService : BackgroundService
         image.Strip();
 
         // Resize based on type
-        int maxSize = task.ImageType.ToLowerInvariant() == "avatar" ? 1024 : 1920;
+        uint maxSize = task.ImageType.ToLowerInvariant() == "avatar" ? 1024u : 1920u;
         if (image.Width > maxSize || image.Height > maxSize)
         {
             var size = new MagickGeometry(maxSize, maxSize)
