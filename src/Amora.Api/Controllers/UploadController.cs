@@ -37,15 +37,22 @@ public class UploadController : ControllerBase
     }
 
     [HttpGet("presigned-image-url")]
-    public async Task<IActionResult> GetPresignedImageUrl([FromQuery] string extension = ".jpg")
+    public async Task<IActionResult> GetPresignedImageUrl([FromQuery] string extension = ".jpg", [FromQuery] string imageType = "profile")
     {
         extension = extension.ToLowerInvariant();
         var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".avif", ".gif" };
         if (!allowedExtensions.Contains(extension))
             return BadRequest(new { success = false, message = "Định dạng ảnh không hỗ trợ" });
 
-        // We use a temp folder for raw uploads if needed, or just chat-images
-        var (uploadUrl, publicUrl) = await _storageService.GeneratePreSignedUploadUrlAsync(extension, "chat-images/raw");
+        string rawFolder = imageType.ToLowerInvariant() switch
+        {
+            "avatar" => "avatars/raw",
+            "chat" => "chat-images/raw",
+            "post" => "post-images/raw",
+            _ => "profile-images/raw"
+        };
+
+        var (uploadUrl, publicUrl) = await _storageService.GeneratePreSignedUploadUrlAsync(extension, rawFolder);
 
         return Ok(new
         {

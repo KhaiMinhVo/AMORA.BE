@@ -84,7 +84,14 @@ public class ImageProcessingBackgroundService : BackgroundService
         // 3. Upload processed image
         string extension = ".webp";
         string mimeType = "image/webp";
-        var processedUrl = await storageService.UploadFileAsync(outStream, extension, "processed-images", mimeType);
+        string finalFolder = task.ImageType.ToLowerInvariant() switch
+        {
+            "avatar" => "avatars",
+            "chat" => "chat-images",
+            "post" => "post-images",
+            _ => "profile-images"
+        };
+        var processedUrl = await storageService.UploadFileAsync(outStream, extension, finalFolder, mimeType);
 
         // 4. Delete raw file
         await storageService.DeleteFileAsync(task.OriginalFileKey, stoppingToken);
