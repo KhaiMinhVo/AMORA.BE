@@ -1,4 +1,5 @@
 using Amora.Application.Abstractions;
+using Amora.Infrastructure.BackgroundJobs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,10 +11,12 @@ namespace Amora.Api.Controllers;
 public class UploadController : ControllerBase
 {
     private readonly IStorageService _storageService;
+    private readonly ImageProcessingChannel _imageChannel;
 
-    public UploadController(IStorageService storageService)
+    public UploadController(IStorageService storageService, ImageProcessingChannel imageChannel)
     {
         _storageService = storageService;
+        _imageChannel = imageChannel;
     }
 
     [HttpGet("presigned-url")]
@@ -37,16 +40,50 @@ public class UploadController : ControllerBase
     public async Task<IActionResult> GetPresignedImageUrl([FromQuery] string extension = ".jpg")
     {
         extension = extension.ToLowerInvariant();
-        if (extension is not ".jpg" and not ".jpeg" and not ".png" and not ".webp")
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".avif", ".gif" };
+        if (!allowedExtensions.Contains(extension))
             return BadRequest(new { success = false, message = "Định dạng ảnh không hỗ trợ" });
 
-        var (uploadUrl, publicUrl) = await _storageService.GeneratePreSignedUploadUrlAsync(extension, "chat-images");
+        // We use a temp folder for raw uploads if needed, or just chat-images
+        var (uploadUrl, publicUrl) = await _storageService.GeneratePreSignedUploadUrlAsync(extension, "chat-images/raw");
 
         return Ok(new
         {
             success = true,
-            data = new { uploadUrl, publicUrl }
+            data = new { uploadUrl, publicUrl, fileKey = publicUrl.Split(".com/").LastOrDefault() ?? publicUrl }
         });
+    }
+
+    [HttpPost("confirm-image")]
+    public async Task<IActionResult> ConfirmImageUpload([FromBody] ConfirmImageRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.FileKey))
+            return BadRequest(new { success = false, message = "FileKey is required." });
+
+        var userId = User.FindFirst("id")?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var task = new ImageProcessingTask
+        {
+            OriginalFileKey = request.FileKey,
+            UserId = userId,
+            ImageType = request.ImageType ?? "profile"
+        };
+
+        await _imageChannel.AddTaskAsync(task);
+
+        return Ok(new
+        {
+            success = true,
+            message = "Image upload confirmed. Processing in background."
+        });
+    }
+
+    public class ConfirmImageRequest
+    {
+        public string FileKey { get; set; } = string.Empty;
+        public string ImageType { get; set; } = "profile"; // "avatar", "profile", "chat"
     }
 
     /// <summary>

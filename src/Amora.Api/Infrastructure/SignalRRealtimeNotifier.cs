@@ -164,6 +164,18 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
             .SendAsync("ReceiveSystemNotification", payload, cancellationToken);
     }
 
+    public async Task NotifyImageProcessedAsync(Guid userId, string publicUrl, string imageType, CancellationToken cancellationToken = default)
+    {
+        var payload = new
+        {
+            publicUrl = publicUrl,
+            imageType = imageType
+        };
+
+        await _hubContext.Clients.Group(RealtimeGroupNames.User(userId.ToString()))
+            .SendAsync("ImageProcessed", payload, cancellationToken);
+    }
+
     public async Task NotifyChatBlockStatusChangedAsync(Guid userId, Guid matchId, string blockStatus, bool canSendMessages, CancellationToken cancellationToken = default)
     {
         var payload = new

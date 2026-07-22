@@ -22,5 +22,7 @@ public interface IRealtimeNotifier
 
     Task NotifySystemNotificationAsync(Guid userId, Notification notification, CancellationToken cancellationToken = default);
 
+    Task NotifyImageProcessedAsync(Guid userId, string publicUrl, string imageType, CancellationToken cancellationToken = default);
+
     Task NotifyChatBlockStatusChangedAsync(Guid userId, Guid matchId, string blockStatus, bool canSendMessages, CancellationToken cancellationToken = default);
 }

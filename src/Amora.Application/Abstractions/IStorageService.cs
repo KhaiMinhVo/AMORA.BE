@@ -11,6 +11,9 @@ public interface IStorageService
 
     Task<string> UploadFileAsync(Stream fileStream, string fileExtension, string? folder, string? contentType = null);
 
+    Task<Stream> DownloadFileAsync(string fileKey, CancellationToken cancellationToken = default);
+    Task DeleteFileAsync(string fileKey, CancellationToken cancellationToken = default);
+
     Task<long> GetTotalStorageSizeAsync(CancellationToken cancellationToken = default);
     Task<(long Size, DateTimeOffset? LastModified)> GetLatestBackupInfoAsync(CancellationToken cancellationToken = default);
 }

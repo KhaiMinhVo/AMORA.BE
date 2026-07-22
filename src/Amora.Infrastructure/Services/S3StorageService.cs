@@ -64,6 +64,19 @@ public class S3StorageService : IStorageService
 
         return $"{_publicBaseUrl}/{fileName}";
     }
+    public async Task<Stream> DownloadFileAsync(string fileKey, CancellationToken cancellationToken = default)
+    {
+        var response = await _s3Client.GetObjectAsync(_bucketName, fileKey, cancellationToken);
+        var memoryStream = new MemoryStream();
+        await response.ResponseStream.CopyToAsync(memoryStream, cancellationToken);
+        memoryStream.Position = 0;
+        return memoryStream;
+    }
+
+    public async Task DeleteFileAsync(string fileKey, CancellationToken cancellationToken = default)
+    {
+        await _s3Client.DeleteObjectAsync(_bucketName, fileKey, cancellationToken);
+    }
 
     public async Task<long> GetTotalStorageSizeAsync(CancellationToken cancellationToken = default)
     {
