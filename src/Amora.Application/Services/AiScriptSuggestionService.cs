@@ -112,7 +112,16 @@ public sealed class AiScriptSuggestionService
                     {
                         try
                         {
-                            using var suggestionDoc = JsonDocument.Parse(text);
+                            var cleanText = text.Trim();
+                            if (cleanText.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
+                                cleanText = cleanText.Substring(7);
+                            else if (cleanText.StartsWith("```", StringComparison.OrdinalIgnoreCase))
+                                cleanText = cleanText.Substring(3);
+                            if (cleanText.EndsWith("```"))
+                                cleanText = cleanText.Substring(0, cleanText.Length - 3);
+                            cleanText = cleanText.Trim();
+
+                            using var suggestionDoc = JsonDocument.Parse(cleanText);
                             if (suggestionDoc.RootElement.TryGetProperty("content", out var contentProp))
                             {
                                 var suggestion = contentProp.GetString();
