@@ -50,7 +50,7 @@ public class UploadController : ControllerBase
         return Ok(new
         {
             success = true,
-            data = new { uploadUrl, publicUrl, fileKey = publicUrl.Split(".com/").LastOrDefault() ?? publicUrl }
+            data = new { uploadUrl, publicUrl, fileKey = new Uri(publicUrl).AbsolutePath.TrimStart('/') }
         });
     }
 
@@ -64,9 +64,15 @@ public class UploadController : ControllerBase
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
 
+        var fileKey = request.FileKey;
+        if (fileKey.StartsWith("http://") || fileKey.StartsWith("https://"))
+        {
+            fileKey = new Uri(fileKey).AbsolutePath.TrimStart('/');
+        }
+
         var task = new ImageProcessingTask
         {
-            OriginalFileKey = request.FileKey,
+            OriginalFileKey = fileKey,
             UserId = userId,
             ImageType = request.ImageType ?? "profile"
         };
