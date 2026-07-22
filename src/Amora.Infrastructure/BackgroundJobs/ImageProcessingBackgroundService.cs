@@ -75,7 +75,7 @@ public class ImageProcessingBackgroundService : BackgroundService
         image.Format = MagickFormat.WebP;
         image.Quality = 75;
         // Optimize WebP encoding speed (0 = fastest, 6 = slowest, 4 = default)
-        image.Settings.SetDefine(MagickFormat.Webp, "method", "0");
+        image.Settings.SetDefine(MagickFormat.WebP, "method", "0");
 
         using var outStream = new MemoryStream();
         image.Write(outStream);
