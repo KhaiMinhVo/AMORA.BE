@@ -31,9 +31,8 @@ public sealed class SmtpEmailService : IEmailService
         {
             if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))
             {
-                _logger.LogWarning("SMTP credentials not configured. OTP to {Email}: {Body}", toEmail, body);
-                // Return true for local development when credentials are missing
-                return true; 
+                _logger.LogError("SMTP credentials are not configured; email was not sent.");
+                return false;
             }
 
             using var client = new SmtpClient(_host, _port)
@@ -53,12 +52,12 @@ public sealed class SmtpEmailService : IEmailService
             mailMessage.To.Add(toEmail);
 
             await client.SendMailAsync(mailMessage, cancellationToken);
-            _logger.LogInformation("Email sent successfully to {Email}", toEmail);
+            _logger.LogInformation("Email sent successfully.");
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email to {Email}", toEmail);
+            _logger.LogError(ex, "Failed to send email.");
             return false;
         }
     }

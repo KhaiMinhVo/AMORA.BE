@@ -10,7 +10,7 @@ public sealed class RabbitMqHealthCheck : IHealthCheck
 
     public RabbitMqHealthCheck(IConfiguration configuration)
     {
-        _amqpUrl = configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672//";
+        _amqpUrl = configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672/%2F";
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)

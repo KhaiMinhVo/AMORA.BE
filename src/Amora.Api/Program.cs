@@ -184,12 +184,12 @@ builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 // Message Bus — Singleton vì connection RabbitMQ được tái sử dụng
 builder.Services.AddSingleton<IMessageBus>(_ =>
 {
-    var rabbitUrl = builder.Configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672//";
+    var rabbitUrl = builder.Configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672/%2F";
     return RabbitMqMessageBus.CreateAsync(rabbitUrl).GetAwaiter().GetResult();
 });
 builder.Services.AddSingleton<IMessagePublisher>(_ =>
 {
-    var rabbitUrl = builder.Configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672//";
+    var rabbitUrl = builder.Configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672/%2F";
     return RabbitMqMessagePublisher.CreateAsync(rabbitUrl).GetAwaiter().GetResult();
 });
 builder.Services.AddScoped<AudioProcessingService>();
@@ -318,9 +318,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapGet("/api/logs", () => 
+app.MapGet("/api/logs", () =>
 {
-    try 
+    try
     {
         var logDir = Path.Combine(Directory.GetCurrentDirectory(), "logs");
         if (!Directory.Exists(logDir)) return $"Directory not found: {logDir}";
@@ -335,7 +335,7 @@ app.MapGet("/api/logs", () =>
     {
         return ex.ToString();
     }
-});
+}).RequireAuthorization(policy => policy.RequireRole("Admin"));
 
 app.UseRouting();
 app.UseCors("AllowSpecificOrigins");

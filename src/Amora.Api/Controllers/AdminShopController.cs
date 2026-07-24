@@ -10,7 +10,7 @@ namespace Amora.Api.Controllers;
 
 [ApiController]
 [Route("api/admin/shop")]
-[Authorize] // Should be restricted to Admin role in production
+[Authorize(Roles = "Admin")]
 public sealed class AdminShopController : ControllerBase
 {
     private readonly IShopRepository _shopRepository;

@@ -31,7 +31,7 @@ public sealed class VibeResultConsumerService : BackgroundService
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
-        _amqpUrl = configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672//";
+        _amqpUrl = configuration["RabbitMQ:Url"] ?? "amqp://guest:guest@localhost:5672/%2F";
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

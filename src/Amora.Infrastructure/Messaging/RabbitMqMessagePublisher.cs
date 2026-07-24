@@ -54,8 +54,6 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher, IAsyncDisposab
 
     public async Task PublishAsync<T>(string queueName, T payload, CancellationToken cancellationToken = default)
     {
-        await _channel.QueueDeclareAsync(queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
-
         var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -70,6 +68,17 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher, IAsyncDisposab
         await _publishGate.WaitAsync(cancellationToken);
         try
         {
+            // RabbitMQ channels must not be used concurrently. Queue declaration is
+            // part of the same channel operation as publishing, so keep both inside
+            // the gate.
+            await _channel.QueueDeclareAsync(
+                queueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
             await _channel.BasicPublishAsync(string.Empty, queueName, true, props, body, cancellationToken);
         }
         finally

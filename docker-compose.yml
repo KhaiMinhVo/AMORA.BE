@@ -50,15 +50,16 @@ services:
       retries: 5
 
   seq:
-    image: datalust/seq:latest
+    image: datalust/seq:2026.1.17044
     container_name: amora-seq
     environment:
       ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_ADMINPASSWORDHASH: "${SEQ_ADMIN_PASSWORD_HASH:?SEQ_ADMIN_PASSWORD_HASH must be set}"
     ports:
-      - "5341:5341"    # Ingestion + UI
-      - "8081:80"      # Alternate UI port
+      - "127.0.0.1:8081:80" # UI through an SSH tunnel only
     volumes:
       - seq_data:/data
+    restart: unless-stopped
 
   audio-worker:
     build:
@@ -68,7 +69,7 @@ services:
     env_file:
       - ../amora-audio-worker/.env
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
       DOTNET_WEBHOOK_URL: http://amora-api:8080/api/webhooks/audio-processed
     depends_on:
       rabbitmq:
@@ -100,9 +101,11 @@ services:
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=AmoraCoreDb;Username=postgres;Password=${POSTGRES_PASSWORD}
       ConnectionStrings__MongoDb: mongodb://mongodb:27017
       ConnectionStrings__Redis: redis:6379
-      RabbitMQ__Url: amqp://guest:guest@rabbitmq:5672//
+      RabbitMQ__Url: amqp://guest:guest@rabbitmq:5672/%2F
       AiService__Url: http://ai-service:8000
       AiService__ApiKey: ${AI_SERVICE_API_KEY}
+      Serilog__WriteTo__2__Name: Seq
+      Serilog__WriteTo__2__Args__serverUrl: http://seq:80
       AWS__AccessKey: ${AWS_ACCESS_KEY_ID}
       AWS__SecretKey: ${AWS_SECRET_ACCESS_KEY}
       EmailSettings__Username: ${SMTP_USERNAME}
@@ -136,7 +139,7 @@ services:
     env_file:
       - ../amora-audio-worker/.env
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/%2F
       ALLOWED_AUDIO_HOSTS: ${ALLOWED_AUDIO_HOSTS:-amora-voice-bucket.s3.amazonaws.com,cdn.amora.pro.vn}
     depends_on:
       rabbitmq:

@@ -1,6 +1,7 @@
 name: Deploy to Google Cloud
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main # Khi có code mới đẩy lên nhánh main sẽ tự động chạy
@@ -17,25 +18,26 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
+          set -euo pipefail
+
           # Di chuyển vào thư mục code
+          git -C ~/amora-audio-worker fetch origin master
+          git -C ~/amora-audio-worker reset --hard origin/master
+          git -C ~/amora-audio-worker clean -fd
+
           cd ~/AMORA.BE
           
           # Kéo code mới nhất từ nhánh main (Xóa đè các file bị sửa trên server nếu có)
           git fetch origin main
           git reset --hard origin/main
           git clean -fd
-          git pull origin main
-          
-          # Dọn dẹp các container bị treo (để tránh lỗi Conflict)
-          docker-compose down
-          docker rm -f amora-api || true
           
           # Build lại và chạy các thay đổi mới
-          docker-compose up -d --build
+          docker compose up -d --build --remove-orphans
+          docker compose ps
 
           # Cập nhật cấu hình Nginx và reload (nếu user không bị hỏi pass khi dùng sudo)
           # Nếu chạy CI bị lỗi ở bước này (do đòi mật khẩu), bạn xóa 2 dòng dưới đi 
           # và tự chạy tay trên server 1 lần duy nhất nhé!
           sudo cp ~/AMORA.BE/nginx.conf /etc/nginx/sites-available/default || true
           sudo systemctl reload nginx || true
-
