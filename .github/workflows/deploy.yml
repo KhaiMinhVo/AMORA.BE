@@ -6,6 +6,11 @@ on:
     branches:
       - main # Khi có code mới đẩy lên nhánh main sẽ tự động chạy
 
+# Chỉ cho phép một tiến trình deploy thao tác VPS tại một thời điểm.
+concurrency:
+  group: amora-production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
