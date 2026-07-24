@@ -83,7 +83,11 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.PasswordHash).HasMaxLength(500);
             entity.HasIndex(x => x.Email).IsUnique().HasFilter("\"Email\" IS NOT NULL");
             entity.Property(x => x.AvatarUrl).HasMaxLength(1000).IsRequired();
-            entity.Property(x => x.Gender).HasConversion<string>().HasMaxLength(20).HasDefaultValue(Amora.Domain.Enums.Gender.PreferNotToSay);
+            entity.Property(x => x.Gender)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .HasDefaultValue(Gender.PreferNotToSay)
+                .HasSentinel(Gender.PreferNotToSay);
             entity.Property(x => x.SubscriptionType).HasConversion<string>().HasMaxLength(20).HasDefaultValue(Amora.Domain.Enums.SubscriptionType.Free);
             entity.Property(x => x.City).HasMaxLength(100);
             entity.Property(x => x.Bio).HasMaxLength(300);

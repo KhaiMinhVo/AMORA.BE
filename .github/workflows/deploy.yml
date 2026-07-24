@@ -17,6 +17,7 @@ jobs:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
+        command_timeout: 30m
         script: |
           set -euo pipefail
 
@@ -32,9 +33,39 @@ jobs:
           git reset --hard origin/main
           git clean -fd
           
-          # Build lại và chạy các thay đổi mới
-          docker compose up -d --build --remove-orphans
+          # Build tuần tự để giảm đỉnh sử dụng RAM/ổ đĩa trên VPS nhỏ.
+          docker compose build amora-api
+          docker compose build ai-service
+          docker compose build audio-worker
+          docker compose build chat-voice-consumer
+
+          docker compose up -d --no-build --remove-orphans
+
+          # Chỉ báo deploy thành công khi API thực sự sẵn sàng.
+          attempt=1
+          until curl -fsS http://localhost:5002/health > /dev/null; do
+            if [ "$attempt" -ge 36 ]; then
+              docker compose ps
+              docker compose logs --tail=100 amora-api || true
+              exit 1
+            fi
+
+            attempt=$((attempt + 1))
+            sleep 5
+          done
+
+          # Bắt trường hợp worker/service vừa khởi động rồi crash hoặc restart.
+          sleep 10
+          for service in amora-api ai-service audio-worker chat-voice-consumer seq; do
+            container_id="$(docker compose ps -q "$service")"
+            if [ -z "$container_id" ] || [ "$(docker inspect --format '{{.State.Status}}' "$container_id")" != "running" ]; then
+              docker compose logs --tail=100 "$service" || true
+              exit 1
+            fi
+          done
+
           docker compose ps
+          docker image prune -f
 
           # Cập nhật cấu hình Nginx và reload (nếu user không bị hỏi pass khi dùng sudo)
           # Nếu chạy CI bị lỗi ở bước này (do đòi mật khẩu), bạn xóa 2 dòng dưới đi 
