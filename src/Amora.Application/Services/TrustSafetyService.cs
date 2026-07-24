@@ -4,6 +4,7 @@ using Amora.Application.Exceptions;
 using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Amora.Application.Services;
 
@@ -14,13 +15,12 @@ public sealed class TrustSafetyService
     private readonly IUserBlockRepository _blockRepository;
     private readonly IUserRepository _userRepository;
     private readonly AiModerationService _aiModerationService;
-    private readonly AdminModerationService _adminModerationService;
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly IVoiceCommentRepository _voiceCommentRepository;
     private readonly AdminNotificationService _adminNotificationService;
-    private readonly TrustScoreService _trustScoreService;
     private readonly IMatchConnectionRepository _matchConnectionRepository;
     private readonly IRealtimeNotifier _realtimeNotifier;
+    private readonly Microsoft.Extensions.Logging.ILogger<TrustSafetyService> _logger;
 
     public TrustSafetyService(
         ICurrentUserService currentUserService,
@@ -28,26 +28,24 @@ public sealed class TrustSafetyService
         IUserBlockRepository blockRepository,
         IUserRepository userRepository,
         AiModerationService aiModerationService,
-        AdminModerationService adminModerationService,
         IVoicePostRepository voicePostRepository,
         IVoiceCommentRepository voiceCommentRepository,
         AdminNotificationService adminNotificationService,
-        TrustScoreService trustScoreService,
         IMatchConnectionRepository matchConnectionRepository,
-        IRealtimeNotifier realtimeNotifier)
+        IRealtimeNotifier realtimeNotifier,
+        Microsoft.Extensions.Logging.ILogger<TrustSafetyService> logger)
     {
         _currentUserService = currentUserService;
         _reportRepository = reportRepository;
         _blockRepository = blockRepository;
         _userRepository = userRepository;
         _aiModerationService = aiModerationService;
-        _adminModerationService = adminModerationService;
         _voicePostRepository = voicePostRepository;
         _voiceCommentRepository = voiceCommentRepository;
         _adminNotificationService = adminNotificationService;
-        _trustScoreService = trustScoreService;
         _matchConnectionRepository = matchConnectionRepository;
         _realtimeNotifier = realtimeNotifier;
+        _logger = logger;
     }
 
     // ── Report ──────────────────────────────────────────────────────────────
@@ -64,12 +62,41 @@ public sealed class TrustSafetyService
             ?? throw new NotFoundApiException("Không tìm thấy người dùng.");
 
         // Kiểm tra đã report chưa (tránh spam)
-        if (await _reportRepository.ExistsAsync(reporterId, targetUserId, cancellationToken))
+        if (await _reportRepository.ExistsRecentAsync(
+                reporterId,
+                targetUserId,
+                request.TargetPostId,
+                request.TargetCommentId,
+                DateTimeOffset.UtcNow.AddHours(-24),
+                cancellationToken))
             throw new ConflictApiException("Bạn đã báo cáo người dùng này rồi.");
 
         // Parse reason enum
         if (!Enum.TryParse<ReportReason>(request.Reason, ignoreCase: true, out var reason))
             throw new ValidationApiException($"Lý do báo cáo không hợp lệ. Các giá trị cho phép: {string.Join(", ", Enum.GetNames<ReportReason>())}");
+
+        if (request.TargetPostId.HasValue && request.TargetCommentId.HasValue)
+            throw new ValidationApiException("Mỗi báo cáo chỉ được đính kèm một bài viết hoặc một bình luận.");
+
+        VoicePost? targetPost = null;
+        VoiceComment? targetComment = null;
+
+        if (request.TargetPostId.HasValue)
+        {
+            targetPost = await _voicePostRepository.GetByIdAsync(request.TargetPostId.Value, cancellationToken)
+                ?? throw new NotFoundApiException("Bài viết bị báo cáo không tồn tại.");
+
+            if (targetPost.PosterId != targetUserId)
+                throw new ValidationApiException("Bài viết không thuộc về người dùng bị báo cáo.");
+        }
+        else if (request.TargetCommentId.HasValue)
+        {
+            targetComment = await _voiceCommentRepository.GetByIdAsync(request.TargetCommentId.Value, cancellationToken)
+                ?? throw new NotFoundApiException("Bình luận bị báo cáo không tồn tại.");
+
+            if (targetComment.CommenterId != targetUserId)
+                throw new ValidationApiException("Bình luận không thuộc về người dùng bị báo cáo.");
+        }
 
         var report = new UserReport
         {
@@ -97,46 +124,38 @@ public sealed class TrustSafetyService
             request.Reason, 
             cancellationToken);
 
-        await _trustScoreService.DeductReportPenaltyAsync(targetUserId, cancellationToken);
-
         // -- AI Auto Evaluation --
-        string reportedContent = "";
-        if (request.TargetPostId.HasValue)
+        try
         {
-            var post = await _voicePostRepository.GetByIdAsync(request.TargetPostId.Value, cancellationToken);
-            if (post != null && !string.IsNullOrWhiteSpace(post.AudioUrl))
+            string reportedContent = "";
+            if (targetPost is not null && !string.IsNullOrWhiteSpace(targetPost.AudioUrl))
             {
-                var text = await _aiModerationService.TranscribeAudioAsync(post.AudioUrl, cancellationToken);
+                var text = await _aiModerationService.TranscribeAudioAsync(targetPost.AudioUrl, cancellationToken);
                 reportedContent = text ?? "";
             }
-        }
-        else if (request.TargetCommentId.HasValue)
-        {
-            var comment = await _voiceCommentRepository.GetByIdAsync(request.TargetCommentId.Value, cancellationToken);
-            if (comment != null && !string.IsNullOrWhiteSpace(comment.AudioUrl))
+            else if (targetComment is not null && !string.IsNullOrWhiteSpace(targetComment.AudioUrl))
             {
-                var text = await _aiModerationService.TranscribeAudioAsync(comment.AudioUrl, cancellationToken);
+                var text = await _aiModerationService.TranscribeAudioAsync(targetComment.AudioUrl, cancellationToken);
                 reportedContent = text ?? "";
             }
-        }
-        
-        var aiVerdict = await _aiModerationService.EvaluateReportAsync(report, reportedContent, cancellationToken);
-        if (aiVerdict == "BAN")
-        {
-            await _adminModerationService.ResolveReportAsync(report.Id, new Dtos.Admin.ResolveReportRequest
+
+            if (!string.IsNullOrWhiteSpace(reportedContent))
             {
-                Action = "Ban",
-                ResolutionNote = "[AI AUTOMATED] Banned due to severe violation.",
-                BanDurationDays = 3 // Standard auto-ban duration
-            }, cancellationToken);
+                var evaluation = await _aiModerationService.EvaluateReportAsync(reportedContent, cancellationToken);
+                report.AiVerdict = evaluation.Verdict;
+                report.AiScore = evaluation.Score;
+                report.AiEvaluatedAt = DateTimeOffset.UtcNow;
+                await _reportRepository.UpdateAiEvaluationAsync(
+                    report.Id,
+                    evaluation.Verdict,
+                    evaluation.Score,
+                    report.AiEvaluatedAt.Value,
+                    cancellationToken);
+            }
         }
-        else if (aiVerdict == "IGNORE")
+        catch (Exception ex)
         {
-            await _adminModerationService.ResolveReportAsync(report.Id, new Dtos.Admin.ResolveReportRequest
-            {
-                Action = "Ignore",
-                ResolutionNote = "[AI AUTOMATED] Ignored. Deemed safe or false report."
-            }, cancellationToken);
+            _logger.LogWarning(ex, "AI advisory evaluation failed for report {ReportId}.", report.Id);
         }
 
         return new ReportResponseDto

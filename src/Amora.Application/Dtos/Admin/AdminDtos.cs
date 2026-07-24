@@ -20,6 +20,9 @@ public sealed class ReportDto
     public string Reason { get; init; } = string.Empty;
     public string? Description { get; init; }
     public string Status { get; init; } = string.Empty;
+    public string? AiVerdict { get; init; }
+    public double? AiScore { get; init; }
+    public DateTimeOffset? AiEvaluatedAt { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }
 

@@ -24,7 +24,6 @@ public sealed class VoicePostService
     private readonly string? _storageBucketName;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
     private readonly Microsoft.Extensions.Logging.ILogger<VoicePostService> _logger;
-    private readonly TrustScoreService _trustScoreService;
 
     public VoicePostService(
         ICurrentUserService currentUserService,
@@ -35,8 +34,7 @@ public sealed class VoicePostService
         AudioProcessingService audioProcessingService,
         IConfiguration configuration,
         Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
-        Microsoft.Extensions.Logging.ILogger<VoicePostService> logger,
-        TrustScoreService trustScoreService)
+        Microsoft.Extensions.Logging.ILogger<VoicePostService> logger)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -47,7 +45,6 @@ public sealed class VoicePostService
         _storageBucketName = configuration["Storage:BucketName"] ?? configuration["AWS:BucketName"];
         _scopeFactory = scopeFactory;
         _logger = logger;
-        _trustScoreService = trustScoreService;
     }
 
     public async Task LogPlayAsync(Guid postId, CancellationToken cancellationToken = default)
@@ -108,7 +105,6 @@ public sealed class VoicePostService
         };
 
         await _voicePostRepository.AddAsync(post, cancellationToken);
-        await _trustScoreService.AddVoicePostBonusAsync(userId, cancellationToken);
 
         // Trích xuất S3 file key từ publicUrl (bỏ phần domain, giữ lại path)
         // Ví dụ: "https://amora-voice-bucket.s3.amazonaws.com/voices/abc.m4a" → "voices/abc.m4a"
@@ -117,68 +113,65 @@ public sealed class VoicePostService
         {
             await _audioProcessingService.EnqueueAudioProcessingAsync(post.Id, s3FileKey, cancellationToken);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to enqueue audio processing for voice post {PostId}.", post.Id);
+            post.Status = VoicePostStatus.Failed;
+            await _voicePostRepository.UpdateAsync(post, cancellationToken);
         }
 
-        // Run AI Moderation in the background
-        _ = Task.Run(async () =>
+        // Complete moderation before returning so it cannot be lost on process restart.
+        try
         {
             using var scope = _scopeFactory.CreateScope();
             var aiModeration = scope.ServiceProvider.GetRequiredService<AiModerationService>();
             var postRepo = scope.ServiceProvider.GetRequiredService<IVoicePostRepository>();
-            var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-            var userBanRepo = scope.ServiceProvider.GetRequiredService<IUserBanRepository>();
             var adminNotifier = scope.ServiceProvider.GetRequiredService<AdminNotificationService>();
 
-            var text = await aiModeration.TranscribeAudioAsync(request.AudioUrl);
+            var text = await aiModeration.TranscribeAudioAsync(request.AudioUrl, cancellationToken);
             if (!string.IsNullOrWhiteSpace(text))
             {
-                bool isToxic = await aiModeration.IsMessageToxicAsync(text);
+                bool isToxic = await aiModeration.IsMessageToxicAsync(text, cancellationToken);
                 if (isToxic)
                 {
                     // Ban user and close post
-                    var p = await postRepo.GetByIdAsync(post.Id);
+                    var p = await postRepo.GetByIdAsync(post.Id, cancellationToken);
                     if (p != null)
                     {
                         p.Status = VoicePostStatus.Closed;
-                        await postRepo.UpdateAsync(p);
+                        await postRepo.UpdateAsync(p, cancellationToken);
                     }
 
-                    var u = await userRepo.GetByIdAsync(userId);
-                    if (u != null)
-                    {
-                        u.IsBanned = true;
-                        
-                        var ban = new Amora.Domain.Entities.UserBan
-                        {
-                            Id = Guid.NewGuid(),
-                            UserId = u.Id,
-                            BanReason = "[AI AUTOMATED] Voice post contained toxic/offensive language.",
-                            BannedUntil = DateTimeOffset.UtcNow.AddDays(7),
-                            CreatedAt = DateTimeOffset.UtcNow,
-                            IsActive = true
-                        };
-
-                        await userRepo.UpdateAsync(u);
-                        await userBanRepo.AddAsync(ban);
-                        
-                        await adminNotifier.NotifyAutoBlockedContentAsync("Voice Post", "Chứa nội dung vi phạm/toxic.", userId);
-                    }
+                    await adminNotifier.NotifyAutoBlockedContentAsync(
+                        "Voice Post",
+                        "AI đã ẩn nội dung nghi vi phạm; cần quản trị viên xem xét.",
+                        userId,
+                        cancellationToken);
                 }
             }
 
             try
             {
                 var scopedMediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-                await scopedMediator.Send(new AnalyzeVoiceToneCommand(post.Id));
+                await scopedMediator.Send(new AnalyzeVoiceToneCommand(post.Id), cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to dispatch AnalyzeVoiceToneCommand for post {PostId}", post.Id);
             }
-        });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AI moderation failed for voice post {PostId}.", post.Id);
+        }
 
         return new CreateVoicePostResponseDto
         {

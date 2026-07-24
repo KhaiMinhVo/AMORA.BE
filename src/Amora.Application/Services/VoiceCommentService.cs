@@ -5,6 +5,7 @@ using Amora.Domain.Entities;
 using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Amora.Application.Services;
 
@@ -16,6 +17,7 @@ public sealed class VoiceCommentService
     private readonly IUserRepository _userRepository;
     private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
     private readonly NotificationService _notificationService;
+    private readonly Microsoft.Extensions.Logging.ILogger<VoiceCommentService> _logger;
 
     public VoiceCommentService(
         ICurrentUserService currentUserService,
@@ -23,7 +25,8 @@ public sealed class VoiceCommentService
         IVoiceCommentRepository voiceCommentRepository,
         IUserRepository userRepository,
         Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory,
-        NotificationService notificationService)
+        NotificationService notificationService,
+        Microsoft.Extensions.Logging.ILogger<VoiceCommentService> logger)
     {
         _currentUserService = currentUserService;
         _voicePostRepository = voicePostRepository;
@@ -31,6 +34,7 @@ public sealed class VoiceCommentService
         _userRepository = userRepository;
         _scopeFactory = scopeFactory;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task LogPlayAsync(Guid commentId, CancellationToken cancellationToken = default)
@@ -109,53 +113,43 @@ public sealed class VoiceCommentService
             );
         }
 
-        // Run AI Moderation in the background for comments
-        _ = Task.Run(async () =>
+        try
         {
             using var scope = _scopeFactory.CreateScope();
             var aiModeration = scope.ServiceProvider.GetRequiredService<AiModerationService>();
             var commentRepo = scope.ServiceProvider.GetRequiredService<IVoiceCommentRepository>();
-            var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-            var userBanRepo = scope.ServiceProvider.GetRequiredService<IUserBanRepository>();
             var adminNotifier = scope.ServiceProvider.GetRequiredService<AdminNotificationService>();
 
-            var text = await aiModeration.TranscribeAudioAsync(request.AudioUrl);
-            if (!string.IsNullOrWhiteSpace(text))
+            var text = await aiModeration.TranscribeAudioAsync(request.AudioUrl, cancellationToken);
+            var isToxic = !string.IsNullOrWhiteSpace(text)
+                && await aiModeration.IsMessageToxicAsync(text, cancellationToken);
+            var current = await commentRepo.GetByIdAsync(comment.Id, cancellationToken);
+            if (current != null)
             {
-                bool isToxic = await aiModeration.IsMessageToxicAsync(text);
+                current.Status = isToxic ? VoiceCommentStatus.Rejected : VoiceCommentStatus.Accepted;
+                await commentRepo.UpdateAsync(current, cancellationToken);
+                comment.Status = current.Status;
+
                 if (isToxic)
                 {
-                    // Ban user and close comment
-                    var c = await commentRepo.GetByIdAsync(comment.Id);
-                    if (c != null)
-                    {
-                        c.Status = VoiceCommentStatus.Rejected;
-                        await commentRepo.UpdateAsync(c);
-                    }
-
-                    var u = await userRepo.GetByIdAsync(userId);
-                    if (u != null)
-                    {
-                        u.IsBanned = true;
-                        
-                        var ban = new Amora.Domain.Entities.UserBan
-                        {
-                            Id = Guid.NewGuid(),
-                            UserId = u.Id,
-                            BanReason = "[AI AUTOMATED] Voice comment contained toxic/offensive language.",
-                            BannedUntil = DateTimeOffset.UtcNow.AddDays(7),
-                            CreatedAt = DateTimeOffset.UtcNow,
-                            IsActive = true
-                        };
-
-                        await userRepo.UpdateAsync(u);
-                        await userBanRepo.AddAsync(ban);
-                        
-                        await adminNotifier.NotifyAutoBlockedContentAsync("Voice Comment", "Chứa nội dung vi phạm/toxic.", userId);
-                    }
+                    await adminNotifier.NotifyAutoBlockedContentAsync(
+                        "Voice Comment",
+                        "AI đã ẩn nội dung nghi vi phạm; cần quản trị viên xem xét.",
+                        userId,
+                        cancellationToken);
                 }
             }
-        });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AI moderation failed for voice comment {CommentId}.", comment.Id);
+            comment.Status = VoiceCommentStatus.Accepted;
+            await _voiceCommentRepository.UpdateAsync(comment, cancellationToken);
+        }
 
         return new CreateCommentResponseDto
         {

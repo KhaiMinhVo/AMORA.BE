@@ -7,6 +7,7 @@ using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -44,8 +45,12 @@ public class VoicePostServiceTests
             _mockCurrentUserService.Object,
             _mockVoicePostRepository.Object,
             _mockUserRepository.Object,
+            null!,
+            null!,
             audioProcessingService,
-            _configuration
+            _configuration,
+            null!,
+            NullLogger<VoicePostService>.Instance
         );
     }
 

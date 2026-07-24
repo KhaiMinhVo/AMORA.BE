@@ -50,7 +50,12 @@ public class MatchServiceTests
             _mockRealtimeNotifier.Object,
             _mockMediator.Object,
             _mockPetRepo.Object,
-            _mockReadStateRepo.Object
+            _mockReadStateRepo.Object,
+            null!,
+            null!,
+            null!,
+            null!,
+            null!
         );
     }
 
@@ -103,7 +108,7 @@ public class MatchServiceTests
         var match = new MatchConnection { Id = Guid.NewGuid(), UserAId = post.PosterId, UserBId = comment.CommenterId, Status = MatchStatus.Active };
         var tupleResult = (MatchConnection: match, PostClosed: true);
         
-        _mockMatchRepo.Setup(m => m.CreateConnectionAsync(postId, commentId, userId, It.IsAny<CancellationToken>()))
+        _mockMatchRepo.Setup(m => m.CreateConnectionAsync(postId, commentId, userId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(tupleResult);
 
         // Act

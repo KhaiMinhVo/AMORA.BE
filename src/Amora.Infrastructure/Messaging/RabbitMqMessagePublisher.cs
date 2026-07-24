@@ -9,6 +9,7 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher, IAsyncDisposab
 {
     private readonly IConnection _connection;
     private readonly IChannel _channel;
+    private readonly SemaphoreSlim _publishGate = new(1, 1);
 
     private RabbitMqMessagePublisher(IConnection connection, IChannel channel)
     {
@@ -27,7 +28,9 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher, IAsyncDisposab
             try
             {
                 connection = await factory.CreateConnectionAsync();
-                channel = await connection.CreateChannelAsync();
+                channel = await connection.CreateChannelAsync(new CreateChannelOptions(
+                    publisherConfirmationsEnabled: true,
+                    publisherConfirmationTrackingEnabled: true));
                 break;
             }
             catch (Exception)
@@ -64,12 +67,21 @@ public sealed class RabbitMqMessagePublisher : IMessagePublisher, IAsyncDisposab
             DeliveryMode = DeliveryModes.Persistent
         };
 
-        await _channel.BasicPublishAsync(string.Empty, queueName, false, props, body, cancellationToken);
+        await _publishGate.WaitAsync(cancellationToken);
+        try
+        {
+            await _channel.BasicPublishAsync(string.Empty, queueName, true, props, body, cancellationToken);
+        }
+        finally
+        {
+            _publishGate.Release();
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
         await _channel.DisposeAsync();
         await _connection.DisposeAsync();
+        _publishGate.Dispose();
     }
 }

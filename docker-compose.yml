@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
     container_name: amora-postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: AmoraCoreDb
     ports:
       - "5444:5432"
@@ -79,6 +77,17 @@ services:
     deploy:
       replicas: 1
 
+  ai-service:
+    build:
+      context: ./src/Amora.AiService
+      dockerfile: Dockerfile
+    container_name: amora-ai-service
+    environment:
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY}
+      AI_ALLOWED_AUDIO_HOSTS: ${AI_ALLOWED_AUDIO_HOSTS:-amora-voice-bucket.s3.amazonaws.com,cdn.amora.pro.vn}
+      AI_BIND_HOST: 0.0.0.0
+    restart: unless-stopped
+
   amora-api:
     build:
       context: .
@@ -87,19 +96,24 @@ services:
     ports:
       - "5002:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=AmoraCoreDb;Username=postgres;Password=postgres
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=AmoraCoreDb;Username=postgres;Password=${POSTGRES_PASSWORD}
       ConnectionStrings__MongoDb: mongodb://mongodb:27017
       ConnectionStrings__Redis: redis:6379
       RabbitMQ__Url: amqp://guest:guest@rabbitmq:5672//
-      AiService__Url: http://host.docker.internal:8000
+      AiService__Url: http://ai-service:8000
+      AiService__ApiKey: ${AI_SERVICE_API_KEY}
       AWS__AccessKey: ${AWS_ACCESS_KEY_ID}
       AWS__SecretKey: ${AWS_SECRET_ACCESS_KEY}
       EmailSettings__Username: ${SMTP_USERNAME}
       EmailSettings__Password: ${SMTP_PASSWORD}
       EmailSettings__FromEmail: ${SMTP_FROM}
       Webhooks__Secret: ${WEBHOOK_SECRET}
+      Jwt__Key: ${JWT_KEY}
       Gemini__ApiKey: ${GEMINI_API_KEY}
+      PayOS__ClientId: ${PAYOS_CLIENT_ID}
+      PayOS__ApiKey: ${PAYOS_API_KEY}
+      PayOS__ChecksumKey: ${PAYOS_CHECKSUM_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,6 +121,8 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+      ai-service:
+        condition: service_started
       redis:
         condition: service_healthy
     restart: unless-stopped
@@ -121,6 +137,7 @@ services:
       - ../amora-audio-worker/.env
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672//
+      ALLOWED_AUDIO_HOSTS: ${ALLOWED_AUDIO_HOSTS:-amora-voice-bucket.s3.amazonaws.com,cdn.amora.pro.vn}
     depends_on:
       rabbitmq:
         condition: service_healthy

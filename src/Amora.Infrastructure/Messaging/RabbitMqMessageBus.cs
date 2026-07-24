@@ -13,6 +13,7 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
 {
     private readonly IConnection _connection;
     private readonly IChannel _channel;
+    private readonly SemaphoreSlim _publishGate = new(1, 1);
 
     private RabbitMqMessageBus(IConnection connection, IChannel channel)
     {
@@ -32,7 +33,9 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
             try
             {
                 connection = await factory.CreateConnectionAsync();
-                channel = await connection.CreateChannelAsync();
+                channel = await connection.CreateChannelAsync(new CreateChannelOptions(
+                    publisherConfirmationsEnabled: true,
+                    publisherConfirmationTrackingEnabled: true));
                 break;
             }
             catch (Exception)
@@ -77,19 +80,28 @@ public sealed class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
             DeliveryMode = DeliveryModes.Persistent, // Tin nhắn bền vững, không mất khi broker restart
         };
 
-        await _channel.BasicPublishAsync(
-            exchange: string.Empty,
-            routingKey: "celery",
-            mandatory: false,
-            basicProperties: props,
-            body: body,
-            cancellationToken: cancellationToken
-        );
+        await _publishGate.WaitAsync(cancellationToken);
+        try
+        {
+            await _channel.BasicPublishAsync(
+                exchange: string.Empty,
+                routingKey: "celery",
+                mandatory: true,
+                basicProperties: props,
+                body: body,
+                cancellationToken: cancellationToken
+            );
+        }
+        finally
+        {
+            _publishGate.Release();
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
         await _channel.DisposeAsync();
         await _connection.DisposeAsync();
+        _publishGate.Dispose();
     }
 }

@@ -249,7 +249,8 @@ public sealed class AmoraDbContext : DbContext
             entity.Property(x => x.Reason).HasConversion<string>().HasMaxLength(30);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             entity.Property(x => x.Description).HasMaxLength(500);
-            entity.HasIndex(x => new { x.ReporterId, x.TargetUserId }).IsUnique();
+            entity.Property(x => x.AiVerdict).HasMaxLength(20);
+            entity.HasIndex(x => new { x.ReporterId, x.TargetUserId, x.CreatedAt });
             
             entity.HasData(new UserReport
             {

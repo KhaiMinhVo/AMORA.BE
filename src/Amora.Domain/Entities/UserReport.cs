@@ -24,5 +24,9 @@ public sealed class UserReport
 
     public ReportStatus Status { get; set; } = ReportStatus.Pending;
 
+    public string? AiVerdict { get; set; }
+    public double? AiScore { get; set; }
+    public DateTimeOffset? AiEvaluatedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

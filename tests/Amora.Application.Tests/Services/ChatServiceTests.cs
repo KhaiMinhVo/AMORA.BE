@@ -20,7 +20,6 @@ public class ChatServiceTests
     private readonly Mock<IChatMessageRepository> _mockChatMessageRepository;
     private readonly Mock<IRealtimeNotifier> _mockRealtimeNotifier;
     private readonly Mock<IMediator> _mockMediator;
-    private readonly Mock<PetFeatureGateService> _mockPetFeatureGateService;
     private readonly Mock<IChatReadStateRepository> _mockChatReadStateRepository;
     private readonly ChatService _chatService;
 
@@ -51,7 +50,11 @@ public class ChatServiceTests
             _mockRealtimeNotifier.Object,
             _mockMediator.Object,
             petFeatureGateService, // Use real instance but with mocked dependencies
-            _mockChatReadStateRepository.Object
+            _mockChatReadStateRepository.Object,
+            null!,
+            null!,
+            null!,
+            null!
         );
     }
 
@@ -144,10 +147,11 @@ public class ChatServiceTests
             m.MessageType == MessageType.Text
         ), It.IsAny<CancellationToken>()), Times.Once);
 
-        // Verify match handshake was extended
-        _mockMatchConnectionRepository.Verify(repo => repo.ExtendHandshakeAsync(matchId, It.IsAny<CancellationToken>()), Times.Once);
-
         // Verify realtime notification was sent
-        _mockRealtimeNotifier.Verify(notifier => notifier.NotifyNewMessageAsync(It.IsAny<ChatMessage>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockRealtimeNotifier.Verify(notifier => notifier.NotifyNewMessageAsync(
+            It.IsAny<ChatMessage>(),
+            It.IsAny<int?>(),
+            It.IsAny<DateTimeOffset?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 }

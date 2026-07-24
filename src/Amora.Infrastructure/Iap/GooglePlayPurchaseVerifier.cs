@@ -105,7 +105,10 @@ public sealed class GooglePlayPurchaseVerifier : Amora.Application.Abstractions.
         if (string.IsNullOrWhiteSpace(credentialsPath) || !File.Exists(credentialsPath))
             return null;
 
-        var credential = GoogleCredential.FromFile(credentialsPath).CreateScoped(AndroidPublisherScope);
+        var sourceCredential = await CredentialFactory.FromFileAsync<ServiceAccountCredential>(
+            credentialsPath,
+            cancellationToken);
+        var credential = sourceCredential.ToGoogleCredential().CreateScoped(AndroidPublisherScope);
         if (credential.UnderlyingCredential is not ITokenAccess tokenAccess)
             return null;
 

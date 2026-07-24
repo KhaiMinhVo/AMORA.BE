@@ -15,6 +15,7 @@ public sealed class AdminModerationService
     private readonly IPetTransactionRepository _petTransactionRepository;
     private readonly IVoicePostRepository _voicePostRepository;
     private readonly NotificationService _notificationService;
+    private readonly TrustScoreService _trustScoreService;
 
     public AdminModerationService(
         IUserReportRepository reportRepository,
@@ -23,7 +24,8 @@ public sealed class AdminModerationService
         IRealtimeNotifier realtimeNotifier,
         IPetTransactionRepository petTransactionRepository,
         IVoicePostRepository voicePostRepository,
-        NotificationService notificationService)
+        NotificationService notificationService,
+        TrustScoreService trustScoreService)
     {
         _reportRepository = reportRepository;
         _userRepository = userRepository;
@@ -32,6 +34,7 @@ public sealed class AdminModerationService
         _petTransactionRepository = petTransactionRepository;
         _voicePostRepository = voicePostRepository;
         _notificationService = notificationService;
+        _trustScoreService = trustScoreService;
     }
 
     public async Task<PaginatedList<AdminUserDto>> GetUsersAsync(int page, int pageSize, string? keyword, string? subscriptionType, bool? isBanned, CancellationToken cancellationToken = default)
@@ -133,6 +136,9 @@ public sealed class AdminModerationService
                 Reason = report.Reason.ToString(),
                 Description = report.Description,
                 Status = report.Status.ToString(),
+                AiVerdict = report.AiVerdict,
+                AiScore = report.AiScore,
+                AiEvaluatedAt = report.AiEvaluatedAt,
                 CreatedAt = report.CreatedAt
             });
         }
@@ -154,6 +160,20 @@ public sealed class AdminModerationService
         if (report.Status != ReportStatus.Pending)
             throw new ValidationApiException("Báo cáo này đã được giải quyết.");
 
+        var validActions = new[] { "Ban", "Ignore", "Reject", "Warning" };
+        if (!validActions.Contains(request.Action, StringComparer.OrdinalIgnoreCase))
+            throw new ValidationApiException("Invalid action. Supported actions: Ban, Ignore, Reject, Warning.");
+
+        if (!await _reportRepository.TryTransitionStatusAsync(
+                report.Id,
+                ReportStatus.Pending,
+                ReportStatus.Processing,
+                cancellationToken))
+        {
+            throw new ConflictApiException("Report is already being processed by another administrator.");
+        }
+        report.Status = ReportStatus.Processing;
+
         if (request.Action.Equals("Ban", StringComparison.OrdinalIgnoreCase))
         {
             await BanUserAsync(report.TargetUserId, new BanUserRequest
@@ -162,6 +182,9 @@ public sealed class AdminModerationService
                 DurationDays = request.BanDurationDays
             }, cancellationToken);
 
+            // A report is only penalized after it has been confirmed.
+            // Ban first so a score reaching zero cannot create a duplicate ban record.
+            await _trustScoreService.DeductReportPenaltyAsync(report.TargetUserId, cancellationToken);
             report.Status = ReportStatus.ActionTaken;
         }
         else if (request.Action.Equals("Ignore", StringComparison.OrdinalIgnoreCase) || request.Action.Equals("Reject", StringComparison.OrdinalIgnoreCase))
@@ -170,7 +193,7 @@ public sealed class AdminModerationService
         }
         else if (request.Action.Equals("Warning", StringComparison.OrdinalIgnoreCase))
         {
-            // Just resolve it and maybe send a warning via realtime notifier in future
+            await _trustScoreService.DeductReportPenaltyAsync(report.TargetUserId, cancellationToken);
             report.Status = ReportStatus.ActionTaken;
         }
         else
@@ -247,6 +270,9 @@ public sealed class AdminModerationService
 
         if (user.Role == "Admin")
             throw new ValidationApiException("Không thể khóa tài khoản Admin.");
+
+        if (user.IsBanned)
+            return;
 
         user.IsBanned = true;
         

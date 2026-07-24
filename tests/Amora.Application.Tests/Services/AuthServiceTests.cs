@@ -38,7 +38,12 @@ public class AuthServiceTests
         _authService = new AuthService(
             _mockUserRepository.Object,
             _mockJwtTokenService.Object,
-            diamondRewardService
+            diamondRewardService,
+            _mockEmailService.Object,
+            _mockCache.Object,
+            _mockConfig.Object,
+            null!,
+            null!
         );
 
         _mockJwtTokenService.Setup(j => j.CreateToken(It.IsAny<AppUser>()))

@@ -30,7 +30,8 @@ public class IapWebhookServiceTests
             _mockUserRepo.Object,
             _mockTransactionRepo.Object,
             _mockWebhookEventRepo.Object,
-            _mockLogger.Object
+            _mockLogger.Object,
+            null!
         );
     }
 

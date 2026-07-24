@@ -65,8 +65,8 @@ public class PetShopServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var itemId = Guid.NewGuid();
-        var user = new AppUser { Id = userId, AmoraGems = 5 };
-        var item = new ShopItem { Id = itemId, PriceAmoraGems = 10 };
+        var user = new AppUser { Id = userId, Diamonds = 5 };
+        var item = new ShopItem { Id = itemId, PriceDiamonds = 10 };
 
         _mockShopRepository.Setup(s => s.GetItemByIdAsync(itemId, It.IsAny<CancellationToken>())).ReturnsAsync(item);
         _mockUserRepository.Setup(u => u.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);

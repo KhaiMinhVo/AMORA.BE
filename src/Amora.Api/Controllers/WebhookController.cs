@@ -2,6 +2,8 @@ using Amora.Application.Dtos.Posts;
 using Amora.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Amora.Api.Controllers;
 
@@ -35,14 +37,21 @@ public sealed class WebhookController : ControllerBase
     {
         // Xác thực nguồn gốc webhook bằng shared secret
         var expectedSecret = _configuration["Webhooks:Secret"];
-        if (!string.IsNullOrEmpty(expectedSecret))
+        if (string.IsNullOrWhiteSpace(expectedSecret))
         {
-            if (!Request.Headers.TryGetValue("X-Webhook-Secret", out var receivedSecret)
-                || receivedSecret != expectedSecret)
+            _logger.LogCritical("[Webhook] Webhooks:Secret is not configured.");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
             {
-                _logger.LogWarning("[Webhook] Unauthorized webhook call for PostId={PostId}", payload.PostId);
-                return Unauthorized(new { success = false, message = "Invalid webhook secret." });
-            }
+                success = false,
+                message = "Webhook authentication is unavailable."
+            });
+        }
+
+        if (!Request.Headers.TryGetValue("X-Webhook-Secret", out var receivedSecret)
+            || !SecretsMatch(receivedSecret.ToString(), expectedSecret))
+        {
+            _logger.LogWarning("[Webhook] Unauthorized webhook call for PostId={PostId}", payload.PostId);
+            return Unauthorized(new { success = false, message = "Invalid webhook secret." });
         }
 
         _logger.LogInformation("[Webhook] Nhận kết quả từ Worker: PostId={PostId}, Status={Status}",
@@ -51,5 +60,13 @@ public sealed class WebhookController : ControllerBase
         await _audioProcessingService.HandleAudioProcessedAsync(payload, cancellationToken);
 
         return Ok(new { success = true });
+    }
+
+    private static bool SecretsMatch(string actual, string expected)
+    {
+        var actualBytes = Encoding.UTF8.GetBytes(actual);
+        var expectedBytes = Encoding.UTF8.GetBytes(expected);
+        return actualBytes.Length == expectedBytes.Length
+               && CryptographicOperations.FixedTimeEquals(actualBytes, expectedBytes);
     }
 }

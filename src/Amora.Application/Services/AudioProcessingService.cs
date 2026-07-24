@@ -52,9 +52,10 @@ public sealed class AudioProcessingService
         {
             // Cập nhật URL âm thanh sang file đã lọc nhiễu
             post.AudioUrl = payload.CleanAudioUrl;
-            post.Status = VoicePostStatus.Open; // Bây giờ mới hiện lên Feed
+            if (post.Status == VoicePostStatus.Processing)
+                post.Status = VoicePostStatus.Open;
         }
-        else
+        else if (post.Status == VoicePostStatus.Processing)
         {
             post.Status = VoicePostStatus.Failed;
         }

@@ -7,6 +7,7 @@ using Amora.Domain.Enums;
 using Amora.Domain.Interfaces;
 using FluentAssertions;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Amora.Application.Tests.Services;
@@ -37,8 +38,7 @@ public class TrustSafetyServiceTests
             null!,
             null!,
             null!,
-            null!,
-            null!
+            NullLogger<TrustSafetyService>.Instance
         );
     }
 
@@ -80,7 +80,7 @@ public class TrustSafetyServiceTests
         var targetId = Guid.NewGuid();
         _mockCurrentUserService.Setup(c => c.UserId).Returns(userId);
         _mockUserRepository.Setup(u => u.GetByIdAsync(targetId, It.IsAny<CancellationToken>())).ReturnsAsync(new AppUser());
-        _mockReportRepository.Setup(r => r.ExistsAsync(userId, targetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _mockReportRepository.Setup(r => r.ExistsRecentAsync(userId, targetId, null, null, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         // Act
         var act = async () => await _trustSafetyService.ReportUserAsync(targetId, new CreateReportRequest { Reason = "Harassment" });
@@ -97,7 +97,7 @@ public class TrustSafetyServiceTests
         var targetId = Guid.NewGuid();
         _mockCurrentUserService.Setup(c => c.UserId).Returns(userId);
         _mockUserRepository.Setup(u => u.GetByIdAsync(targetId, It.IsAny<CancellationToken>())).ReturnsAsync(new AppUser());
-        _mockReportRepository.Setup(r => r.ExistsAsync(userId, targetId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _mockReportRepository.Setup(r => r.ExistsRecentAsync(userId, targetId, null, null, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         // Act
         var result = await _trustSafetyService.ReportUserAsync(targetId, new CreateReportRequest { Reason = "Harassment", Description = "Testing" });

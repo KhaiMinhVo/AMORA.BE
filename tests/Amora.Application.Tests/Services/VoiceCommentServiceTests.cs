@@ -8,7 +8,7 @@ using Amora.Domain.Interfaces;
 using FluentAssertions;
 using Moq;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Amora.Application.Tests.Services;
@@ -29,7 +29,11 @@ public class VoiceCommentServiceTests
         _voiceCommentService = new VoiceCommentService(
             _mockCurrentUserService.Object,
             _mockVoicePostRepo.Object,
-            _mockVoiceCommentRepo.Object
+            _mockVoiceCommentRepo.Object,
+            null!,
+            null!,
+            null!,
+            NullLogger<VoiceCommentService>.Instance
         );
     }
 

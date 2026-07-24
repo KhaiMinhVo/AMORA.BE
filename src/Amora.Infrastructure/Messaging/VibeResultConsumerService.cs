@@ -15,6 +15,7 @@ namespace Amora.Infrastructure.Messaging;
 public sealed class VibeResultConsumerService : BackgroundService
 {
     private const string QueueName = "chat_vibe_result";
+    private const string FailedQueueName = "chat_vibe_result_failed";
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<VibeResultConsumerService> _logger;
@@ -41,9 +42,14 @@ public sealed class VibeResultConsumerService : BackgroundService
             {
                 var factory = new ConnectionFactory { Uri = new Uri(_amqpUrl) };
                 _connection = await factory.CreateConnectionAsync(stoppingToken);
-                _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+                _channel = await _connection.CreateChannelAsync(
+                    new CreateChannelOptions(
+                        publisherConfirmationsEnabled: true,
+                        publisherConfirmationTrackingEnabled: true),
+                    stoppingToken);
 
                 await _channel.QueueDeclareAsync(QueueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+                await _channel.QueueDeclareAsync(FailedQueueName, durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
                 await _channel.BasicQosAsync(0, 1, false, cancellationToken: stoppingToken);
 
                 var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -64,7 +70,23 @@ public sealed class VibeResultConsumerService : BackgroundService
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Failed processing vibe result.");
-                        await _channel.BasicNackAsync(ea.DeliveryTag, false, requeue: true, stoppingToken);
+                        var properties = new BasicProperties
+                        {
+                            ContentType = ea.BasicProperties.ContentType ?? "application/json",
+                            DeliveryMode = DeliveryModes.Persistent,
+                            Headers = new Dictionary<string, object?>
+                            {
+                                ["x-last-error"] = ex.Message[..Math.Min(ex.Message.Length, 500)]
+                            }
+                        };
+                        await _channel.BasicPublishAsync(
+                            string.Empty,
+                            FailedQueueName,
+                            mandatory: true,
+                            properties,
+                            ea.Body,
+                            stoppingToken);
+                        await _channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
                     }
                 };
 

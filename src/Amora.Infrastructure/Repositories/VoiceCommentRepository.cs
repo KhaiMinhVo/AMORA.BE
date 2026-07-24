@@ -36,7 +36,11 @@ public sealed class VoiceCommentRepository : IVoiceCommentRepository
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.VoiceComments.AsNoTracking().Where(x => x.PostId == postId).OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id);
+        var query = _dbContext.VoiceComments
+            .AsNoTracking()
+            .Where(x => x.PostId == postId && x.Status == Domain.Enums.VoiceCommentStatus.Accepted)
+            .OrderByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id);
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return (items, totalCount);

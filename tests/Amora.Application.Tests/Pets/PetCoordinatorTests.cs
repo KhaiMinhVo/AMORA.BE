@@ -30,7 +30,10 @@ public class PetCoordinatorTests
             _mockPetRepo.Object,
             _mockMatchRepo.Object,
             _mockPublisher.Object,
-            _mockNotifier.Object
+            _mockNotifier.Object,
+            null!,
+            null!,
+            null!
         );
     }
 

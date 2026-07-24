@@ -13,6 +13,7 @@ public sealed class AiModerationService
     private readonly IConfiguration _configuration;
     private readonly ILogger<AiModerationService> _logger;
     private readonly string? _aiServiceUrl;
+    private readonly string? _apiKey;
 
     public AiModerationService(HttpClient httpClient, IConfiguration configuration, ILogger<AiModerationService> logger)
     {
@@ -20,6 +21,7 @@ public sealed class AiModerationService
         _configuration = configuration;
         _logger = logger;
         _aiServiceUrl = _configuration["AiService:Url"];
+        _apiKey = _configuration["AiService:ApiKey"];
     }
 
     /// <summary>
@@ -29,17 +31,16 @@ public sealed class AiModerationService
     public async Task<bool> IsMessageToxicAsync(string content, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(content)) return false;
-        if (string.IsNullOrWhiteSpace(_aiServiceUrl))
+        if (!IsConfigured())
         {
-            _logger.LogWarning("AiService URL is missing. Skipping AI moderation check.");
+            _logger.LogWarning("AiService URL or API key is missing. Skipping AI moderation check.");
             return false;
         }
 
         try
         {
-            var requestBody = new { text = content };
-            var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"{_aiServiceUrl}/evaluate", jsonContent, cancellationToken);
+            using var request = CreateRequest("/evaluate", new { text = content });
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
             
             if (response.IsSuccessStatusCode)
             {
@@ -50,6 +51,10 @@ public sealed class AiModerationService
             
             _logger.LogError("AiService returned {StatusCode} during toxicity check.", response.StatusCode);
             return false;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -62,43 +67,43 @@ public sealed class AiModerationService
     /// Evaluates a user report and suggests an action.
     /// Returns "Ban", "Ignore", or "Manual" (leave for human admin).
     /// </summary>
-    public async Task<string> EvaluateReportAsync(UserReport report, string reportedContent, CancellationToken cancellationToken = default)
+    public async Task<AiReportEvaluation> EvaluateReportAsync(string reportedContent, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(_aiServiceUrl))
+        if (!IsConfigured())
         {
-            return "Manual";
+            return new AiReportEvaluation("Manual", null);
         }
 
         try
         {
-            // Evaluate both description and reportedContent
-            string fullTextToEvaluate = $"{report.Reason} {report.Description} {reportedContent}";
-            
-            var requestBody = new { text = fullTextToEvaluate };
-            var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"{_aiServiceUrl}/evaluate", jsonContent, cancellationToken);
+            // Reporter-controlled reason/description must never influence an automated verdict.
+            if (string.IsNullOrWhiteSpace(reportedContent))
+                return new AiReportEvaluation("Manual", null);
+
+            using var request = CreateRequest("/evaluate", new { text = reportedContent });
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
             
             if (response.IsSuccessStatusCode)
             {
                 var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
                 var doc = JsonDocument.Parse(responseString);
                 bool isToxic = doc.RootElement.GetProperty("isToxic").GetBoolean();
+                double score = doc.RootElement.GetProperty("score").GetDouble();
                 
-                if (isToxic) return "BAN";
-                
-                // If it's a specific report with evidence, and evidence is not toxic -> Ignore
-                if (!string.IsNullOrWhiteSpace(reportedContent))
-                {
-                     return "IGNORE";
-                }
+                // AI is advisory only. It must never ban or dismiss a user report.
+                return new AiReportEvaluation(isToxic ? "Flagged" : "Clear", score);
             }
             
-            return "Manual";
+            return new AiReportEvaluation("Manual", null);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while calling AiService for report evaluation.");
-            return "Manual"; 
+            return new AiReportEvaluation("Manual", null);
         }
     }
 
@@ -107,16 +112,15 @@ public sealed class AiModerationService
     /// </summary>
     public async Task<string?> TranscribeAudioAsync(string audioUrl, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(_aiServiceUrl) || string.IsNullOrWhiteSpace(audioUrl))
+        if (!IsConfigured() || string.IsNullOrWhiteSpace(audioUrl))
         {
             return null;
         }
 
         try
         {
-            var requestBody = new { audioUrl = audioUrl };
-            var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"{_aiServiceUrl}/transcribe", jsonContent, cancellationToken);
+            using var request = CreateRequest("/transcribe", new { audioUrl });
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
@@ -128,10 +132,30 @@ public sealed class AiModerationService
             _logger.LogError("AiService returned {StatusCode} during transcription.", response.StatusCode);
             return null;
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while calling AiService for transcription.");
             return null;
         }
     }
+
+    private bool IsConfigured()
+        => !string.IsNullOrWhiteSpace(_aiServiceUrl)
+           && !string.IsNullOrWhiteSpace(_apiKey);
+
+    private HttpRequestMessage CreateRequest(string path, object body)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_aiServiceUrl}{path}")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json")
+        };
+        request.Headers.Add("X-Internal-Api-Key", _apiKey);
+        return request;
+    }
 }
+
+public sealed record AiReportEvaluation(string Verdict, double? Score);

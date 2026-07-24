@@ -201,7 +201,9 @@ builder.Services.AddHostedService<Amora.Infrastructure.BackgroundJobs.Subscripti
 builder.Services.AddSingleton<Amora.Infrastructure.BackgroundJobs.ImageProcessingChannel>();
 builder.Services.AddHostedService<Amora.Infrastructure.BackgroundJobs.ImageProcessingBackgroundService>();
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-only-secret-key-change-me-please-use-a-longer-256-bit-key";
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+    throw new InvalidOperationException("Jwt:Key must be configured with at least 32 characters.");
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

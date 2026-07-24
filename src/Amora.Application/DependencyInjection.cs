@@ -27,7 +27,10 @@ public static class DependencyInjection
         services.AddHttpClient<AiEmotionAnalysisService>();
         services.AddHttpClient<AiVoiceAnalysisService>();
 
-        services.AddHttpClient<AiModerationService>();
+        services.AddHttpClient<AiModerationService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
         return services;
     }
 }
